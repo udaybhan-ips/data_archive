@@ -1,0 +1,20 @@
+<div class="container">
+  <form class="centered-tight bg-rounded-box soft-shadow">
+
+    <div class="alert alert-success" role="alert" ng-show="alert.success">{{alert.success}}</div>
+    <div class="alert alert-danger" role="alert" ng-show="alert.error">{{alert.error}}</div>
+
+    <label for="inputEmail" class="sr-only">Email address</label>
+    <input type="email" id="inputEmail" class="form-control square-bottom" placeholder="Enter your e-mail" ng-model="email" required autofocus>
+
+    <label for="inputPassword" class="sr-only">Password</label>
+    <input type="password" id="inputPassword" class="form-control square-top" placeholder="Password" ng-model="password" required>
+
+    <button class="btn btn-lg btn-primary btn-block" type="submit" ng-click="login()">Login</button>
+    <br>
+    <p class="text-xs-center">Don't have an account yet? <br>
+        <a ui-sref="register"><b>Register now</b></a>
+    </p>
+
+</form>
+</div>

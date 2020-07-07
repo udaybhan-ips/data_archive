@@ -1,0 +1,31 @@
+<div class="container">
+  <div class="centered-md bg-rounded-box soft-shadow">
+    <h4 class="text-xs-center">Account Settings</h4>
+    <form class="m-t-1">
+
+     <div class="alert alert-success" role="alert" ng-show="alert.success">{{alert.success}}</div>
+     <div class="alert alert-danger" role="alert" ng-show="alert.error">{{alert.error}}</div>
+
+     <div class="list-group">
+      <div class="list-group-item">
+        <h5 class="list-group-item-heading">Name:</h5>
+        <input class="form-control m-b-1" type="text" placeholder="Your name" ng-model="name">
+        <button class="btn btn-success form-control" ng-click="changeName()">Change name</button>
+      </div> 
+      <div class="list-group-item">
+        <h5 class="list-group-item-heading">Email:</h5>
+        <input class="form-control m-b-1" type="email" placeholder="Your email" ng-model="email">
+        <button class="btn btn-success form-control" ng-click="changeEmail()">Change email</button>
+      </div>
+      <div class="list-group-item">
+        <h5 class="list-group-item-heading">Password:</h5>
+        <input class="form-control m-b-1" type="password" placeholder="New password" ng-model="password">
+        <button class="btn btn-success form-control" ng-click="changePassword()">Change password</button>
+      </div>
+    </div>
+
+    <button class="btn btn-secondary m-t-2" ui-sref="profile">Back to profile</button>
+
+  </form>
+</div>
+</div>
