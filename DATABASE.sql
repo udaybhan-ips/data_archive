@@ -20,3 +20,10 @@ SONUS_CALLINGNUMBER varchar, SONUS_EGCALLEDNUMBER varchar, SONUS_EGRPROTOVARIANT
 
 create table batch_date_control (date_id integer serial, date_use varchar, date_set timestamp without time zone,
 last_update timestamp without time zone, remarks varchar, deleted BOOLEAN NOT NULL DEFAULT FALSE)
+
+
+create table sonus_outbound_summary (id serial, service_id integer, raw_cdr_cound bigint, pro_cdr_count bigint, summary_date timestamp without time zone, 
+date_updated timestamp without time zone);
+
+
+
