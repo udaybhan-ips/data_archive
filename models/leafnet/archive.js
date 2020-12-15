@@ -1,15 +1,16 @@
-var config = require('./../../config/config');
 var db = require('./../../config/database');
+const { BATCH_SIZE } = require('../../config/config');
+const CDR_SONUS_CS='cdr_sonus_cs';
 
 module.exports = {
 
   getTargetDate: async function(date_id) {
     try {
-          const query=`SELECT max(date_set)::date as target_date, max(date_set)::date + interval '9 HOURS'  as target_date_added_timezone FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
+          const query=`SELECT max(date_set)::date + interval '0 HOURS' as target_date , max(date_set)::date - interval '9 HOURS'  as target_date_with_timezone FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
           const targetDateRes= await db.query(query,[]);
           console.log(targetDateRes);
           if(targetDateRes.rows){
-              return  {'targetDate' : utcToDate(targetDateRes.rows[0].target_date),'targetDateWithTimezone' : utcToDate(targetDateRes.rows[0].target_date_added_timezone)} ;              
+              return  {'targetDate' : (targetDateRes.rows[0].target_date),'targetDateWithTimezone' : (targetDateRes.rows[0].target_date_with_timezone)} ;              
           }
           return {err:'not found'};
       } catch (error) {
@@ -18,78 +19,49 @@ module.exports = {
   },
   deleteTargetDateCDR: async function(targetDate) {
     try {
-        const query=`delete FROM cdr_sonus where START_TIME >= '${targetDate}' and start_Time < '${targetDate}'::timestamp + INTERVAL '1' DAY`;
+        const query=`delete FROM cdr_sonus where START_TIME::date = '${targetDate}'::date`;
         const deleteTargetDateRes= await db.query(query,[]);
         return deleteTargetDateRes;
     } catch (error) {
         return error;
     }
 },
-getTargetCDR: async function(targetDate) {
+getTargetCDR: async function(targetDateWithTimezone) {
     
     try {
         const query=`SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
         CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW, CALLSTATUS,
-         CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  where STARTTIME >= '${targetDate}' and 
-         startTime < DATE_ADD("${targetDate}", INTERVAL 1 DAY)  AND INGRPSTNTRUNKNAME = 'IPSLFIQ57APRII' AND RECORDTYPEID = 3 order by STARTTIME` ;
+         CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  where STARTTIME >= '${targetDateWithTimezone}' and 
+         startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  AND INGRPSTNTRUNKNAME = 'IPSLFIQ57APRII' AND RECORDTYPEID = 3 order by STARTTIME` ;
+     
         const data= await db.mySQLQuery(query);
         return data;
     } catch (error) {
         return error;
     }
 },
+  insertByBatches: async function(records) {
+  
+    const JSON_data = Object.values(JSON.parse(JSON.stringify(records)));
+    const dataSize=JSON_data.length;
+    const chunkArray=chunk(JSON_data,BATCH_SIZE);
+    //console.log(chunkArray);
 
-  create: async function(data1) {
-    try {
-    var data = Object.values(JSON.parse(JSON.stringify(data1)));
-      for(let i=0;i<data.length;i++){
-                const query=`INSERT INTO cdr_sonus(Date_Bill,Orig_ANI,Term_ANI,Stop_Time,Start_Time,Duration,Duration_Use,
-                In_OutBound,Dom_Int_Call,Orig_Carrier_ID,Term_Carrier_ID,Transit_Carrier_ID,Selected_Carrier_ID,Billing_Comp_Code,Trunk_Port,
-                SONUS_SESSION_ID,SONUS_START_TIME,SONUS_DISCONNECT_TIME,SONUS_CALL_DURATION,SONUS_CALL_DURATION_SECOND,
-                SONUS_INANI,SONUS_INCALLEDNUMBER,SONUS_INGRESSPROTOCOLVARIANT,REGISTER_DATE,SONUS_INGRPSTNTRUNKNAME,SONUS_GW,SONUS_CALLSTATUS,
-                SONUS_CALLINGNUMBER,SONUS_EGCALLEDNUMBER,SONUS_EGRPROTOVARIANT  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11, $12, $13, $14, 
-                  $15, $16, $17, $18, $19, $20,$21, $22, $23, $24, $25, $26, $27, $28, $29, $30) returning cdr_id`;
-                let valueArray=[];
-                valueArray.push(data[i]['ORIGDATE']);
-                valueArray.push(data[i]['INANI']);
-                valueArray.push(data[i]['INCALLEDNUMBER']);
-                valueArray.push(data[i]['STOPTIME']);
-                valueArray.push(data[i]['ORIGDATE']);
-                valueArray.push(parseFloat(data[i]['DURATION'],10));
-                valueArray.push(parseInt(data[i]['DURATION'],10));
-                valueArray.push(0);
-                valueArray.push(0);
-                valueArray.push(getOrigCarrierID(data[i]['EGRPROTOVARIANT']));
-                valueArray.push(getTermCarrierID(data[i]['EGRPROTOVARIANT']));
-                valueArray.push('');
-                valueArray.push(getSelectedCarrierID(data[i]['EGRPROTOVARIANT']));
-                valueArray.push(getCompanyCode("LEAFNET"));
-                valueArray.push(0);
-                valueArray.push(data[i]['SESSIONID']);
-                valueArray.push(data[i]['STARTTIME']);
-                valueArray.push(data[i]['DISCONNECTTIME']);
-                valueArray.push(data[i]['CALLDURATION']);
-                valueArray.push(parseInt(data[i]['DURATION'],10));
-                valueArray.push(data[i]['INANI']);
-                valueArray.push(data[i]['INCALLEDNUMBER']);
-                valueArray.push(data[i]['INGRESSPROTOCOLVARIANT']);
-                valueArray.push('now()');
-                valueArray.push(data[i]['INGRPSTNTRUNKNAME']);
-                valueArray.push(data[i]['GW']);
-                valueArray.push(data[i]['CALLSTATUS']);
-                valueArray.push(data[i]['CALLINGNUMBER']);
-                valueArray.push(data[i]['EGCALLEDNUMBER']);
-                valueArray.push(data[i]['EGRPROTOVARIANT']);
-                const res = await db.query(query,valueArray);
-          }
-            return res.rows[0];
-    } catch (error) {
-        return error;
+    let res=[];
+    let resArr=[];
+    for(let i=0;i<chunkArray.length;i++){
+      const data =  getNextInsertBatch(chunkArray[i]);
+      res=await db.queryBatchInsert(data,CDR_SONUS_CS);
+      resArr.push(res);
     }
+            console.log("done"+ new Date());
+            console.log(resArr);
+      return resArr;
+
   },
   updateBatchControl: async function(serviceId,targetDate) {
     try {
-        const query=`update batch_date_control set date_set='${targetDate}'::date + interval '2' day , last_update=now() where date_id='${serviceId}'`;
+        const query=`update batch_date_control set date_set='${targetDate}'::date + interval '1' day , last_update=now() where date_id='${serviceId}'`;
         const updateBatchControlRes= await db.query(query,[]);
         return updateBatchControlRes;
     } catch (error) {
@@ -157,14 +129,10 @@ function utcToDate(utcDate){
 
   function getOrigCarrierID(EGRPROTOVARIANT){
     let origCarrierID = 0;
-    console.log("EGRPROTOVARIANT=="+EGRPROTOVARIANT);
     let origStrIndex=EGRPROTOVARIANT.indexOf("0xfb");
-    console.log("origStrIndex=="+origStrIndex);
-
     if(origStrIndex){
       origCarrierID = EGRPROTOVARIANT.substring(origStrIndex+5,origStrIndex+9);
     }
-    console.log("origCarrierID=="+origCarrierID);
     return origCarrierID;
   }
 
@@ -193,3 +161,71 @@ function utcToDate(utcDate){
     }
     return companyCode;
   }
+  function getNextInsertBatch(data) {
+    
+    let valueArray=[];
+
+    try {
+     for(let i=0;i<data.length;i++){
+       
+       let obj={};
+       obj['date_bill']=data[i]['ORIGDATE'];
+       obj['orig_ani']=data[i]['INANI'];
+       obj['term_ani']=data[i]['INCALLEDNUMBER'];
+       obj['stop_time']=data[i]['STOPTIME'];
+       obj['start_time']=data[i]['ORIGDATE'];
+       obj['duration']=parseFloat(data[i]['DURATION'],10);
+       obj['duration_use']=parseInt(data[i]['DURATION'],10);
+       obj['in_outbound']=0;
+       obj['dom_int_call']=0;
+       obj['orig_carrier_id']=getOrigCarrierID(data[i]['EGRPROTOVARIANT']);
+       obj['term_carrier_id']=getTermCarrierID(data[i]['EGRPROTOVARIANT']);
+       obj['transit_carrier_id']='';
+       obj['selected_carrier_id']=getSelectedCarrierID(data[i]['EGRPROTOVARIANT']);
+       obj['billing_comp_code']=getCompanyCode("LEAFNET");
+       obj['trunk_port']=0;
+       obj['sonus_session_id']=data[i]['SESSIONID'];
+       obj['sonus_start_time']=data[i]['STARTTIME'];
+       obj['sonus_disconnect_time']=data[i]['DISCONNECTTIME'];
+       obj['sonus_call_duration']=data[i]['CALLDURATION'];
+       obj['sonus_call_duration_second']=parseInt(data[i]['DURATION'],10);
+       obj['sonus_inani']=data[i]['INANI'];
+       obj['sonus_incallednumber']=data[i]['INCALLEDNUMBER'];
+       obj['sonus_ingressprotocolvariant']=data[i]['INGRESSPROTOCOLVARIANT'];
+       obj['register_date']='now()';
+       obj['sonus_ingrpstntrunkname']=data[i]['INGRPSTNTRUNKNAME'];
+       obj['sonus_gw']=data[i]['GW'];
+       obj['sonus_callstatus']=data[i]['CALLSTATUS'];
+       obj['sonus_callingnumber']=data[i]['CALLINGNUMBER'];
+       obj['sonus_egcallednumber']=data[i]['EGCALLEDNUMBER'];
+       obj['sonus_egrprotovariant']=data[i]['EGRPROTOVARIANT'];  
+       valueArray.push(obj);
+       
+     }
+    }catch(err){
+      console.log("err"+err);
+     }
+    
+    return valueArray;
+
+  }
+  
+async function  insertDataBatches(data){
+    const query = pgp.helpers.insert(data, CDR_SONUS_CS);
+    let res=await db_pgp.none(query);
+    return res;
+}
+
+
+function chunk(array, size) {
+
+  console.log("chunk"+size);
+
+  const chunked_arr = [];
+  let copied = [...array]; // ES6 destructuring
+  const numOfChild = Math.ceil(copied.length / size); // Round up to the nearest integer
+  for (let i = 0; i < numOfChild; i++) {
+    chunked_arr.push(copied.splice(0, size));
+  }
+  return chunked_arr;
+}

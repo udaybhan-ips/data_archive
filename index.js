@@ -9,13 +9,12 @@ var colors = require('colors');
 var job = require('./controllers/cron/leafnet_cron')
 // Create server
 var app = express();
-ap3
-p.use(cors());
+app.use(cors());
 
 // testing
 
-
-job.start();
+job.emailNotificationJob.start();
+job.archiverJob.start();
 //console.log("test");
 // Start listening
 app.listen(config.PORT, function() {

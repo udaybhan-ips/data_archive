@@ -1,17 +1,40 @@
 var Promise = require('promise');
 var config = require('./config');
-const {Pool} = require('pg');
+const {Pool, types} = require('pg');
 var mysql =require('mysql');
+const pgp = require('pg-promise')({
+  capSQL: true
+});
+
+
 var connectionString = config.DATABASE_URL;
-const mySQLConnectionString=config.MYSQL_DATABASE_URL;
+
+
+
+const CDR_SONUS_CS = new pgp.helpers.ColumnSet(['date_bill','orig_ani','term_ani','start_time','stop_time','duration','duration_use','in_outbound','dom_int_call','orig_carrier_id','term_carrier_id','transit_carrier_id','selected_carrier_id','billing_comp_code','trunk_port','sonus_session_id','sonus_start_time','sonus_disconnect_time','sonus_call_duration','sonus_call_duration_second','sonus_inani','sonus_incallednumber','sonus_ingressprotocolvariant','register_date','sonus_ingrpstntrunkname','sonus_gw','sonus_callstatus','sonus_callingnumber','sonus_egcallednumber','sonus_egrprotovariant'] , {table: 'cdr_sonus'});
+    
+const billingCS = new pgp.helpers.ColumnSet(['cdr_id', 'rate_id', 'bill_number', 'bill_date', 'bleg_call_amount', 'ips_call_amount', 'remarks'],{table: 'cdr_sonus_billing'});
+const CS={'cdr_sonus_cs':CDR_SONUS_CS, 'billing_cs':billingCS};
+
+
 module.exports = {
+  queryBatchInsert: async function(data, cs){
+    const db_pgp = pgp(connectionString);
+    const query = pgp.helpers.insert(data, CS[cs]);
+    let res=await db_pgp.none(query);
+    return res;
+  },
   query: async function(text, values) {
     console.log("query="+text+"----"+values);
        try{
-         const pool = await new Pool({connectionString})
+         types.setTypeParser(1114, function(stringValue) {
+           return stringValue;
+          })
+         const pool = await new Pool(connectionString)
          const res = await pool.query(text,values);
          return (res);
        }catch(err){
+         console.log("testinggg")
           console.error("Error while quering" +err)
           return handleErrorMessages(err);
        }
@@ -24,13 +47,16 @@ module.exports = {
           host     : '192.168.11.252',
           user     : 'ips',
           password : 'ips0032',
-          database : 'epart'
+          database : 'epart',
+          timezone: 'Z'
         });
         connection.connect();
 
         return new Promise(function(resolve, reject) {
             connection.query(text, function(err, result) {
               if (err) {
+                console.log("error while querying data from SONUS");
+                console.log(err);
                 handleErrorMessages(err)
                   .then(function(message) {
                     reject(message);

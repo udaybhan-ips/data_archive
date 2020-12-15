@@ -11,12 +11,15 @@ module.exports = {
         if(targetDateErr) {
              throw new Error('Could not fetch target date');  
         }
+        console.log(JSON.stringify(Dates));
 
         const deleteTargetDateData = await ArchiveLeafnet.deleteTargetDateCDR(Dates.targetDate);
         
-        const getTargetCDRRes = await ArchiveLeafnet.getTargetCDR(Dates.targetDate);
+        const getTargetCDRRes = await ArchiveLeafnet.getTargetCDR(Dates.targetDateWithTimezone);
+
+       // console.log(JSON.stringify(getTargetCDRRes));
         
-        const getDataRes = await ArchiveLeafnet.create(getTargetCDRRes);
+       const getDataRes = await ArchiveLeafnet.insertByBatches(getTargetCDRRes);
         
         const [udpateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveLeafnet.updateBatchControl(dateId,Dates.targetDate));
         if(updateBatchControlErr) {
@@ -28,9 +31,7 @@ module.exports = {
             id: addRatesRes
           });
     } catch (error) {
-        return res.status(400).json({
-            message: error
-          });
+        return error;
     }    
   },
 }
