@@ -42,7 +42,7 @@ ips_call_amount  numeric not null, remarks varchar not null );
 
 
 create table sonus_outbound_customer(id serial, customer_name varchar, customer_id varchar, date_added timestamp without time zone,
-billing_start_date timestamp without time zone, expiry_date timestamp without time zone, date_updated timestamp without time zone, deleted BOOLEAN NOT NULL DEFAULT FALSE );
+billing_start_date timestamp without time zone, expiry_date timestamp without time zone,trunk_port varchar, date_updated timestamp without time zone, deleted BOOLEAN NOT NULL DEFAULT FALSE );
 
 create table sonus_outbound_rates(id serial, customer_id varchar, landline numeric, mobile numeric, date_added timestamp without time zone);
 

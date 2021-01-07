@@ -21,7 +21,10 @@ module.exports = {
       console.log("target month="+targetMonth);
 
       const year = new Date(targetMonth).getFullYear();
-      const month = new Date(targetMonth).getMonth() + 1;
+      let month = new Date(targetMonth).getMonth() + 1;
+      if(parseInt(month,10)<10){
+          month='0'+month;
+      }
 
       
       try {
@@ -84,7 +87,7 @@ module.exports = {
     let mailOption={
         from: 'uday@ipsism.co.jp',
         to: 'uday@ipsism.co.jp',
-        cc:'y_ito@ipsism.co.jp',
+        cc:'r_chong@ipsism.co.jp',
    //     cc:'gaurav@ipsism.co.jp,abhilash@ipsism.co.jp,vijay@ipsism.co.jp',
         subject:'LEAFNET CDR CHECK',
         html

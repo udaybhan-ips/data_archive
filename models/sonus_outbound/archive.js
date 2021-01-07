@@ -1,14 +1,15 @@
 var db = require('./../../config/database');
 const { BATCH_SIZE } = require('../../config/config');
-const CDR_SONUS_CS='cdr_sonus_cs';
+const CDR_SONUS_OUTBOUND_CS='cdr_sonus_outbound_cs';
 
 module.exports = {
 
   getTargetDate: async function(date_id) {
     try {
+          const ipsPortal=true;
           const query=`SELECT max(date_set)::date + interval '0 HOURS' as target_date , max(date_set)::date - interval '9 HOURS'  as target_date_with_timezone FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
           const targetDateRes= await db.query(query,[]);
-          console.log(targetDateRes);
+         // console.log(targetDateRes);
           if(targetDateRes.rows){
               return  {'targetDate' : (targetDateRes.rows[0].target_date),'targetDateWithTimezone' : (targetDateRes.rows[0].target_date_with_timezone)} ;              
           }
@@ -17,54 +18,96 @@ module.exports = {
           return error;
       }
   },
+  getAllTrunkgroup: async function() {
+    try {
+          const query=`select trunk_port, customer_name, customer_id,incallednumber from sonus_outbound_customer `;
+          const ipsPortal=true;
+          const getTrunkportRes= await db.query(query,[],ipsPortal);
+        //  console.log(getTrunkportRes);
+          if(getTrunkportRes.rows){
+              return  getTrunkportRes.rows;
+            }
+          return {err:'not found'};
+      } catch (error) {
+          console.log("Err "+ error.message);
+          return error;
+      }
+  },
+  
   deleteTargetDateCDR: async function(targetDate) {
     try {
-        const query=`delete FROM cdr_sonus where START_TIME::date = '${targetDate}'::date`;
+        const query=`delete FROM cdr_sonus_outbound where START_TIME::date = '${targetDate}'::date`;
         const deleteTargetDateRes= await db.query(query,[]);
         return deleteTargetDateRes;
     } catch (error) {
+        console.log("Err "+ error.message);
         return error;
     }
-},
-getTargetCDR: async function(targetDateWithTimezone) {
-    
-    try {
-        const query=`SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
-        CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW, CALLSTATUS,
-         CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  where STARTTIME >= '${targetDateWithTimezone}' and 
-         startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  AND INGRPSTNTRUNKNAME = 'IPSLFIQ57APRII' AND RECORDTYPEID = 3 order by STARTTIME` ;
-     
-        const data= await db.mySQLQuery(query);
-        return data;
-    } catch (error) {
-        return error;
+  },
+getTargetCDR: async function(targetDateWithTimezone, customerInfo) {
+  try {
+      let where='';
+      let trunkPortsVal='';
+
+      if(customerInfo['incallednumber']){ 
+        where=` WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND 
+        INGRPSTNTRUNKNAME in ('${customerInfo.trunk_port}') AND incallednumber like '${customerInfo['incallednumber']}' AND RECORDTYPEID = 3 order by STARTTIME `;
+      }else{
+        let trunkPorts = customerInfo.trunk_port;
+        let trunkPortsArr = trunkPorts.split(",");
+
+        for(let i=0; i<trunkPortsArr.length;i++){
+          trunkPortsVal = trunkPortsVal + `'${trunkPortsArr[i]}',`;
+        }
+        //remove last value (,)
+        if(trunkPortsVal.substr(trunkPortsVal.length - 1)==','){
+          trunkPortsVal = trunkPortsVal.substring(0, trunkPortsVal.length - 1);
+        }
+
+        where=`WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY)  AND INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND RECORDTYPEID = 3 order by STARTTIME `;
+      }
+
+      //console.log("where="+where);
+      
+      const query=`SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
+      CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW, CALLSTATUS,
+      CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  ${where} ` ;
+      //console.log("query="+query);
+      const data= await db.mySQLQuery(query);
+      return data;
+    }catch (error) {
+      console.log("err="+error.message);
+      return error;
     }
 },
-  insertByBatches: async function(records) {
+  insertByBatches: async function(records, customerInfo) {
   
     const JSON_data = Object.values(JSON.parse(JSON.stringify(records)));
     const dataSize=JSON_data.length;
-    const chunkArray=chunk(JSON_data,BATCH_SIZE);
+    const chunkArray= await chunk(JSON_data,BATCH_SIZE);
     //console.log(chunkArray);
-
+    //console.log(JSON.stringify(customerInfo));
     let res=[];
     let resArr=[];
     for(let i=0;i<chunkArray.length;i++){
-      const data =  getNextInsertBatch(chunkArray[i]);
-      res=await db.queryBatchInsert(data,CDR_SONUS_CS);
+      const data = await getNextInsertBatch(chunkArray[i], customerInfo);
+      //console.log("data="+JSON.stringify(data));
+      res=await db.queryBatchInsert(data,CDR_SONUS_OUTBOUND_CS);
       resArr.push(res);
     }
-            console.log("done"+ new Date());
-            console.log(resArr);
-      return resArr;
+    console.log("done"+ new Date());
+    console.log(resArr);
+    return resArr;
 
   },
+
   updateBatchControl: async function(serviceId,targetDate) {
     try {
         const query=`update batch_date_control set date_set='${targetDate}'::date + interval '1' day , last_update=now() where date_id='${serviceId}'`;
         const updateBatchControlRes= await db.query(query,[]);
         return updateBatchControlRes;
     } catch (error) {
+        console.log("Err "+ error.message);
         return error;
     }
   },
@@ -74,6 +117,7 @@ getTargetCDR: async function(targetDateWithTimezone) {
         const deleteTargetDateSummaryRes= await db.query(query,[]);
         return deleteTargetDateSummaryRes;
     } catch (error) {
+        console.log("Err "+ error.message);
         return error;
     }
 },
@@ -83,6 +127,7 @@ getTargetCDR: async function(targetDateWithTimezone) {
       const getProSummaryDataRes= await db.query(query,[]);
       return getProSummaryDataRes.rows;
     } catch (error) {
+      console.log("Err "+ error.message);
       return error;
     }
 },
@@ -103,6 +148,7 @@ getTargetCDR: async function(targetDateWithTimezone) {
         const updateSummaryDataRes= await db.query(query,valueArray);
         return updateSummaryDataRes;
     } catch (error) {
+        console.log("Err "+ error.message);
         return error;
     }
   },
@@ -154,20 +200,35 @@ function utcToDate(utcDate){
     return selectedCarrierID;
   }
 
-  function getCompanyCode(companyName){
-    let companyCode='99999999';
-    if(companyName=='LEAFNET'){
-      companyCode='00000594';
-    }
-    return companyCode;
+  async function getCompanyInfo(trunkPort, customerInfo,incallednumber){
+    let res={};
+    let startDigitofInCallNum=incallednumber.substring(0,3)+'%';
+    
+      if(customerInfo['incallednumber']==startDigitofInCallNum){        
+        res['comp_code']=customerInfo['customer_id'];
+        res['comp_name']=customerInfo['customer_name'];
+      }else {
+        let trunkPortsArr = customerInfo['trunk_port'].split(",");
+        for(let i=0; i<trunkPortsArr.length; i++){
+          if(trunkPortsArr[i]==trunkPort){
+            res['comp_code']=customerInfo['customer_id'];
+            res['comp_name']=customerInfo['customer_name'];
+          }
+        }  
+      }
+      
+          
+    //console.log(JSON.stringify(res));
+    return res;
   }
-  function getNextInsertBatch(data) {
+  async function  getNextInsertBatch(data, customerInfo) {
     
     let valueArray=[];
+    console.log("inserting data")
 
     try {
      for(let i=0;i<data.length;i++){
-       
+       let compInfo = await getCompanyInfo(data[i]['INGRPSTNTRUNKNAME'], customerInfo, data[i]['INCALLEDNUMBER'] );     
        let obj={};
        obj['date_bill']=data[i]['ORIGDATE'];
        obj['orig_ani']=data[i]['INANI'];
@@ -182,7 +243,8 @@ function utcToDate(utcDate){
        obj['term_carrier_id']=getTermCarrierID(data[i]['EGRPROTOVARIANT']);
        obj['transit_carrier_id']='';
        obj['selected_carrier_id']=getSelectedCarrierID(data[i]['EGRPROTOVARIANT']);
-       obj['billing_comp_code']=getCompanyCode("LEAFNET");
+       obj['billing_comp_code']= compInfo.comp_code;
+       obj['billing_comp_name']= compInfo.comp_name;
        obj['trunk_port']=0;
        obj['sonus_session_id']=data[i]['SESSIONID'];
        obj['sonus_start_time']=data[i]['STARTTIME'];
@@ -203,21 +265,12 @@ function utcToDate(utcDate){
        
      }
     }catch(err){
-      console.log("err"+err);
+      console.log("err"+err.message);
      }
     
     return valueArray;
-
   }
-  
-async function  insertDataBatches(data){
-    const query = pgp.helpers.insert(data, CDR_SONUS_CS);
-    let res=await db_pgp.none(query);
-    return res;
-}
-
-
-function chunk(array, size) {
+async function chunk(array, size) {
 
   console.log("chunk"+size);
 

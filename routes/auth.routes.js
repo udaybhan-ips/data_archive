@@ -6,6 +6,7 @@ var Promise = require('promise');
 var usersController = require('./../controllers/users.controller');
 
 // Registration of new users via API
+
 router.post('/auth/register', usersController.createUser);
 
 // Authentication to obtain a token
