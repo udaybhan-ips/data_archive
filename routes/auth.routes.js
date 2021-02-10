@@ -1,9 +1,9 @@
 var router = require('express').Router();
 var jwt = require('jsonwebtoken');
-var User = require('./../models/user');
+var User = require('./../models/user/user');
 var config = require('./../config/config');
 var Promise = require('promise');
-var usersController = require('./../controllers/users.controller');
+var usersController = require('./../controllers/user/users.controller');
 
 // Registration of new users via API
 
@@ -39,6 +39,7 @@ router.post('/auth/authenticate', function(req, res) {
 });
 
 // Any route past this point requires a valid auth token
+
 router.use(function(req, res, next) {
   console.log("test");
   console.log(req.headers)

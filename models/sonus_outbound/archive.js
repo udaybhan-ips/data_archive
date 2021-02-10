@@ -18,6 +18,19 @@ module.exports = {
           return error;
       }
   },
+  getRates: async function() {
+    try {
+        const query=`select customer_id, landline, mobile from sonus_outbound_rates `;
+        const ratesRes= await db.query(query,[], ipsPortal=true);
+        
+        if(ratesRes.rows){
+            return (ratesRes.rows);              
+        }
+        return {err:'not found'};
+    } catch (error) {
+        return error; 
+    }
+  },
   getAllTrunkgroup: async function() {
     try {
           const query=`select trunk_port, customer_name, customer_id,incallednumber from sonus_outbound_customer `;
@@ -80,7 +93,7 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo) {
       return error;
     }
 },
-  insertByBatches: async function(records, customerInfo) {
+  insertByBatches: async function(records, customerInfo, ratesInfo) {
   
     const JSON_data = Object.values(JSON.parse(JSON.stringify(records)));
     const dataSize=JSON_data.length;
@@ -90,7 +103,7 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo) {
     let res=[];
     let resArr=[];
     for(let i=0;i<chunkArray.length;i++){
-      const data = await getNextInsertBatch(chunkArray[i], customerInfo);
+      const data = await getNextInsertBatch(chunkArray[i], customerInfo, ratesInfo);
       //console.log("data="+JSON.stringify(data));
       res=await db.queryBatchInsert(data,CDR_SONUS_OUTBOUND_CS);
       resArr.push(res);
@@ -216,19 +229,60 @@ function utcToDate(utcDate){
           }
         }  
       }
-      
-          
     //console.log(JSON.stringify(res));
     return res;
   }
-  async function  getNextInsertBatch(data, customerInfo) {
+
+  async function getBillingAmount(compInfo,incallednumber, ratesInfo, callDuration){
+
+    //console.log("comp info--"+JSON.stringify(compInfo));
+    //console.log("incallednumber="+incallednumber)
+    //console.log("ratesInfo---"+JSON.stringify(ratesInfo))
+    //console.log("callDuration="+callDuration)
+
+    let mobRate,landLineRate;
+    let startDigitofInCallNum=incallednumber.substring(0,2);
+    let rateObj = {},mobAmount=0, landlineAmount=0;
+
+    try{
+      for(let i=0; i<ratesInfo.length; i++){
+        if(ratesInfo[i]['customer_id'] == compInfo['comp_code']){
+          rateObj['mobile'] = ratesInfo[i]['mobile'];
+          rateObj['landline'] = ratesInfo[i]['landline'];
+          break;
+        }
+      }
+
+      //console.log("rateObj"+JSON.stringify(rateObj))
+
+      if(startDigitofInCallNum=='70' || startDigitofInCallNum=='80' || startDigitofInCallNum=='90'){                
+        mobAmount = parseFloat(rateObj['mobile']) * parseInt(callDuration,10) ;        
+      }else {
+        landlineAmount = parseFloat(rateObj['landline']) * parseInt(callDuration,10);          
+      }
+      
+      //console.log("mobAmount=="+mobAmount);
+     // console.log("landlineAmount=="+landlineAmount);
+
+    }catch(e){
+      console.log("Error !"+e.message);
+      return e;
+    }
+    
+
+    return {'mob_amount':mobAmount,'landline_amount':landlineAmount};    
+  }
+
+  async function  getNextInsertBatch(data, customerInfo,ratesInfo) {
     
     let valueArray=[];
     console.log("inserting data")
 
     try {
      for(let i=0;i<data.length;i++){
-       let compInfo = await getCompanyInfo(data[i]['INGRPSTNTRUNKNAME'], customerInfo, data[i]['INCALLEDNUMBER'] );     
+       let compInfo = await getCompanyInfo(data[i]['INGRPSTNTRUNKNAME'], customerInfo, data[i]['INCALLEDNUMBER'] );
+       let amountDet = await getBillingAmount(compInfo, data[i]['INCALLEDNUMBER'] ,ratesInfo, data[i]['DURATION']);
+
        let obj={};
        obj['date_bill']=data[i]['ORIGDATE'];
        obj['orig_ani']=data[i]['INANI'];
@@ -261,6 +315,9 @@ function utcToDate(utcDate){
        obj['sonus_callingnumber']=data[i]['CALLINGNUMBER'];
        obj['sonus_egcallednumber']=data[i]['EGCALLEDNUMBER'];
        obj['sonus_egrprotovariant']=data[i]['EGRPROTOVARIANT'];  
+       obj['landline_amount']=amountDet.landline_amount;
+       obj['mob_amount']=amountDet.mob_amount;
+
        valueArray.push(obj);
        
      }

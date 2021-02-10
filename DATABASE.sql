@@ -5,6 +5,12 @@ carrier_name varchar, call_sort varchar, date_start timestamp without time zone 
 rate_setup numeric, rate_second numeric, date_updated timestamp without time zone, currnet_flag integer , date_added timestamp without time zone Default now() )
 
 
+create table cdr_sonus_rate_history (rate_id serial Primary key, company_code varchar, carrier_code varchar, 
+carrier_name varchar, call_sort varchar, date_start timestamp without time zone , date_expired timestamp without time zone,
+rate_setup numeric, rate_second numeric, date_updated timestamp without time zone, currnet_flag integer , date_added timestamp without time zone Default now() )
+
+ create table sonus_outbound_rates_history (id serial , customer_id varchar , landline numeric , mobile numeric , date_added timestamp without time zone);
+ 
 create table cdr_sonus_billing (bill_id bigint serial, cdr_id bigint not null, rate_id bigint not null, 
 bill_number bigint not null, bill_date timestamp without time zone not null, bleg_call_amount numeric not null,
 ips_call_amount  numeric not null, remarks varchar not null );
@@ -49,3 +55,8 @@ create table sonus_outbound_rates(id serial, customer_id varchar, landline numer
 create table m_customer (id serial, customer_cd varchar, customer_name varchar, post_number integer, address varchar, tel_number varchar,
 fax_number integer, email varchar, pay_type integer, staff_name varchar, logo varchar, bcode varchar, upd_id varchar, upd_date timestamp without time zone
 , upd_cnt integer)
+
+
+ create table cdr_sonus_outbound_summary (id serial, invoice_no integer, customer_name varchar, customer_id varchar, billing_month 
+ varchar, billing_year varchar, billing_date timestamp without time zone , update_date timestamp without time zone default now(),
+  duration bigint, landline_amt bigint, mobile_amt bigint, total_amt bigint);

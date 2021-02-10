@@ -16,12 +16,13 @@ module.exports = {
         const deleteTargetDateData = await  ArchiveSonusOutbound.deleteTargetDateCDR(Dates.targetDate);
 
         const getAllTrunkgroupRes = await ArchiveSonusOutbound.getAllTrunkgroup();
+        const getRatesRes = await ArchiveSonusOutbound.getRates();
 
         console.log(JSON.stringify(getAllTrunkgroupRes));
 
         for (let i=0;i<getAllTrunkgroupRes.length;i++){
             let getTargetCDRRes = await  ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, getAllTrunkgroupRes[i]);
-            const getDataRes = await  ArchiveSonusOutbound.insertByBatches(getTargetCDRRes,getAllTrunkgroupRes[i]);
+            const getDataRes = await  ArchiveSonusOutbound.insertByBatches(getTargetCDRRes, getAllTrunkgroupRes[i], getRatesRes);
         
         }
 

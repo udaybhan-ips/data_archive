@@ -11,7 +11,7 @@ module.exports = {
            throw new Error('Could not fetch target date');  
       }
       
-        const [proDataRes,proDataErr] = await handleError(EmailNotification.getSummaryData(Dates.targetDate));
+        const [proDataRes,proDataErr] = await handleError(EmailNotification.getSummaryData(Dates.targetDateWithTimezone));
         if(proDataErr) {
              throw new Error('error while fetching data processed data');  
         }

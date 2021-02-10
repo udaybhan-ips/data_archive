@@ -103,16 +103,13 @@ module.exports = {
         return error;
     }
   },
-  createTable: async function ( rawData ,processData , customerName){
+  createTable: async function ( rawData ,processData , customerName, customerId, incallednumber){
 
-    let proDataLen=processData.length;
-    let rawDataLen=rawData.length;
     let html='';
-    let table='';
     
-    //console.log("proData="+proDataLen);
-    //console.log("rawData="+rawDataLen);
-    html= tableCreate(rawData, processData, customerName);
+    //console.log("proData="+proDataLen.length);
+    //console.log("rawData="+rawDataLen.length);
+    html= tableCreate(rawData, processData, customerName, customerId, incallednumber);
     //console.log("html");
     //console.log(html);
 
@@ -136,7 +133,7 @@ module.exports = {
 }
 
 
-function tableCreate(rawData, processData, customerName) {
+function tableCreate(rawData, processData, customerName, customerId, incallednumber) {
 
     //console.log("rawData="+JSON.stringify(rawData))
     //console.log("processData="+JSON.stringify(processData))
@@ -177,7 +174,16 @@ function tableCreate(rawData, processData, customerName) {
     let html='';
     let h4=`This is the daily CDR Report of ${customerName} !! <br /><br />`;
     let h3=`${locSA[0]} ~ ${locEA[0]} !! `;
-    let h2=`<h2 align="center"> ${customerName} CDR BALANCE CHECK </h2>`;  
+    let h2='';
+
+    if(customerId=='106' && incallednumber=='8211%'){        
+        h2=`<h2 align="center"> ${customerName} IPSMVN0S1RPRII with 8211% CDR BALANCE CHECK </h2>`;  
+    }else if(customerId=='106'){
+        h2=`<h2 align="center"> ${customerName} IPSW1ZKLN6PRI2,IPSW1ZN3W4PRI2 CDR BALANCE CHECK </h2>`;  
+    }else    {
+        h2=`<h2 align="center"> ${customerName} CDR BALANCE CHECK </h2>`;  
+    }
+    
     html+=h4;
     html+=h3;
     html+=h2;

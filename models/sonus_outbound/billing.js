@@ -3,9 +3,8 @@ var db = require('./../../config/database');
 
 module.exports = {
   getRates: async function() {
-      console.log("in modal");
       try {
-          const query=`select * from cdr_sonus_rate where currnet_flag=1 `;
+          const query=`select customer_id, landline, mobile from sonus_outbound_rates `;
           const ratesRes= await db.query(query,[]);
           
           if(ratesRes.rows){
@@ -20,7 +19,7 @@ module.exports = {
 getTargetCDR: async function(targetDate) {
     
     try {
-        const query=`SELECT * from CDR_SONUS ` ;
+        const query=`SELECT * from CDR_SONUS_OUTBOUND ` ;
         const data= await db.query(query);
         return data.rows;
     } catch (error) {
@@ -29,7 +28,9 @@ getTargetCDR: async function(targetDate) {
 },
 
   create: async function(data, ratesData) {
+      
       const ipsRates = await getRates('00000130','',ratesData);
+
       for(let i=0;i < data.length;i++){
 
         const query=`INSERT INTO cdr_sonus_billing( cdr_id, rate_id, bill_number, bill_date, bleg_call_amount, ips_call_amount, remarks ) VALUES ($1, $2, $3, $4, $5, $6, $7) returning cdr_id`;

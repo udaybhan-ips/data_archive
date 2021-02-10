@@ -1,11 +1,10 @@
-var config = require('./../../config/config');
 var db = require('./../../config/database');
 
 module.exports = {
   findAll: async function() {
       try {
-          const query="SELECT * FROM cdr_sonus_rate";
-          const rateListRes= await db.query(query,[]);
+          const query="SELECT * FROM sonus_outbound_rates";
+          const rateListRes= await db.query(query,[], ipsPortal=true);
           return rateListRes.rows;
       } catch (error) {
           return error;
@@ -16,18 +15,48 @@ module.exports = {
     console.log(data);
     try {
       //  if(validateRateData()){
-            const query=`INSERT INTO cdr_sonus_rate (company_code, carrier_code, carrier_name, call_sort, 
-                date_start, date_expired, rate_setup, rate_second, date_updated, currnet_flag  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning rate_id`;
-            const value= [data.company_code, data.carrier_code, data.carrier_name, data.call_sort, 
-                data.date_start, data.date_expired, data.rate_setup, data.rate_second, 'now()', data.current_flag];
-            const res = await db.query(query,value);
+            const query=`INSERT INTO sonus_outbound_rates (customer_id, landline, mobile, date_added ) VALUES ($1, $2, $3) returning rate_id`;
+            const value= [data.customer_id, data.landline, data.mobile, 'now()'];
+            const res = await db.query(query,value, ipsPortal=true);            
             return res.rows[0];
       //  }
     } catch (error) {
         return error;
     }
   },
+  udpateRates: async function(data) {
+    console.log(data);
+    let updateData = '';
+    try {
+      //  if(validateRateData()){
+            if(!data.customer_id){
+              return {'err':'customer id is required'};
+            }
 
+            if(data.landline){
+              updateData = 'landline='+data.landline+',';
+            }
+            
+            if(data.mobile){
+              updateData = updateData + 'mobile='+data.mobile;
+            }
+            // remove ',' from last character
+            if(updateData.substr(updateData.length - 1)==','){
+              updateData = updateData.substring(0, updateData.length - 1);
+            }
+
+            const query=`INSERT INTO sonus_outbound_rates_history (customer_id, landline, mobile, date_added ) VALUES ($1, $2, $3, $4) returning rate_id`;
+            const value= [data.customer_id, data.landline, data.mobile, 'now()'];
+            const res = await db.query(query,value, ipsPortal=true); 
+            const queryUpdate = `update sonus_outbound_rates set ${updateData} where customer_id = '${data.customer_id}'`;
+            const resUpdate = await db.query(queryUpdate,[], ipsPortal=true); 
+            
+            return resUpdate.rows[0];
+      //  }
+    } catch (error) {
+        return error;
+    }
+  },
   
 }
 

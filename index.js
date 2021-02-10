@@ -8,17 +8,17 @@ var cors = require ('cors');
 var colors = require('colors');
 
 var jobLef = require('./controllers/cron/leafnet_cron');
-var jobOut = require('./controllers/cron/sonus_outbund_cron');
+var jobSonusOut = require('./controllers/cron/sonus_outbund_cron');
 
 // Create server
 var app = express();
 app.use(cors());
 
 // testing
- jobOut.archiverJobSonusOut.start();
- jobOut.emailNotificationJobOut.start();
- jobLef.emailNotificationJob.start();
- jobLef.archiverJob.start();
+  jobSonusOut.archiverJobSonusOut.start();
+//    jobSonusOut.emailNotificationJobOut.start();
+//  jobLef.emailNotificationJob.start();
+  //jobLef.archiverJob.start();
 // //console.log("test");
 // Start listening
 app.listen(config.PORT, function() {

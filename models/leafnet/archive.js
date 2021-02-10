@@ -6,11 +6,11 @@ module.exports = {
 
   getTargetDate: async function(date_id) {
     try {
-          const query=`SELECT max(date_set)::date + interval '0 HOURS' as target_date , max(date_set)::date - interval '9 HOURS'  as target_date_with_timezone FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
+          const query=`SELECT date_id , date_set::date + interval '1' day as next_run_time  ,  (date_set)::date + interval '0 HOURS' as target_date , (date_set)::date - interval '9 HOURS'  as target_date_with_timezone FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
           const targetDateRes= await db.query(query,[]);
           console.log(targetDateRes);
           if(targetDateRes.rows){
-              return  {'targetDate' : (targetDateRes.rows[0].target_date),'targetDateWithTimezone' : (targetDateRes.rows[0].target_date_with_timezone)} ;              
+              return  {'id':(targetDateRes.rows[0].date_id), 'next_run_time': (targetDateRes.rows[0].next_run_time) , 'targetDate' : (targetDateRes.rows[0].target_date),'targetDateWithTimezone' : (targetDateRes.rows[0].target_date_with_timezone)} ;              
           }
           return {err:'not found'};
       } catch (error) {
@@ -59,9 +59,15 @@ getTargetCDR: async function(targetDateWithTimezone) {
       return resArr;
 
   },
-  updateBatchControl: async function(serviceId,targetDate) {
+  updateBatchControl: async function(serviceId,targetDate,api) {
+    let query;
     try {
-        const query=`update batch_date_control set date_set='${targetDate}'::date + interval '1' day , last_update=now() where date_id='${serviceId}'`;
+        if(api){
+          query=`update batch_date_control set date_set='${targetDate}'::date + interval '0' day , last_update=now() where date_id='${serviceId}'`;
+        }else{
+          query=`update batch_date_control set date_set='${targetDate}'::date + interval '1' day , last_update=now() where date_id='${serviceId}'`;
+        }
+        
         const updateBatchControlRes= await db.query(query,[]);
         return updateBatchControlRes;
     } catch (error) {
@@ -85,6 +91,15 @@ getTargetCDR: async function(targetDateWithTimezone) {
     } catch (error) {
       return error;
     }
+},
+getStatus: async function(targetDate) {
+  try {
+    const query=`select count(*) as total FROM cdr_sonus where START_TIME >= '${targetDate}' and start_Time < '${targetDate}'::timestamp + INTERVAL '1' DAY`;
+    const getProSummaryDataRes= await db.query(query,[]);
+    return getProSummaryDataRes.rows;
+  } catch (error) {
+    return error;
+  }
 },
   updateSummaryData: async function(serviceId, targetDateWithTimezone, sonusData, billingServerData) {
 
@@ -161,6 +176,7 @@ function utcToDate(utcDate){
     }
     return companyCode;
   }
+
   function getNextInsertBatch(data) {
     
     let valueArray=[];
@@ -209,13 +225,6 @@ function utcToDate(utcDate){
     return valueArray;
 
   }
-  
-async function  insertDataBatches(data){
-    const query = pgp.helpers.insert(data, CDR_SONUS_CS);
-    let res=await db_pgp.none(query);
-    return res;
-}
-
 
 function chunk(array, size) {
 

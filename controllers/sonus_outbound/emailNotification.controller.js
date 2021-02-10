@@ -1,4 +1,3 @@
-const { createTable } = require('../../models/sonus_outbound/emailNotification');
 var EmailNotification = require('../../models/sonus_outbound/emailNotification');
 
 module.exports = {
@@ -13,15 +12,15 @@ module.exports = {
 
         const getAllTrunkgroupRes = await EmailNotification.getAllTrunkgroup();
       
-        const [proDataRes,proDataErr] = await handleError(EmailNotification.getSummaryData(Dates.targetDate));
+        const [proDataRes,proDataErr] = await handleError(EmailNotification.getSummaryData(Dates.targetDateWithTimezone));
 
        // console.log("process data= "+JSON.stringify(proDataRes));
 
         if(proDataErr) {
              throw new Error('error while fetching data processed data');  
         }
-        let rawDataRes,rawDataErr;
-        let createTableRes;
+        let rawDataRes;
+        
         let html='<div>Hi</div>';
 
         try{
@@ -36,9 +35,7 @@ module.exports = {
             for(let j=0; j< proDataRes.length; j++){
              
               let obj={}
-              if(incallednumber){
-
-              }
+              
               if(customer_name==proDataRes[j]['billing_comp_name']){
                 obj['total'] = proDataRes[j]['total'];
                 obj['duration'] = proDataRes[j]['duration'];
@@ -49,7 +46,7 @@ module.exports = {
               }              
             }
 
-            html = html + await EmailNotification.createTable(rawDataRes, proData, customer_name);
+            html = html + await EmailNotification.createTable(rawDataRes, proData, customer_name, customerId, incallednumber);
             
           }
         }catch(error){

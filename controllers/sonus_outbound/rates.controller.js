@@ -1,4 +1,4 @@
-var Rate = require('../../models/leafnet/rate');
+var Rate = require('../../models/sonus_outbound/rate');
 
 module.exports = {
   addRates: async function(req, res) {
@@ -10,7 +10,7 @@ module.exports = {
           });
     } catch (error) {
         return res.status(400).json({
-            message: error
+            message: error.message
           });
     }    
   },
@@ -20,10 +20,21 @@ module.exports = {
         return res.status(200).json(listRatesRes);
     } catch (error) {
         return res.status(400).json({
-            message: error
+            message: error.message
           });
     }    
   },
+  updateRates: async function(req, res) {
+    try {
+        const listRatesRes = await Rate.updateRates(req.body);
+        return res.status(200).json(listRatesRes);
+    } catch (error) {
+        return res.status(400).json({
+            message: error.message
+          });
+    }    
+  },
+
 //   changeName: function(req, res) {
 //     User.updateName({ id: req.params.id, name: req.body.name })
 //       .then(function(result) {

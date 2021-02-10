@@ -13,7 +13,7 @@ module.exports = {
             throw new Error('Could not fetch CDRes ');  
         }
     
-        const [billing, billingErr] = await BillingLeafnet.create(getCDRRes, ratesDetails);
+        const [billing, billingErr] = await BillingLeafnet.insertByBatches(getCDRRes, ratesDetails);
         if(billingErr) {
             throw new Error('Error while billing '+ billingErr);  
         }
