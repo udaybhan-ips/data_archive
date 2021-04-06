@@ -118,10 +118,9 @@ module.exports = {
   sendEmail: async function(html){
    
     let mailOption={
-        from: 'uday@ipsism.co.jp',
+        from: 'ips_tech@sysmail.ipsism.co.jp',
         to: 'uday@ipsism.co.jp',
-      //  cc:'y_ito@ipsism.co.jp',
-        cc:'r_chong@ipsism.co.jp',
+        cc:'r_chong@ipsism.co.jp,y_ito@ipsism.co.jp',
         subject:'SONUS OUTBOUND CDR CHECK',
         html
     }
@@ -137,9 +136,6 @@ function tableCreate(rawData, processData, customerName, customerId, incallednum
 
     //console.log("rawData="+JSON.stringify(rawData))
     //console.log("processData="+JSON.stringify(processData))
-    
-    
-
    // console.log("create table---");
     let tableRows='';
 
@@ -169,7 +165,7 @@ function tableCreate(rawData, processData, customerName, customerId, incallednum
         tableRows+=`<td style="text-align:right" class="Processed Data">${processValue}</td>`;
         tableRows+=`<td style="text-align:right" class="Difference">${diff}</td>`;
 
-        tableRows=tableRows+'</tr>'
+        tableRows=tableRows+'</tr>';
     }
     let html='';
     let h4=`This is the daily CDR Report of ${customerName} !! <br /><br />`;

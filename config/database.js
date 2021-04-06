@@ -1,9 +1,13 @@
 var Promise = require('promise');
 var config = require('./config');
-
+const Cursor = require('pg-cursor')
 const {Pool, types} = require('pg');
-
 var mysql =require('mysql');
+var util = require('../public/javascripts/utility');
+
+const { resolve, reject } = require('promise');
+
+let numOfRows=100000;
 
 const pgp = require('pg-promise')({
   capSQL: true
@@ -36,6 +40,49 @@ module.exports = {
    
     return res;
   },
+  parserQuery: async function(text,fileName, header){
+
+    console.log(text);
+
+    
+    try {
+      types.setTypeParser(1114, function(stringValue) {
+        return stringValue;
+       });
+      const pool = await new Pool(connectionString);
+      const client = await pool.connect();
+      const cursor = client.query(new Cursor(text));
+      let data =[];
+      
+      data = await customPromiseHandler(cursor, numOfRows);
+
+       // adding header manually
+
+       let headerValue = {'start_time': 'Start Time','disconnect_time': 'Disconnect Time','duration_use':'Call Duration (s)','sonus_callingnumber':'Calling Number'
+      ,'sonus_egcallednumber':'Called Number','term_carrier_id': 'Carrier Code', 'rate_setup': 'BLEG AC','rate_second':'BLEG Rate','bleg_call_amount':'BLEG Call Amount',
+      'ips_call_amount':'IPS Call Amount' ,'total_amount': 'Total Call Amount'};
+
+      if (data.length){
+        data.unshift(headerValue);
+      }
+
+
+      //console.log("data="+JSON.stringify(data));
+
+      while(data.length){
+        
+        util.createCSVWithWriter(fileName, header, data);
+        data = await customPromiseHandler(cursor, numOfRows);
+        console.log("data length=="+data.length);
+      
+      }
+      cursor.close(() => {
+        client.release()
+      });
+    } catch (error) {
+      console.log("Error !"+error.message);
+    }
+  },
   query: async function(text, values, ipsPortal) {
     console.log("query="+text+"----"+values);
        try{
@@ -61,10 +108,17 @@ module.exports = {
    mySQLQuery: function(text, values) {
         //console.log("mysql connection string is=  "+mySQLConnectionString.MYSQL);
         console.log("query="+text+"----"+values);
-        const connection=mysql.createConnection(mySQLConnectionString);
-        connection.connect();
-
+        const pool=mysql.createPool({
+          host     : '192.168.11.252',
+          user     : 'ips',
+          password : 'ips0032',
+          database : 'epart',
+          timezone: 'Z'
+        });
+        
         return new Promise(function(resolve, reject) {
+          pool.getConnection(function(err, connection){
+            if(err) throw err;
             connection.query(text, function(err, result) {
               if (err) {
                 console.log("error while querying data from SONUS");
@@ -79,9 +133,11 @@ module.exports = {
               }
               else {
                 resolve(result);
+                connection.release();
               }
             });
-          });
+          });          
+        });
       }
 };
 
@@ -105,3 +161,23 @@ function handleErrorMessages(err) {
     resolve(err);
   });
 }
+
+async function  customPromiseHandler(cursor, numberOfRrecord){
+
+  return new Promise((resolve, reject)=>{
+
+    cursor.read(numberOfRrecord, (err, data)=>{
+      if(err){
+        console.log("err...."+err.message);
+        reject(err);
+      }
+      resolve(data);
+    })
+
+  })
+ 
+}
+
+
+
+

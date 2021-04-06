@@ -59,9 +59,9 @@ module.exports = {
 
     try {
         const query=`select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as day from COLLECTOR_73 where INGRPSTNTRUNKNAME = 'IPSLFIQ57APRII' AND RECORDTYPEID = 3 AND starttime>='${actualStartDate}' and starttime <='${targetDateWithTimezone}' group by cast(addtime(starttime,'09:00:00') as Date) order by cast(addtime(starttime,'09:00:00') as Date) asc`;
-        console.log(query);
+        //console.log(query);
         const rawData= await db.mySQLQuery(query,[]);
-        console.log(JSON.stringify(rawData));
+        //console.log(JSON.stringify(rawData));
         return (rawData);              
     } catch (error) {
         return error;
@@ -77,17 +77,17 @@ module.exports = {
     console.log("proData="+proDataLen);
     console.log("rawData="+rawDataLen);
     html= tableCreate(rawData, processData);
-    console.log("html");
-    console.log(html);
+    //console.log("html");
+    //console.log(html);
 
     return html;
   },
   sendEmail: async function(html){
    
     let mailOption={
-        from: 'uday@ipsism.co.jp',
+        from: 'ips_tech@sysmail.ipsism.co.jp',
         to: 'uday@ipsism.co.jp',
-        cc:'r_chong@ipsism.co.jp',
+        cc:'r_chong@ipsism.co.jp,y_ito@ipsism.co.jp',
    //     cc:'gaurav@ipsism.co.jp,abhilash@ipsism.co.jp,vijay@ipsism.co.jp',
         subject:'LEAFNET CDR CHECK',
         html

@@ -1,11 +1,11 @@
 var CronJob = require("cron").CronJob;
 var archiveController = require('../leafnet/archive.controller');
 var billingController = require('../leafnet/billing.controller');
-var CDRsController = require('../leafnet/cdrExtraction.controller');
+var CDRsController = require('../leafnet/cdr.controller');
 var EmailController = require('../leafnet/emailNotification.controller');
 
 
-var archiverJob = new CronJob ('33 12 * * *',function(){
+var archiverJob = new CronJob ('1 7 * * *',function(){
     console.log('This is leafnet archiver start');
     archiveController.getData();
     console.log('This is leafnet archiver End');
@@ -16,15 +16,31 @@ var archiverJob = new CronJob ('33 12 * * *',function(){
 
 
 
-var emailNotificationJob = new CronJob ('2 13 * * *',function(){
+var emailNotificationJob = new CronJob ('1 8 * * *',function(){
     console.log('This is leafnet email notification start');
     EmailController.sendEmail();
     console.log('This is leafnet email notification end');
 
 },null, true, 'Asia/Tokyo');
 
+// var CDRsControllerJob = new CronJob ('15 14 * * *',function(){
+//     console.log('This is leafnet email notification start');
+//     CDRsController.genrateCSV();
+//     console.log('This is leafnet email notification end');
+
+// },null, true, 'Asia/Tokyo');
 
 
-module.exports={archiverJob,emailNotificationJob};
+// var billingControllerJob = new CronJob ('45 17 * * *',function(){
+//     console.log('This is leafnet  billing start');
+//     billingController.getData();
+//     console.log('This is leafnet email notification end');
+
+// },null, true, 'Asia/Tokyo');
+
+
+
+
+module.exports={archiverJob};
 
 

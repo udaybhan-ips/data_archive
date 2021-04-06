@@ -1,28 +1,20 @@
-var BillingLeafnet = require('../../models/leafnet/billing');
+var BillingLeafnet = require('../../models/sonus_outbound/billing');
 
 module.exports = {
   getData: async function(req, res) {
     try {
-        const [ratesDetails,ratesErr] = await handleError(BillingLeafnet.getRates());
+        const [ratesDetails,ratesErr] = await handleError(BillingLeafnet.updateSummaryData());
         if(ratesErr) {
-             throw new Error('Could not fetch Rates details');  
+             throw new Error('issue with summary data');  
         }
     
-        const [getCDRRes, getCDRResErr] = await handleError( BillingLeafnet.getTargetCDR());
-        if(getCDRResErr) {
-            throw new Error('Could not fetch CDRes ');  
-        }
-    
-        const [billing, billingErr] = await BillingLeafnet.create(getCDRRes, ratesDetails);
-        if(billingErr) {
-            throw new Error('Error while billing '+ billingErr);  
-        }
         
         return {
             message: 'success! data inserted sucessfully',
             id: addRatesRes
           };
     } catch (error) {
+      console.log("Error!!"+error.message);
         return {
             message: error
           };

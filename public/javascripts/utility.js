@@ -1,5 +1,14 @@
 const fs=require('fs');
 var path = require('path');
+
+
+
+
+
+
+
+
+
 /*
 create CSV file
 */
@@ -88,6 +97,31 @@ function writeArrayToCSV(data,fileName){
  })
 }
 
+module.exports.createCSVWithWriter=async function(fileName, header, data){
+
+  const createCsvWriter = require('csv-writer').createObjectCsvWriter({ append: true ,header,path: fileName});
+
+  try{
+    await writeData(data, createCsvWriter);    
+  }catch(err){
+    console.log("Err=="+err.message);
+  }
+  
+  
+}
+
+async function writeData(records, csvWriter){
+  try{
+    await csvWriter.writeRecords(records)
+  }catch(erorr){
+    console.log("Error== "+error.message);
+  }
+}
+
+
+
+
+
 module.exports.daysInMonth = function (month, year) {
   return new Date(year, month, 0).getDate();
 }
@@ -97,7 +131,8 @@ module.exports.arrayToCsv= function (data,headers,fileName){
     let csvRows=[];
     csvRows.push(headers.join(",")+'\r\n');
 
-    console.log(csvRows);
+    console.log("ROW LENGTH="+csvRows.length);
+    
     csvRows += data.map(function(d){
       return JSON.stringify(Object.values(d));
     })
@@ -132,19 +167,14 @@ module.exports.utcToDate=function(utcDate){
 
 module.exports.sendEmail=function(mailOptions){
   var transporter = nodemailer.createTransport({
-    service: 'gmail',
+    secure: false,
+    host:'103.120.16.136',
+    port:587,
     auth: {
-      user: 'uday@ipsism.co.jp',
-      pass: 'IpsUday!10790'
+      user: 'ips_tech@sysmail.ipsism.co.jp',
+      pass: '9k7rLZ2T'
     }
   });
-  
-  // var mailOptions = {
-  //   from: 'udaybhan10790@gmail.com',
-  //   to: 'uday@ipsism.co.jp',
-  //   subject: 'Sending Email using Node.js',
-  //   text: 'That was easy!'
-  // };
   
   transporter.sendMail(mailOptions, function(error, info){
     if (error) {

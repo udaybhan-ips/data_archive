@@ -136,7 +136,7 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo) {
 },
   getProSummaryData: async function(targetDate) {
     try {
-      const query=`select count(*) as total FROM cdr_sonus where START_TIME >= '${targetDate}' and start_Time < '${targetDate}'::timestamp + INTERVAL '1' DAY`;
+      const query=`select sum(duration_use), round(sum(mob_amount)) as mob_amount , round(sum(landline_amount)) as landline_amount, billing_comp_name  from cdr_sonus_outbound where start_time >='2021-02-01 00:00:00' and start_time <='2021-02-28 23:59:59' group by billing_comp_name`;
       const getProSummaryDataRes= await db.query(query,[]);
       return getProSummaryDataRes.rows;
     } catch (error) {
@@ -148,15 +148,25 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo) {
 
     try {
         
-        const query=`insert into sonus_outbound_summary (service_id, raw_cdr_cound, pro_cdr_count, summary_date, date_updated) 
-        VALUES ($1, $2, $3, $4, $5) returning cdr_id`;
+        const getProSummaryQuery=`select billing_comp_code,sum(duration_use), round(sum(mob_amount)) as mob_amount , round(sum(landline_amount)) as landline_amount, billing_comp_name  from cdr_sonus_outbound where start_time >='2021-02-01 00:00:00' and start_time <='2021-02-28 23:59:59' group by billing_comp_name,billing_comp_code order by billing_comp_code`;
+        const getProSummaryDataRes= await db.query(getProSummaryQuery,[]);
+        let sonusData = getProSummaryDataRes.rows;
 
-        let valueArray=[];
-        valueArray.push(serviceId);
-        valueArray.push(parseInt(sonusData.length));
-        valueArray.push(parseInt(billingServerData[0]['total']));
-        valueArray.push(targetDateWithTimezone);
-        valueArray.push(now());
+        const query=`insert into cdr_sonus_outbound_summary (invoice_no, customer_name, customer_id, billing_month, billing_year,billing_date,update_date,duration,landline_amt,mobile_amt,total_amt) 
+      VALUES ($1, $2, $3, $4, $5,$6, $7, $8, $9, $10, $11) returning id`;
+
+      let valueArray=[];
+      valueArray.push('1111');
+      valueArray.push((sonusData[0].billing_comp_code));
+      valueArray.push((sonusData[0].billing_comp_name));
+      valueArray.push(('02'));
+      valueArray.push(('2021'));
+      valueArray.push((sonusData[0].billing_month));
+      valueArray.push(('now()'));
+      valueArray.push(parseInt(sonusData[0].total_duration,10));
+      valueArray.push(parseInt(sonusData[0].landline_amount,10));
+      valueArray.push(parseInt(sonusData[0].mob_amount,10));
+      valueArray.push(parseInt(sonusData[0].total_amount,10));
 
         const updateSummaryDataRes= await db.query(query,valueArray);
         return updateSummaryDataRes;

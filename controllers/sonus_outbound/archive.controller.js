@@ -18,7 +18,7 @@ module.exports = {
         const getAllTrunkgroupRes = await ArchiveSonusOutbound.getAllTrunkgroup();
         const getRatesRes = await ArchiveSonusOutbound.getRates();
 
-        console.log(JSON.stringify(getAllTrunkgroupRes));
+      //  console.log(JSON.stringify(getAllTrunkgroupRes));
 
         for (let i=0;i<getAllTrunkgroupRes.length;i++){
             let getTargetCDRRes = await  ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, getAllTrunkgroupRes[i]);

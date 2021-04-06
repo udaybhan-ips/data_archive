@@ -3,7 +3,7 @@ var db = require('./../../config/database');
 module.exports = {
   findAll: async function() {
       try {
-          const query="SELECT * FROM sonus_outbound_rates";
+          const query="select *, (select customer_name  from sonus_outbound_customer where sonus_outbound_customer.customer_id=sonus_outbound_rates.customer_id limit 1) as customer_name from sonus_outbound_rates";
           const rateListRes= await db.query(query,[], ipsPortal=true);
           return rateListRes.rows;
       } catch (error) {

@@ -1,20 +1,22 @@
 var InvoiceLeafnet = require('../../models/leafnet/invoice');
 
 module.exports = {
-  getInvoiceData: async function(req, res) {
+  getInvoice: async function(req, res) {
     try {
         const [invoiceRes,invoiceError] = await handleError(InvoiceLeafnet.getInvoiceData());
         if(invoiceError) {
              throw new Error('Could not fetch the invoice');  
         }
-        return invoiceRes;
+        return res.status(200).json(invoiceRes);
+        
         
     } catch (error) {
-        return {
-            message: error
-          };
+        return res.status(400).json({
+          message: error.message
+        });
     }    
   },
+  
 }
 
 const handleError = (promise) => {

@@ -41,8 +41,10 @@ router.post('/auth/authenticate', function(req, res) {
 // Any route past this point requires a valid auth token
 
 router.use(function(req, res, next) {
+  
   console.log("test");
-  console.log(req.headers)
+  console.log(req.headers);
+
   var token = req.body.token || req.query.token || req.headers['authorization'];
   console.log(token);
   console.log(config.SECRET);

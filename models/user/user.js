@@ -157,7 +157,7 @@ module.exports = {
             );
           })
           .then(function(result) {
-            if (result.rows[0].login_attempts < 10) {
+            if (result.rows[0].login_attempts < 1000) {
               return result.rows[0];
             }
             else {
@@ -179,6 +179,7 @@ module.exports = {
 };
 
 function findOneById(id) {
+  
   return new Promise(function(resolve, reject) {
     db.query('SELECT * FROM users WHERE id = $1', [id])
       .then(function(result) {

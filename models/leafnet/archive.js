@@ -157,6 +157,10 @@ function utcToDate(utcDate){
     if(termStrIndex){
       termCarrierID = EGRPROTOVARIANT.substring(termStrIndex+5,termStrIndex+9);
     }
+
+    if(termCarrierID=='2GSX'|| termCarrierID=='AN,0')
+      termCarrierID='5039';
+
     return termCarrierID;
   }
 
@@ -191,7 +195,7 @@ function utcToDate(utcDate){
        obj['stop_time']=data[i]['STOPTIME'];
        obj['start_time']=data[i]['ORIGDATE'];
        obj['duration']=parseFloat(data[i]['DURATION'],10);
-       obj['duration_use']=parseInt(data[i]['DURATION'],10);
+       obj['duration_use']=Math.ceil(data[i]['DURATION']);
        obj['in_outbound']=0;
        obj['dom_int_call']=0;
        obj['orig_carrier_id']=getOrigCarrierID(data[i]['EGRPROTOVARIANT']);

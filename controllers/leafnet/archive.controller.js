@@ -2,9 +2,6 @@ var ArchiveLeafnet = require('../../models/leafnet/archive');
 const dateId='1';
 module.exports = {
   getData: async function(req, res) {
-
-    
-
     try {
       
         const [Dates,targetDateErr] = await handleError(ArchiveLeafnet.getTargetDate(dateId));
@@ -21,14 +18,14 @@ module.exports = {
         
        const getDataRes = await ArchiveLeafnet.insertByBatches(getTargetCDRRes);
         
-        const [udpateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveLeafnet.updateBatchControl(dateId,Dates.targetDate));
+        const [updateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveLeafnet.updateBatchControl(dateId,Dates.targetDate));
         if(updateBatchControlErr) {
           throw new Error('Err: while updating target date');  
         }
 
-        return udpateBatchControlRes.status(200).json({
+        return res.status(200).json({
             message: 'success! data inserted sucessfully',
-            id: addRatesRes
+            
           });
     } catch (error) {
         return error;
@@ -52,31 +49,14 @@ module.exports = {
   }    
   },
 
-  async reprocess(req, res){
-    try {
-      if(req.body.reprocessDate){
-        const deleteTargetDateData = await ArchiveLeafnet.deleteTargetDateCDR(req.body.reprocessDate);
-        const getTargetCDRRes = await ArchiveLeafnet.getTargetCDR(req.body.reprocessDate);
-        //console.log(JSON.stringify(getTargetCDRRes));
-        const getDataRes = await ArchiveLeafnet.insertByBatches(getTargetCDRRes);
-        return res.status(200).json({result:'success',message:'done'});
-      }else{
-        return res.status(200).json({result:'fail',message:'process date missing'});
-      }
-
-      
-  } catch (error) {
-    return res.status(400).json({
-      message: error.message
-    });
-  }    
-  },
 
   async updateArchiveDate(req, res){
     try {
       if(req.body.date_id && req.body.targetDate){
 
         const getUpdateRes = await ArchiveLeafnet.updateBatchControl(req.body.date_id, req.body.targetDate, api=true);
+
+
         return res.status(200).json([{id:0,result:'success',message:'done'}]);
       }else{
         return res.status(400).json({result:'fail',message:'process date missing'});

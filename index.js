@@ -9,10 +9,13 @@ var colors = require('colors');
 
 var jobLef = require('./controllers/cron/leafnet_cron');
 var jobSonusOut = require('./controllers/cron/sonus_outbund_cron');
+var timeout = require('connect-timeout');
 
 // Create server
 var app = express();
-app.use(cors());
+
+//app.use(cors());
+
 
 // testing
   jobSonusOut.archiverJobSonusOut.start();
@@ -21,6 +24,11 @@ app.use(cors());
   //jobLef.archiverJob.start();
 // //console.log("test");
 // Start listening
-app.listen(config.PORT, function() {
+
+
+
+const server = app.listen(config.PORT, function() {
   console.log(colors.green('Listening with ' + process.env.NODE_ENV + ' config on port ' + config.PORT));
 });
+
+server.timeout = 2400000;
