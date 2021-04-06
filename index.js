@@ -18,7 +18,7 @@ var app = express();
 
 
 // testing
-  jobSonusOut.archiverJobSonusOut.start();
+ // jobSonusOut.archiverJobSonusOut.start();
 //    jobSonusOut.emailNotificationJobOut.start();
 //  jobLef.emailNotificationJob.start();
   //jobLef.archiverJob.start();

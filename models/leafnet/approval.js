@@ -2,8 +2,6 @@ var db = require('../../config/database');
 
 module.exports = {
     getStatusByInvoiceNo: async function(data) {
-        console.log("in get");
-
         try {
             const query=`select * from sonus_outbound_approval_history where invoice_number='${data.invoice_no}' `;
             const invoiceStatusRes= await db.query(query,[]);
@@ -17,8 +15,6 @@ module.exports = {
         }
     },
     addApprovalStatus: async function(data) {
-        //console.log("data");
-        //console.log(data);
         try {
             const query=`insert into sonus_outbound_approval_history (invoice_number , customer_code , customer_name , billing_month , billing_date , amount , status , approved_date , approved_by , revision , comment) 
             VALUES ($1, $2, $3, $4, $5,$6, $7, $8, $9, $10,$11) returning id`;

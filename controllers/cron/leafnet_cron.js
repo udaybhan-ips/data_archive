@@ -5,23 +5,23 @@ var CDRsController = require('../leafnet/cdr.controller');
 var EmailController = require('../leafnet/emailNotification.controller');
 
 
-var archiverJob = new CronJob ('1 7 * * *',function(){
-    console.log('This is leafnet archiver start');
-    archiveController.getData();
-    console.log('This is leafnet archiver End');
+// var archiverJob = new CronJob ('1 7 * * *',function(){
+//     console.log('This is leafnet archiver start');
+//     archiveController.getData();
+//     console.log('This is leafnet archiver End');
 
-},null, true, 'Asia/Tokyo');
-
-
+// },null, true, 'Asia/Tokyo');
 
 
 
-var emailNotificationJob = new CronJob ('1 8 * * *',function(){
-    console.log('This is leafnet email notification start');
-    EmailController.sendEmail();
-    console.log('This is leafnet email notification end');
 
-},null, true, 'Asia/Tokyo');
+
+// var emailNotificationJob = new CronJob ('1 8 * * *',function(){
+//     console.log('This is leafnet email notification start');
+//     EmailController.sendEmail();
+//     console.log('This is leafnet email notification end');
+
+// },null, true, 'Asia/Tokyo');
 
 // var CDRsControllerJob = new CronJob ('15 14 * * *',function(){
 //     console.log('This is leafnet email notification start');
@@ -41,6 +41,6 @@ var emailNotificationJob = new CronJob ('1 8 * * *',function(){
 
 
 
-module.exports={archiverJob};
+module.exports={};
 
 
