@@ -26,7 +26,17 @@ module.exports = {
           });    
            
       }
+      let html = '<div> this is test email for leafnet approval </div>'
+      if(req && req.body && req.body.status){
+        if(req.body.status==='Approve'){
+          ApprovalLeafnet.sendApprovalNotification(html);
+        }        
+      }
+      
+
       return res.status(200).json(addApprovalRes);
+      
+
     } catch (error) {
         return res.status(400).json({
             message: error.message

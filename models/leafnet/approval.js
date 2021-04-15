@@ -1,9 +1,10 @@
 var db = require('../../config/database');
+var utility= require('./../../public/javascripts/utility');
 
 module.exports = {
     getStatusByInvoiceNo: async function(data) {
         try {
-            const query=`select * from sonus_outbound_approval_history where invoice_number='${data.invoice_no}' `;
+            const query=`select * from sonus_outbound_approval_history where invoice_number='${data.invoice_no}' order by approved_date desc `;
             const invoiceStatusRes= await db.query(query,[]);
             console.log(query);
             if(invoiceStatusRes.rows){
@@ -42,7 +43,18 @@ module.exports = {
         } catch (error) {
             return error;
         }
-    },   
+    }, 
+    sendApprovalNotification: async function(html){
+        let mailOption={
+            from: 'ips_tech@sysmail.ipsism.co.jp',
+            to: 'uday@ipsism.co.jp',
+            //cc:'r_chong@ipsism.co.jp,y_ito@ipsism.co.jp',
+            subject:'Approval Notification',
+            html
+        }
+    
+       utility.sendEmail(mailOption);   
+    }  
   
 }
 

@@ -46,7 +46,7 @@ module.exports = {
   },
 
   create: function(data) {
-    console.log(data);
+    console.log("data---in create"+data);
     return new Promise(function(resolve, reject) {
       validateUserData(data)
         .then(function() {
@@ -54,8 +54,8 @@ module.exports = {
         })
         .then(function(hash) {
           return db.query(
-            'INSERT INTO users (name, email_id, password) VALUES ($1, $2, $3) returning id',
-            [data.name, data.email, hash]);
+            'INSERT INTO users (name, email_id, password, role) VALUES ($1, $2, $3, $4) returning id',
+            [data.name, data.email, hash, data.role],ipsPortal=true);
         })
         .then(function(result) {
           resolve(result.rows[0]);
@@ -68,7 +68,7 @@ module.exports = {
 
   delete: function(data) {
     return new Promise(function(resolve, reject) {
-      db.query('DELETE FROM users WHERE id = $1 returning id', [data.id])
+      db.query('DELETE FROM users WHERE id = $1 returning id', [data.id],ipsPortal=true)
         .then(function(result) {
           resolve(result.rows[0]);
         })
@@ -84,7 +84,7 @@ module.exports = {
         reject('error: id and/or name missing')
       }
       else {
-        db.query('UPDATE users SET name = $2 WHERE id = $1 returning name', [data.id, data.name])
+        db.query('UPDATE users SET name = $2 WHERE id = $1 returning name', [data.id, data.name],ipsPortal=true)
           .then(function(result) {
             resolve(result.rows[0]);
           })
@@ -103,7 +103,7 @@ module.exports = {
       else {
         validateEmail(data.email)
           .then(function() {
-            return db.query('UPDATE users SET email_id = $2 WHERE id = $1 returning email', [data.id, data.email]);
+            return db.query('UPDATE users SET email_id = $2 WHERE id = $1 returning email', [data.id, data.email],ipsPortal=true);
           })
           .then(function(result) {
             resolve(result.rows[0]);
@@ -126,7 +126,7 @@ module.exports = {
             return hashPassword(data.password);
           })
           .then(function(hash) {
-            return db.query('UPDATE users SET password = $2 WHERE id = $1 returning id', [data.id, hash]);
+            return db.query('UPDATE users SET password = $2 WHERE id = $1 returning id', [data.id, hash],ipsPortal=true);
           })
           .then(function(result) {
             resolve(result.rows[0]);
@@ -153,7 +153,7 @@ module.exports = {
             }
             return db.query(
               'UPDATE users SET last_login_attempt = now(), login_attempts = $2 WHERE email_id = $1 returning *',
-              [data.email, user.login_attempts + 1]
+              [data.email, user.login_attempts + 1],ipsPortal=true
             );
           })
           .then(function(result) {
@@ -165,10 +165,10 @@ module.exports = {
             }
           })
           .then(function(user) {
-            return verifyPassword(data.password, user);
+             return verifyPassword(data.password, user);
           })
           .then(function(result) {
-            resolve({ isAuthorized: result.isValid, id: result.id });
+            resolve({ isAuthorized: result.isValid, id: result.id, role:result.role });
           })
           .catch(function(err) {
             reject(err);
@@ -181,7 +181,7 @@ module.exports = {
 function findOneById(id) {
   
   return new Promise(function(resolve, reject) {
-    db.query('SELECT * FROM users WHERE id = $1', [id])
+    db.query('SELECT * FROM users WHERE id = $1', [id],ipsPortal=true)
       .then(function(result) {
         if (result.rows[0]) {
           resolve(result.rows[0]);
@@ -198,7 +198,7 @@ function findOneById(id) {
 
 function findOneByEmail(email) {
   return new Promise(function(resolve, reject) {
-    db.query('SELECT * FROM users WHERE email_id = $1', [email])
+    db.query('SELECT * FROM users WHERE email_id = $1', [email],ipsPortal=true)
       .then(function(result) {
         if (result.rows[0]) {
           resolve(result.rows[0]);
@@ -234,6 +234,9 @@ function hashPassword(password) {
 }
 
 function validateUserData(data) {
+
+  console.log("data=="+JSON.stringify(data));
+
   return new Promise(function(resolve, reject) {
     if (!data.password || !data.email) {
       reject('email and/or password missing')
@@ -291,7 +294,7 @@ function verifyPassword(password, user) {
         reject(err);
       }
       else {
-        resolve({ isValid: result, id: user.id });
+        resolve({ isValid: result, id: user.id, role:user.role });
       }
     });
   });

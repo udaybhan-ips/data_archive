@@ -9,7 +9,6 @@ var colors = require('colors');
 
 var jobLef = require('./controllers/cron/leafnet_cron');
 var jobSonusOut = require('./controllers/cron/sonus_outbund_cron');
-var timeout = require('connect-timeout');
 
 // Create server
 var app = express();

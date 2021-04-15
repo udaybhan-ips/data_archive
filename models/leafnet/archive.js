@@ -34,7 +34,7 @@ getTargetCDR: async function(targetDateWithTimezone) {
          CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  where STARTTIME >= '${targetDateWithTimezone}' and 
          startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  AND INGRPSTNTRUNKNAME = 'IPSLFIQ57APRII' AND RECORDTYPEID = 3 order by STARTTIME` ;
      
-        const data= await db.mySQLQuery(query);
+        const data = await db.mySQLQuery(query);
         return data;
     } catch (error) {
         return error;
@@ -43,9 +43,9 @@ getTargetCDR: async function(targetDateWithTimezone) {
   insertByBatches: async function(records) {
   
     const JSON_data = Object.values(JSON.parse(JSON.stringify(records)));
-    const dataSize=JSON_data.length;
+    //const dataSize=JSON_data.length;
     const chunkArray=chunk(JSON_data,BATCH_SIZE);
-    //console.log(chunkArray);
+    //console.log(dataSize);
 
     let res=[];
     let resArr=[];
@@ -54,9 +54,9 @@ getTargetCDR: async function(targetDateWithTimezone) {
       res=await db.queryBatchInsert(data,CDR_SONUS_CS);
       resArr.push(res);
     }
-            console.log("done"+ new Date());
-            console.log(resArr);
-      return resArr;
+    console.log("done"+ new Date());
+    console.log(resArr);
+    return resArr;
 
   },
   updateBatchControl: async function(serviceId,targetDate,api) {

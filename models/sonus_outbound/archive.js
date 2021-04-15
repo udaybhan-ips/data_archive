@@ -272,7 +272,7 @@ function utcToDate(utcDate){
       }
       
       //console.log("mobAmount=="+mobAmount);
-     // console.log("landlineAmount=="+landlineAmount);
+      // console.log("landlineAmount=="+landlineAmount);
 
     }catch(e){
       console.log("Error !"+e.message);
@@ -291,7 +291,7 @@ function utcToDate(utcDate){
     try {
      for(let i=0;i<data.length;i++){
        let compInfo = await getCompanyInfo(data[i]['INGRPSTNTRUNKNAME'], customerInfo, data[i]['INCALLEDNUMBER'] );
-       let amountDet = await getBillingAmount(compInfo, data[i]['INCALLEDNUMBER'] ,ratesInfo, data[i]['DURATION']);
+       let amountDet = await getBillingAmount(compInfo, data[i]['EGCALLEDNUMBER'] ,ratesInfo, data[i]['DURATION']);
 
        let obj={};
        obj['date_bill']=data[i]['ORIGDATE'];

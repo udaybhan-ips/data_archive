@@ -19,7 +19,7 @@ var BillingController = require('../sonus_outbound/billing.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var BillingControllerJob = new CronJob ('20 18 * * *',function(){
+// var BillingControllerJob = new CronJob ('8 15 * * *',function(){
 //     console.log('You will see this message every second');
 //     BillingController.getData();
 //     console.log('You will see this message every second');

@@ -12,22 +12,13 @@ module.exports = {
        const [Dates,targetDateErr] = await handleError(BillingLeafnet.getTargetDate(dateId));
        if(targetDateErr) {
            throw new Error('Could not fetch target date');  
-      } 
+        } 
       const billingYear = new Date(Dates.target_billing_month).getFullYear();
       let billingMonth = new Date(Dates.target_billing_month).getMonth() + 1;
       if(parseInt(billingMonth,10)<10){
         billingMonth='0'+billingMonth;
       }
-    
-      // const currentYear = new Date(Dates.current_montth).getFullYear();
-      // let currentMonth = new Date(Dates.current_montth).getMonth() + 1;
-      // if(parseInt(currentMonth,10)<10){
-      //   currentMonth='0'+currentMonth;
-      // }
-    
-      
-
-
+  
         const [getCDRRes, getCDRResErr] = await handleError( BillingLeafnet.getTargetCDR(billingYear, billingMonth));
         if(getCDRResErr) {
             throw new Error('Could not fetch CDRes ');  

@@ -13,7 +13,7 @@ router.post('/auth/register', usersController.createUser);
 router.post('/auth/authenticate', function(req, res) {
   User.authenticate(req.body)
     .then(function(result) {
-      console.log(result)
+      //console.log(result)
       if (result.isAuthorized === true) {
         jwt.sign({ sub: result.id }, config.SECRET, { expiresIn: config.JWT_EXPIRATION, issuer: 'masterLord' }, function(err,token) {
           if(err){
@@ -21,7 +21,8 @@ router.post('/auth/authenticate', function(req, res) {
           }
           return res.status(200).json({
             message: 'authenticated, token attached',
-            token: token
+            token: token,
+            role:result.role
           });
         });
       }
