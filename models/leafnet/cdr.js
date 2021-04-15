@@ -9,10 +9,22 @@ module.exports = {
           return error;
       }
   },
-
-  createCDR: async function(){
+  getTargetDate: async function(date_id) {
+    try {
+          const query=`SELECT max(date_set)::date - interval '1 month' as target_billing_month, max(date_set)::date as current_montth FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
+          const targetDateRes= await db.query(query,[]);
+          //console.log(targetDateRes);
+          if(targetDateRes.rows){
+              return  {'target_billing_month' : (targetDateRes.rows[0].target_billing_month),'current_montth':(targetDateRes.rows[0].current_montth)} ;              
+          }
+          return {err:'not found'};
+      } catch (error) {
+          return error;
+      }
+  },
+  createCDR: async function(year , month){
     let resChunkArr=[];
-    let year ='2021', month ='02';
+   
     let fileName = __dirname+`\\CDR\\LeafnetCDR${year}${month}.csv`;
 
     let header =  [
@@ -23,7 +35,7 @@ module.exports = {
     ]
 
     try{
-        let query=`select b.SONUS_START_TIME as start_time, b.SONUS_DISCONNECT_TIME as disconnect_time, b.Duration_Use , b.SONUS_CALLINGNUMBER, b.SONUS_EGCALLEDNUMBER,b.Term_Carrier_ID, c.Rate_Setup, c.Rate_Second, a.BLEG_Call_amount , a.IPS_Call_amount, a.Total_amount  from CDR_SONUS_BILLING a, CDR_SONUS b, CDR_SONUS_RATE c where a.CDR_ID = b.CDR_ID and a.Rate_ID = c.Rate_ID order by b.SONUS_START_TIME `;
+        let query=`select b.SONUS_START_TIME as start_time, b.SONUS_DISCONNECT_TIME as disconnect_time, b.Duration_Use , b.SONUS_CALLINGNUMBER, b.SONUS_EGCALLEDNUMBER,b.Term_Carrier_ID, c.Rate_Setup, c.Rate_Second, a.BLEG_Call_amount , a.IPS_Call_amount, a.Total_amount  from CDR_SONUS_BILLING a, CDR_SONUS b, CDR_SONUS_RATE c where a.CDR_ID = b.CDR_ID and a.Rate_ID = c.Rate_ID and to_char(b.start_time, 'MM-YYYY') = '${month}-${year}' order by b.SONUS_START_TIME `;
          
         resChunkArr = await db.parserQuery(query, fileName, header);
 
@@ -32,9 +44,7 @@ module.exports = {
         console.log("Error in creating CDR =="+err.message);
     }
 
-  },
-
- 
+  }, 
   
 }
 

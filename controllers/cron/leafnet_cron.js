@@ -23,7 +23,7 @@ var archiverJob = new CronJob ('40 9 * * *',function(){
 
 // },null, true, 'Asia/Tokyo');
 
-// var CDRsControllerJob = new CronJob ('15 14 * * *',function(){
+// var CDRsControllerJob = new CronJob ('27 16 * * *',function(){
 //     console.log('This is leafnet email notification start');
 //     CDRsController.genrateCSV();
 //     console.log('This is leafnet email notification end');

@@ -1,6 +1,8 @@
 var CDRLeafnet = require('../../models/leafnet/cdr');
+let dateId=1;
 
 module.exports = {
+    
     getCDRPath: async function(req, res) {
     try {
         const [cdrRes,cdrError] = await handleError(CDRLeafnet.getInvoiceData());
@@ -15,9 +17,23 @@ module.exports = {
       });
     }    
   },
+  
   genrateCSV: async function(req, res){
     try {
-      const [genrateCSVRes,genrateCSVErr] = await handleError(CDRLeafnet.createCDR());
+
+      const [Dates,targetDateErr] = await handleError(CDRLeafnet.getTargetDate(dateId));
+      if(targetDateErr) {
+          throw new Error('Could not fetch target date');  
+       } 
+      
+      const billingYear = new Date(Dates.target_billing_month).getFullYear();
+      let billingMonth = new Date(Dates.target_billing_month).getMonth() + 1;
+      
+      if(parseInt(billingMonth,10)<10){
+          billingMonth='0'+billingMonth;
+      }
+
+      const [genrateCSVRes,genrateCSVErr] = await handleError(CDRLeafnet.createCDR(billingYear,billingMonth));
       if(genrateCSVErr) {
            throw new Error('Could not fetch the cdr path');  
       }

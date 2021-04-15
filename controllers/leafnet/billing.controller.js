@@ -9,15 +9,17 @@ module.exports = {
              throw new Error('Could not fetch Rates details');  
         }
 
-       const [Dates,targetDateErr] = await handleError(BillingLeafnet.getTargetDate(dateId));
-       if(targetDateErr) {
+        const [Dates,targetDateErr] = await handleError(BillingLeafnet.getTargetDate(dateId));
+        if(targetDateErr) {
            throw new Error('Could not fetch target date');  
         } 
-      const billingYear = new Date(Dates.target_billing_month).getFullYear();
-      let billingMonth = new Date(Dates.target_billing_month).getMonth() + 1;
-      if(parseInt(billingMonth,10)<10){
-        billingMonth='0'+billingMonth;
-      }
+        
+        const billingYear = new Date(Dates.target_billing_month).getFullYear();
+        
+        let billingMonth = new Date(Dates.target_billing_month).getMonth() + 1;
+        if(parseInt(billingMonth,10)<10){
+           billingMonth='0'+billingMonth;
+        }
   
         const [getCDRRes, getCDRResErr] = await handleError( BillingLeafnet.getTargetCDR(billingYear, billingMonth));
         if(getCDRResErr) {
@@ -45,18 +47,16 @@ module.exports = {
             throw new Error('Error while creating invoice '+ createInvoiceErr.message);  
         }
         
-        
-
         return {
             message: 'success! data inserted sucessfully',
-            id: addRatesRes
+            id: createInvoiceRes
           };
     } catch (error) {
 
       console.log("Error !!!"+error.message);
-        return {
-            message: error
-          };
+      return {
+          message: error
+      };
     }    
   },
 
