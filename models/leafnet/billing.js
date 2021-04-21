@@ -353,6 +353,7 @@ async function  getRates(companyCode, carrierCode, ratesData){
         }
     }catch(err){
         console.log("Error "+err.message);
+        return err;
     }
   return resData;
 }

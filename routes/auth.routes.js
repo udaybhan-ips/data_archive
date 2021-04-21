@@ -15,7 +15,7 @@ router.post('/auth/authenticate', function(req, res) {
     .then(function(result) {
       //console.log(result)
       if (result.isAuthorized === true) {
-        jwt.sign({ sub: result.id }, config.SECRET, { expiresIn: config.JWT_EXPIRATION, issuer: 'masterLord' }, function(err,token) {
+        jwt.sign({ sub: result.id , email:result.email}, config.SECRET, { expiresIn: config.JWT_EXPIRATION, issuer: 'masterLord' }, function(err,token) {
           if(err){
             console.log(err);
           }
@@ -43,12 +43,12 @@ router.post('/auth/authenticate', function(req, res) {
 
 router.use(function(req, res, next) {
   
-  console.log("test");
-  console.log(req.headers);
+ // console.log("test");
+  //console.log(req.headers);
 
   var token = req.body.token || req.query.token || req.headers['authorization'];
-  console.log(token);
-  console.log(config.SECRET);
+  //console.log(token);
+  //console.log(config.SECRET);
   if (token) {
     jwt.verify(token, config.SECRET, function(err, decoded) {
 
@@ -58,6 +58,9 @@ router.use(function(req, res, next) {
           message: 'failed authentication: invalid token'
         });
       }
+
+    //  console.log(decoded);
+
       User.findOne({ 'id': decoded.sub })
         .then(function(user) {
           req.decoded = decoded;

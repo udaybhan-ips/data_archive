@@ -44,7 +44,7 @@ module.exports = {
   },
 
   changePassword: function(req, res) {
-    User.updatePassword({ id: req.params.id, password: req.body.password })
+    User.updatePassword({ email: req.params.email, password: req.body.password })
       .then(function(result) {
         return res.status(200).json(result);
       })

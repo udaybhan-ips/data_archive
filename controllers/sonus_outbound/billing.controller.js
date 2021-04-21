@@ -21,12 +21,8 @@ module.exports = {
           throw new Error('Could not fetch customer list');  
         }
 
-        console.log("customer list=="+JSON.stringify(customerListRes));
-
         for(let i=0; i<customerListRes.length;i++){
-          
-          
-
+ 
           const [deleteSummaryRes, deleteSummaryErr] = await handleError(BillingSonusOutbound.deleteSummaryData(customerListRes[i]['customer_name'],customerListRes[i]['customer_id'], billingYear, billingMonth));
           if(deleteSummaryErr) {
             throw new Error('Error while delete summary data '+ deleteSummaryErr);  

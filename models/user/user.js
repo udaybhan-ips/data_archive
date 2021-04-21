@@ -1,6 +1,7 @@
 var Promise = require('promise');
 var db = require('./../../config/database');
 var bcrypt = require('bcrypt');
+const { use } = require('../../routes/auth.routes');
 
 module.exports = {
   findAll: function() {
@@ -46,7 +47,7 @@ module.exports = {
   },
 
   create: function(data) {
-    console.log("data---in create"+data);
+    
     return new Promise(function(resolve, reject) {
       validateUserData(data)
         .then(function() {
@@ -80,11 +81,11 @@ module.exports = {
 
   updateName: function(data) {
     return new Promise(function(resolve, reject) {
-      if (!data.id || !data.name) {
-        reject('error: id and/or name missing')
+      if (!data.email || !data.name) {
+        reject('error: email and/or name missing')
       }
       else {
-        db.query('UPDATE users SET name = $2 WHERE id = $1 returning name', [data.id, data.name],ipsPortal=true)
+        db.query('UPDATE users SET name = $2 WHERE email_id = $1 returning name', [data.email, data.name],ipsPortal=true)
           .then(function(result) {
             resolve(result.rows[0]);
           })
@@ -95,15 +96,15 @@ module.exports = {
     });
   },
 
-  updateEmail: function(data) {
+  updateUserRole: function(data) {
     return new Promise(function(resolve, reject) {
-      if (!data.id || !data.email) {
-        reject('error: id and/or email missing')
+      if (!data.role || !data.email) {
+        reject('error: role and/or email missing')
       }
       else {
         validateEmail(data.email)
           .then(function() {
-            return db.query('UPDATE users SET email_id = $2 WHERE id = $1 returning email', [data.id, data.email],ipsPortal=true);
+            return db.query('UPDATE users SET role = $2 WHERE email_id = $1 returning email_id', [data.email, data.role],ipsPortal=true);
           })
           .then(function(result) {
             resolve(result.rows[0]);
@@ -117,8 +118,8 @@ module.exports = {
 
   updatePassword: function(data) {
     return new Promise(function(resolve, reject) {
-      if (!data.id || !data.password) {
-        reject('error: id and/or password missing')
+      if (!data.email || !data.password) {
+        reject('error: email and/or password missing')
       }
       else {
         validatePassword(data.password, 6)
@@ -126,7 +127,7 @@ module.exports = {
             return hashPassword(data.password);
           })
           .then(function(hash) {
-            return db.query('UPDATE users SET password = $2 WHERE id = $1 returning id', [data.id, hash],ipsPortal=true);
+            return db.query('UPDATE users SET password = $2 WHERE email_id = $1 returning email_id', [data.email, hash],ipsPortal=true);
           })
           .then(function(result) {
             resolve(result.rows[0]);
@@ -157,6 +158,7 @@ module.exports = {
             );
           })
           .then(function(result) {
+           
             if (result.rows[0].login_attempts < 1000) {
               return result.rows[0];
             }
@@ -168,7 +170,8 @@ module.exports = {
              return verifyPassword(data.password, user);
           })
           .then(function(result) {
-            resolve({ isAuthorized: result.isValid, id: result.id, role:result.role });
+            
+            resolve({ isAuthorized: result.isValid, email:result.email, id: result.id, role:result.role });
           })
           .catch(function(err) {
             reject(err);
@@ -197,6 +200,7 @@ function findOneById(id) {
 }
 
 function findOneByEmail(email) {
+  console.log("email="+email);
   return new Promise(function(resolve, reject) {
     db.query('SELECT * FROM users WHERE email_id = $1', [email],ipsPortal=true)
       .then(function(result) {
@@ -235,7 +239,7 @@ function hashPassword(password) {
 
 function validateUserData(data) {
 
-  console.log("data=="+JSON.stringify(data));
+  //console.log("data=="+JSON.stringify(data));
 
   return new Promise(function(resolve, reject) {
     if (!data.password || !data.email) {
@@ -294,7 +298,7 @@ function verifyPassword(password, user) {
         reject(err);
       }
       else {
-        resolve({ isValid: result, id: user.id, role:user.role });
+        resolve({ isValid: result,id:user.id, email: user.email_id, role:user.role });
       }
     });
   });

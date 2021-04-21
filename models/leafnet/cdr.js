@@ -24,7 +24,7 @@ module.exports = {
   },
   createCDR: async function(year , month){
     let resChunkArr=[];
-   
+    
     let fileName = __dirname+`\\CDR\\LeafnetCDR${year}${month}.csv`;
 
     let header =  [
@@ -35,9 +35,9 @@ module.exports = {
     ]
 
     try{
-        let query=`select b.SONUS_START_TIME as start_time, b.SONUS_DISCONNECT_TIME as disconnect_time, b.Duration_Use , b.SONUS_CALLINGNUMBER, b.SONUS_EGCALLEDNUMBER,b.Term_Carrier_ID, c.Rate_Setup, c.Rate_Second, a.BLEG_Call_amount , a.IPS_Call_amount, a.Total_amount  from CDR_SONUS_BILLING a, CDR_SONUS b, CDR_SONUS_RATE c where a.CDR_ID = b.CDR_ID and a.Rate_ID = c.Rate_ID and to_char(b.start_time, 'MM-YYYY') = '${month}-${year}' order by b.SONUS_START_TIME `;
+        let query=`s    elect b.SONUS_START_TIME as start_time, b.SONUS_DISCONNECT_TIME as disconnect_time, b.Duration_Use , b.SONUS_CALLINGNUMBER, b.SONUS_EGCALLEDNUMBER,b.Term_Carrier_ID, c.Rate_Setup, c.Rate_Second, a.BLEG_Call_amount , a.IPS_Call_amount, a.Total_amount  from CDR_SONUS_BILLING a, CDR_SONUS b, CDR_SONUS_RATE c where to_char(b.start_time, 'MM-YYYY') = '${month}-${year}' a.CDR_ID = b.CDR_ID and a.Rate_ID = c.Rate_ID order by b.SONUS_START_TIME `;
          
-        resChunkArr = await db.parserQuery(query, fileName, header);
+        resChunkArr = await db.parserQuery(query, fileName, header,'Leafnet');
 
         console.log("chunk array length=="+resChunkArr.length)
     }catch(err){

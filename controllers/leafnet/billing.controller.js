@@ -23,7 +23,7 @@ module.exports = {
   
         const [getCDRRes, getCDRResErr] = await handleError( BillingLeafnet.getTargetCDR(billingYear, billingMonth));
         if(getCDRResErr) {
-            throw new Error('Could not fetch CDRes ');  
+            throw new Error('Could not fetch CDRes');  
         }
     
         const [billing, billingErr] = await handleError(BillingLeafnet.insertByBatches(getCDRRes, ratesDetails));

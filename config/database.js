@@ -40,15 +40,23 @@ module.exports = {
    
     return res;
   },
-  parserQuery: async function(text,fileName, header){
+  parserQuery: async function(text,fileName, header,customerName,ipsPortal){
 
     console.log(text);
+
+    if(ipsPortal){
+      connectionString = config.DATABASE_URL_IPS_PORTA;
+    }else{
+      connectionString = config.DATABASE_URL_SONUS_DB;
+    }
 
     
     try {
       types.setTypeParser(1114, function(stringValue) {
         return stringValue;
        });
+
+       console.log("connectionString="+JSON.stringify(connectionString));
       const pool = await new Pool(connectionString);
       const client = await pool.connect();
       const cursor = client.query(new Cursor(text));
@@ -62,19 +70,22 @@ module.exports = {
       ,'sonus_egcallednumber':'Called Number','term_carrier_id': 'Carrier Code', 'rate_setup': 'BLEG AC','rate_second':'BLEG Rate','bleg_call_amount':'BLEG Call Amount',
       'ips_call_amount':'IPS Call Amount' ,'total_amount': 'Total Call Amount'};
 
+      let sonusCDROutCusHeader= {'start_time':'Start Time','stop_time':'Disconnect Time','duration_use':'Call Duration (s)','sonus_callingnumber':'Calling Number',
+      'sonus_egcallednumber':'Called Number','term_carrier_id':'Carrier Code','mobile_count':'Mobile Calls Count','landline_count':'Landline Calls Count',
+      'mobile_duration':'Mobile Duration','landline_duration':'Landline Duration','mob_amount':'Mobile Amount','landline_amount':'Landline Amount',
+      'total_amount':'Total Call Amount','total_duration':'Total Duration'};
+
+
       if (data.length){
-        data.unshift(headerValue);
+        if(customerName==='Leafnet'){
+          data.unshift(headerValue);
+        }else{
+          data.unshift(sonusCDROutCusHeader);
+        }        
       }
-
-
-      //console.log("data="+JSON.stringify(data));
-
       while(data.length){
-        
         util.createCSVWithWriter(fileName, header, data);
         data = await customPromiseHandler(cursor, numOfRows);
-        console.log("data length=="+data.length);
-      
       }
       cursor.close(() => {
         client.release()
