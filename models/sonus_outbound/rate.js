@@ -24,8 +24,8 @@ module.exports = {
         return error;
     }
   },
-  udpateRates: async function(data) {
-    console.log(data);
+  updateRates: async function(data) {
+    //console.log(data);
     let updateData = '';
     try {
       //  if(validateRateData()){
@@ -45,9 +45,13 @@ module.exports = {
               updateData = updateData.substring(0, updateData.length - 1);
             }
 
-            const query=`INSERT INTO sonus_outbound_rates_history (customer_id, landline, mobile, date_added ) VALUES ($1, $2, $3, $4) returning rate_id`;
+            const query=`INSERT INTO sonus_outbound_rates_history (customer_id, landline, mobile, date_added ) VALUES ($1, $2, $3, $4) returning customer_id`;
             const value= [data.customer_id, data.landline, data.mobile, 'now()'];
-            const res = await db.query(query,value, ipsPortal=true); 
+            const res = await db.query(query,value, ipsPortal=true);
+            
+            //console.log("res==");
+            //console.log(res);
+            
             const queryUpdate = `update sonus_outbound_rates set ${updateData} where customer_id = '${data.customer_id}'`;
             const resUpdate = await db.query(queryUpdate,[], ipsPortal=true); 
             

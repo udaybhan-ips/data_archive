@@ -31,7 +31,7 @@ var EmailController = require('../leafnet/emailNotification.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var billingControllerJob = new CronJob ('45 17 * * *',function(){
+// var billingControllerJob = new CronJob ('13 16 * * *',function(){
 //     console.log('This is leafnet  billing start');
 //     billingController.getData();
 //     console.log('This is leafnet email notification end');

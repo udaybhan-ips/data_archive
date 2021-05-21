@@ -58,4 +58,16 @@ module.exports = {
         });
       });
   },
+  listUsers: function(req, res) {
+  //  console.log("list users")
+    Customer.listUsers()
+      .then(function(result) {
+        return res.status(200).json(result);
+      })
+      .catch(function(err) {
+        return res.status(400).json({
+          message: err
+        });
+      });
+  },
 };

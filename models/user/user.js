@@ -138,6 +138,39 @@ module.exports = {
       }
     });
   },
+  updatePasswordByUser: function(data) {
+    console.log("data="+JSON.stringify(data));
+    return new Promise(function(resolve, reject) {
+      if (!data.email || !data.password || !data.current_password) {
+        reject('error: email and/or password and/or current password missing')
+      }
+      else {
+        findOneByEmail(data.email)
+          .then(function(user) {
+             return verifyPassword(data.current_password, user);
+          })
+          .then(function(result) {
+            validatePassword(data.password, 6)
+            .then(function() {
+              return hashPassword(data.password);
+            })
+            .then(function(hash) {
+              return db.query('UPDATE users SET password = $2 WHERE email_id = $1 returning email_id', [data.email, hash],ipsPortal=true);
+            })
+            .then(function(result) {
+              resolve(result.rows[0]);
+            })
+            .catch(function(err) {
+              reject(err);
+            });
+          })
+          .catch(function(err) {
+            reject(err);
+          });
+
+      }
+    });
+  },
 
   authenticate: function(data) {
     return new Promise(function(resolve, reject) {
@@ -171,7 +204,7 @@ module.exports = {
           })
           .then(function(result) {
             
-            resolve({ isAuthorized: result.isValid, email:result.email, id: result.id, role:result.role });
+            resolve({ isAuthorized: result.isValid, email:result.email,name:result.name, id: result.id, role:result.role });
           })
           .catch(function(err) {
             reject(err);
@@ -298,7 +331,7 @@ function verifyPassword(password, user) {
         reject(err);
       }
       else {
-        resolve({ isValid: result,id:user.id, email: user.email_id, role:user.role });
+        resolve({ isValid: result,id:user.id,name:user.name, email: user.email_id, role:user.role });
       }
     });
   });

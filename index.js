@@ -13,7 +13,7 @@ var jobSonusOut = require('./controllers/cron/sonus_outbund_cron');
 // Create server
 var app = express();
 
-//app.use(cors());
+app.use(cors());
 
 
 // testing

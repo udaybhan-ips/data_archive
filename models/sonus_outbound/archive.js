@@ -6,21 +6,38 @@ module.exports = {
 
   getTargetDate: async function(date_id) {
     try {
-          const ipsPortal=true;
-          const query=`SELECT max(date_set)::date + interval '0 HOURS' as target_date , max(date_set)::date - interval '9 HOURS'  as target_date_with_timezone FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
+          const query=`SELECT date_id , date_set::date + interval '1' day as next_run_time  ,  (date_set)::date + interval '0 HOURS' as target_date , (date_set)::date - interval '9 HOURS'  as target_date_with_timezone FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
           const targetDateRes= await db.query(query,[]);
-         // console.log(targetDateRes);
+          //console.log(targetDateRes);
           if(targetDateRes.rows){
-              return  {'targetDate' : (targetDateRes.rows[0].target_date),'targetDateWithTimezone' : (targetDateRes.rows[0].target_date_with_timezone)} ;              
+              return  {'id':(targetDateRes.rows[0].date_id), 'next_run_time': (targetDateRes.rows[0].next_run_time) , 'targetDate' : (targetDateRes.rows[0].target_date),'targetDateWithTimezone' : (targetDateRes.rows[0].target_date_with_timezone)} ;              
           }
           return {err:'not found'};
       } catch (error) {
           return error;
       }
   },
-  getRates: async function() {
+  getSonusCustomerList: async function() {
     try {
-        const query=`select customer_id, landline, mobile from sonus_outbound_rates `;
+          const query=`select id,customer_name, customer_id, trunk_port, incallednumber from sonus_outbound_customer where deleted = false order by customer_name`;
+          const sonusCustList= await db.query(query,[], true);
+          //console.log(targetDateRes);
+          if(sonusCustList.rows){
+              return sonusCustList.rows ;              
+          }
+          return {err:'not found'};
+      } catch (error) {
+          return error;
+      }
+  },
+  getRates: async function(customerId, customerName) {
+    try {
+        let where = "";
+
+        if(customerId){
+          where = `WHERE customer_id= '${customerId}'`;
+        }
+        const query=`select customer_id, landline, mobile from sonus_outbound_rates ${where} `;
         const ratesRes= await db.query(query,[], ipsPortal=true);
         
         if(ratesRes.rows){
@@ -31,9 +48,15 @@ module.exports = {
         return error; 
     }
   },
-  getAllTrunkgroup: async function() {
+  getAllTrunkgroup: async function(customerId, customerName) {
     try {
-          const query=`select trunk_port, customer_name, customer_id,incallednumber from sonus_outbound_customer `;
+         let where = "";
+
+          if(customerId && customerName){
+              where = `WHERE customer_id= '${customerId}' AND customer_name = '${customerName}' ` ;
+          }
+
+          const query=`select trunk_port, customer_name, customer_id,incallednumber from sonus_outbound_customer ${where}`;
           const ipsPortal=true;
           const getTrunkportRes= await db.query(query,[],ipsPortal);
         //  console.log(getTrunkportRes);
@@ -47,9 +70,14 @@ module.exports = {
       }
   },
   
-  deleteTargetDateCDR: async function(targetDate) {
+  deleteTargetDateCDR: async function(targetDate, customerId, customerName) {
     try {
-        const query=`delete FROM cdr_sonus_outbound where START_TIME::date = '${targetDate}'::date`;
+        let ANDclo = "";
+
+        if(customerId && customerName){
+          ANDclo = `AND  billing_comp_code= '${customerId}' AND billing_comp_name = '${customerName}' `;
+        }
+        const query=`delete FROM cdr_sonus_outbound where START_TIME::date = '${targetDate}'::date ${ANDclo}`;
         const deleteTargetDateRes= await db.query(query,[]);
         return deleteTargetDateRes;
     } catch (error) {
@@ -63,7 +91,7 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo) {
       let trunkPortsVal='';
 
       if(customerInfo['incallednumber']){ 
-        where=` WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND 
+        where=` WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 9 DAY) AND 
         INGRPSTNTRUNKNAME in ('${customerInfo.trunk_port}') AND incallednumber like '${customerInfo['incallednumber']}' AND RECORDTYPEID = 3 order by STARTTIME `;
       }else{
         let trunkPorts = customerInfo.trunk_port;
@@ -77,14 +105,46 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo) {
           trunkPortsVal = trunkPortsVal.substring(0, trunkPortsVal.length - 1);
         }
 
-        where=`WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY)  AND INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND RECORDTYPEID = 3 order by STARTTIME `;
+        where=`WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 9 DAY)  AND INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND RECORDTYPEID = 3 order by STARTTIME `;
+      }
+
+      
+      //console.log("where="+where);
+      
+      const query=`SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
+      CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW, CALLSTATUS,
+      CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73_202105  ${where} ` ;
+      //console.log("query="+query);
+      const data= await db.mySQLQuery(query);
+      return data;
+    }catch (error) {
+      console.log("err="+error.message);
+      return error;
+    }
+
+},
+
+getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
+  try {
+      let where='';
+      
+      console.log("customer info");
+      console.log(JSON.stringify(customerInfo));
+
+      if(customerInfo['incallednumber']){ 
+        where=` WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND 
+        INGRPSTNTRUNKNAME in ('${customerInfo.trunk_port}') AND incallednumber like '${customerInfo['incallednumber']}' AND RECORDTYPEID = 3 order by STARTTIME `;
+      }else{
+        let trunkPorts = customerInfo.trunk_port;
+
+        where=`WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY)  AND INGRPSTNTRUNKNAME in ('${trunkPorts}') AND RECORDTYPEID = 3 order by STARTTIME `;
       }
 
       //console.log("where="+where);
       
       const query=`SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
       CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW, CALLSTATUS,
-      CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  ${where} ` ;
+      CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73_202105  ${where} ` ;
       //console.log("query="+query);
       const data= await db.mySQLQuery(query);
       return data;
@@ -93,6 +153,7 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo) {
       return error;
     }
 },
+
   insertByBatches: async function(records, customerInfo, ratesInfo) {
   
     const JSON_data = Object.values(JSON.parse(JSON.stringify(records)));
@@ -114,13 +175,18 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo) {
 
   },
 
-  updateBatchControl: async function(serviceId,targetDate) {
+  updateBatchControl: async function(serviceId,targetDate,api) {
+    let query;
     try {
-        const query=`update batch_date_control set date_set='${targetDate}'::date + interval '1' day , last_update=now() where date_id='${serviceId}'`;
+        if(api){
+          query=`update batch_date_control set date_set='${targetDate}'::date + interval '0' day , last_update=now() where date_id='${serviceId}'`;
+        }else{
+          query=`update batch_date_control set date_set='${targetDate}'::date + interval '10' day , last_update=now() where date_id='${serviceId}'`;
+        }
+        
         const updateBatchControlRes= await db.query(query,[]);
         return updateBatchControlRes;
     } catch (error) {
-        console.log("Err "+ error.message);
         return error;
     }
   },

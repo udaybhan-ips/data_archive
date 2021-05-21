@@ -20,6 +20,8 @@ router.use('/v1', require('./apiv1/sonus_outbound/billing.summary.routes'));
 router.use('/v1', require('./apiv1/sonus_outbound/rates.routes'));
 router.use('/v1', require('./apiv1/sonus_outbound/cdr.routes'));
 router.use('/v1', require('./apiv1/sonus_outbound/approval.routes'));
+router.use('/v1', require('./apiv1/sonus_outbound/archive.data.routes'));
+
 
 /** Customer details **/
 

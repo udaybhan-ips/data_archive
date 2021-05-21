@@ -1,9 +1,9 @@
 var ArchiveSonusOutbound = require('../../models/sonus_outbound/archive');
-
+const dateId='2';
 module.exports = {
   getData: async function(req, res) {
 
-    const dateId='2';
+    
 
     try {
       
@@ -39,6 +39,87 @@ module.exports = {
         return error;
     }    
   },
+
+  
+
+  async reprocessByCustomerId(req, res){
+    try {
+      if(req.body.customerId && req.body.customerName){
+
+        const Dates = await ArchiveSonusOutbound.getTargetDate(dateId);
+        const deleteTargetDateData = await  ArchiveSonusOutbound.deleteTargetDateCDR(Dates.targetDate, req.body.customerId, req.body.customerName );
+
+        const getAllTrunkgroupRes = await ArchiveSonusOutbound.getAllTrunkgroup(req.body.customerId, req.body.customerName);
+        const getRatesRes = await ArchiveSonusOutbound.getRates(req.body.customerId, req.body.customerName);
+
+      //  console.log(JSON.stringify(getAllTrunkgroupRes));
+
+        let getTargetCDRRes = await  ArchiveSonusOutbound.getTargetCDRBYID(Dates.targetDateWithTimezone, getAllTrunkgroupRes[0]);
+        const getDataRes = await  ArchiveSonusOutbound.insertByBatches(getTargetCDRRes, getAllTrunkgroupRes[0], getRatesRes);
+        const [udpateBatchControlRes, updateBatchControlErr] = await handleError( ArchiveSonusOutbound.updateBatchControl(dateId,Dates.targetDate));
+        
+        return res.status(200).json([{id:0,result:'success',message:'done'}]);
+      }else{
+        return res.status(400).json({result:'fail',message:'process date missing'});
+      }
+
+      
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message
+    });
+  }    
+  },
+
+  async getArchiveStatus(req, res){
+    try {
+      const [archiveRes,archiveErr] = await handleError(ArchiveSonusOutbound.getTargetDate(dateId));
+      if(archiveErr) {
+           //throw new Error('Could not fetch the summary');
+           return res.status(500).json({
+            message: archiveErr.message
+          });  
+      }
+      return res.status(200).json([archiveRes]);
+      
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message
+    });
+  }    
+  },
+  async getSonusCustomerList(req, res){
+    try {
+        const getSonusCustListRes = await ArchiveSonusOutbound.getSonusCustomerList();
+        return res.status(200).json(getSonusCustListRes);
+      
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message
+    });
+  }    
+  },
+
+  async updateArchiveDate(req, res){
+    try {
+      if(req.body.date_id && req.body.targetDate){
+
+        const getUpdateRes = await ArchiveSonusOutbound.updateBatchControl(req.body.date_id, req.body.targetDate, api=true);
+
+
+        return res.status(200).json([{id:0,result:'success',message:'done'}]);
+      }else{
+        return res.status(400).json({result:'fail',message:'process date missing'});
+      }
+
+      
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message
+    });
+  }    
+  },
+ 
 }
 
 

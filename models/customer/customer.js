@@ -91,6 +91,22 @@ module.exports = {
     });
   },
 
+  listUsers: function() {
+
+    //console.log("date="+JSON.stringify(data));
+
+    return new Promise(function(resolve, reject) {
+      db.query('select id, name, email_id from users order by email_id', [],ipsPortal=true)
+        .then(function(result) {
+          resolve(result.rows);
+        })
+        .catch(function(err) {
+          reject(err);
+        });
+    });
+  },
+
+  
   updateCustomerInfo: function(data) {
     return new Promise(function(resolve, reject) {
       if (!data.id || !data.customer_code) {

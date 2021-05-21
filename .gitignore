@@ -2,6 +2,7 @@ node_modules
 public/vendor
 temp
 *.csv
+*.CSV
 *.pdf
 .vscode/
 -

@@ -22,7 +22,8 @@ router.post('/auth/authenticate', function(req, res) {
           return res.status(200).json({
             message: 'authenticated, token attached',
             token: token,
-            role:result.role
+            role:result.role,
+            name:result.name
           });
         });
       }

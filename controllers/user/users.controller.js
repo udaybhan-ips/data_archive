@@ -54,6 +54,17 @@ module.exports = {
         });
       });
   },
+  changePasswordByUser: function(req, res) {
+    User.updatePasswordByUser({ email: req.body.email, password: req.body.new_password, current_password:req.body.old_password })
+      .then(function(result) {
+        return res.status(200).json(result);
+      })
+      .catch(function(err) {
+        return res.status(400).json({
+          message: err
+        });
+      });
+  },
 
   deleteUser: function(req, res) {
     User.delete({ id: req.params.id })

@@ -10,5 +10,7 @@ router.post('/customer/addCustomer', customerController.createUser);
 // router.put('/users/:id/email', usersController.changeEmail);
 router.post('/customer/deleteCustomer', customerController.deleteUser);
 
+router.get('/customer/users_list',  customerController.listUsers);
+
 
 module.exports = router;
