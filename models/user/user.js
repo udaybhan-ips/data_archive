@@ -147,7 +147,7 @@ module.exports = {
       else {
         findOneByEmail(data.email)
           .then(function(user) {
-             return verifyPassword(data.current_password, user);
+             return verifyPasswordCus(data.current_password, user);
           })
           .then(function(result) {
             validatePassword(data.password, 6)
@@ -325,14 +325,40 @@ function validatePassword(password, minCharacters) {
 }
 
 function verifyPassword(password, user) {
+ // console.log("passwoed="+user.password);
+ console.log("passwoed="+password);
+   console.log("passwoed="+user.password);
   return new Promise(function(resolve, reject) {
     bcrypt.compare(password, user.password, function(err, result) {
       if (err) {
+        console.log("err")
         reject(err);
       }
       else {
+        console.log("else")
+        
         resolve({ isValid: result,id:user.id,name:user.name, email: user.email_id, role:user.role });
       }
     });
   });
 }
+
+function verifyPasswordCus(password, user) {
+  
+   return new Promise(function(resolve, reject) {
+     bcrypt.compare(password, user.password, function(err, result) {
+       if (err) {
+        // console.log("err")
+         reject(err);
+       }
+       if(result){
+        resolve({ isValid: result,id:user.id,name:user.name, email: user.email_id, role:user.role });
+       }
+       else {
+        // console.log("err 1"+JSON.stringify(err))
+         
+         reject("Password did not match");
+       }
+     });
+   });
+ }

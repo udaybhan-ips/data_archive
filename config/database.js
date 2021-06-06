@@ -178,7 +178,8 @@ async function  customPromiseHandler(cursor, numberOfRrecord){
   return new Promise((resolve, reject)=>{
 
     cursor.read(numberOfRrecord, (err, data)=>{
-      if(err){
+      
+       if(err){
         console.log("err...."+err.message);
         reject(err);
       }

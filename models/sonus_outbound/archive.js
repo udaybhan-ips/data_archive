@@ -181,7 +181,7 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
         if(api){
           query=`update batch_date_control set date_set='${targetDate}'::date + interval '0' day , last_update=now() where date_id='${serviceId}'`;
         }else{
-          query=`update batch_date_control set date_set='${targetDate}'::date + interval '10' day , last_update=now() where date_id='${serviceId}'`;
+          query=`update batch_date_control set date_set='${targetDate}'::date + interval '4' day , last_update=now() where date_id='${serviceId}'`;
         }
         
         const updateBatchControlRes= await db.query(query,[]);

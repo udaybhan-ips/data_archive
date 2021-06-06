@@ -3,7 +3,7 @@ var db = require('./../../config/database');
 module.exports = {
   findAll: async function() {
       try {
-          const query="select sor.*,soc.customer_name from (select * from sonus_outbound_rates)as sor join (select customer_name, customer_id  from sonus_outbound_customer) as soc on (soc.customer_id=sor.customer_id)";
+          const query="select sor.customer_id,sor.landline, sor.mobile, sor.date_added, sor.updated_by, soc.customer_name, row_number() over (order by sor.customer_id) as id from (select * from sonus_outbound_rates)as sor join (select customer_name, customer_id  from sonus_outbound_customer) as soc on (soc.customer_id=sor.customer_id)";
           const rateListRes= await db.query(query,[], ipsPortal=true);
           return rateListRes.rows;
       } catch (error) {
