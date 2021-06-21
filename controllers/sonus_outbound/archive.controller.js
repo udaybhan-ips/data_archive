@@ -18,13 +18,47 @@ module.exports = {
         const getAllTrunkgroupRes = await ArchiveSonusOutbound.getAllTrunkgroup();
         const getRatesRes = await ArchiveSonusOutbound.getRates();
 
-      //  console.log(JSON.stringify(getAllTrunkgroupRes));
+        console.log(JSON.stringify(getAllTrunkgroupRes));
 
-        for (let i=0;i<getAllTrunkgroupRes.length;i++){
-            let getTargetCDRRes = await  ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, getAllTrunkgroupRes[i]);
-            const getDataRes = await  ArchiveSonusOutbound.insertByBatches(getTargetCDRRes, getAllTrunkgroupRes[i], getRatesRes);
-        
+        let trunkPortsVal='';
+        let TGsWithIncalledNum=[];
+        let whereCl = [];
+
+        try{
+          for (let i=0;i<getAllTrunkgroupRes.length;i++){
+            if(getAllTrunkgroupRes[i]['incallednumber']){
+              TGsWithIncalledNum.push(getAllTrunkgroupRes[i]);
+              
+            }else{
+              let trunkPorts = getAllTrunkgroupRes[i].trunk_port;
+              let trunkPortsArr = trunkPorts.split(",");
+  
+              for(let j=0; j<trunkPortsArr.length;j++){
+                trunkPortsVal = trunkPortsVal + `'${trunkPortsArr[j]}',`;
+              }
+            }
+  
+          }
+          //remove last value (,)
+              if(trunkPortsVal.substr(trunkPortsVal.length - 1)==','){
+                trunkPortsVal = trunkPortsVal.substring(0, trunkPortsVal.length - 1);
+              }
+
+        }catch(e){
+          console.log("e="+e.message);
         }
+        
+        
+         let getTargetCDRTGRes = await  ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, getAllTrunkgroupRes,trunkPortsVal );
+         const getTGDataRes = await  ArchiveSonusOutbound.insertByBatches(getTargetCDRTGRes, getAllTrunkgroupRes, getRatesRes);
+      
+        // For incallednumber 
+
+        let getTargetCDRWithIncalledRes = await  ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, TGsWithIncalledNum,null,"incallednumber" );
+        
+        const getWithCalledDataRes = await  ArchiveSonusOutbound.insertByBatches(getTargetCDRWithIncalledRes, TGsWithIncalledNum, getRatesRes);
+        
+       
 
         const [udpateBatchControlRes, updateBatchControlErr] = await handleError( ArchiveSonusOutbound.updateBatchControl(dateId,Dates.targetDate));
         if(updateBatchControlErr) {
@@ -55,7 +89,7 @@ module.exports = {
       //  console.log(JSON.stringify(getAllTrunkgroupRes));
 
         let getTargetCDRRes = await  ArchiveSonusOutbound.getTargetCDRBYID(Dates.targetDateWithTimezone, getAllTrunkgroupRes[0]);
-        const getDataRes = await  ArchiveSonusOutbound.insertByBatches(getTargetCDRRes, getAllTrunkgroupRes[0], getRatesRes);
+        const getDataRes = await  ArchiveSonusOutbound.insertByBatches(getTargetCDRRes, getAllTrunkgroupRes, getRatesRes);
         const [udpateBatchControlRes, updateBatchControlErr] = await handleError( ArchiveSonusOutbound.updateBatchControl(dateId,Dates.targetDate));
         
         return res.status(200).json([{id:0,result:'success',message:'done'}]);

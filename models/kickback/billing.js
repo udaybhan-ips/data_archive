@@ -135,19 +135,18 @@ insertByBatches: async function(records, ratesData) {
       }
        
  },
- sendNotification: async function(customerName, billingYear, billingMonth, currentMonth){
-  let subject = `${billingYear}年${billingMonth}月度 LEAFNET（月末）請求書処理のお願い`;
+ sendNotofication: async function(customerName, billingYear, billingMonth, currentMonth){
+  let subject = `Approval Notification for ${reqData.customer_name} of ${utility.dateVsMonths[reqData.billing_month]}`;
   let html = `<div>
       <div> Hi Team, </div>
-      <div> Leafnet billing has been finished, Please check at below link.</div>
-      <div>http://10.168.22.40/services/leafnet/</div>
+      <div> Below is the billing status of ${reqData.customer_name} Sonus Outbound. This is approved by ${reqData.approved_by}.</div>
       <div> Thank you </div>
   </div>`;
 
   let mailOption={
       from: 'ips_tech@sysmail.ipsism.co.jp',
       to: 'uday@ipsism.co.jp',
-      cc:'y_ito@ipsism.co.jp',
+      //cc:'r_chong@ipsism.co.jp,y_ito@ipsism.co.jp',
       subject,
       html
   }

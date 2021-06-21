@@ -1,6 +1,6 @@
 var db = require('./../../config/database');
 const { BATCH_SIZE } = require('../../config/config');
-const CDR_SONUS_CS='cdr_sonus_cs';
+const CDR_CS='cdr_cs';
 
 module.exports = {
 
@@ -17,9 +17,24 @@ module.exports = {
           return error;
       }
   },
-  deleteTargetDateCDR: async function(targetDate) {
+  getTableName: async function(targetDate){
+    try{
+      const year = new Date(targetDate).getFullYear();
+      let month = new Date(targetDate).getMonth() + 1;
+
+      if(parseInt(month,10)<10){
+          month='0'+month;
+      }
+      return `cdr_${year}${month}`;
+
+    }catch(e){
+      console.log("err in get table="+e.message);
+      return console.error(e);
+    }
+  },
+  deleteTargetDateCDR: async function(targetDate, tableName) {
     try {
-        const query=`delete FROM cdr_sonus where START_TIME::date = '${targetDate}'::date`;
+        const query=`delete FROM ${tableName} where START_TIME::date = '${targetDate}'::date`;
         const deleteTargetDateRes= await db.query(query,[]);
         return deleteTargetDateRes;
     } catch (error) {
@@ -29,10 +44,14 @@ module.exports = {
 getTargetCDR: async function(targetDateWithTimezone) {
     
     try {
-        const query=`SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
-        CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW, CALLSTATUS,
-         CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  where STARTTIME >= '${targetDateWithTimezone}' and 
-         startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  AND INGRPSTNTRUNKNAME = 'IPSLFIQ57APRII' AND RECORDTYPEID = 3 order by STARTTIME` ;
+        const query=`SELECT GW, SESSIONID, STARTTIME, CALLDURATION, ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, DISCONNECTTIME, ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
+        CALLDURATION*0.01 AS DURATION, CEIL(CALLDURATION*0.01) AS DURATIONKIRIAGE, INANI, INGRPSTNTRUNKNAME,
+        OUTGOING, INCALLEDNUMBER, CALLINGPARTYCATEGORY, EGCALLEDNUMBER, INGRESSPROTOCOLVARIANT,CALLSTATUS FROM COLLECTOR_73  
+        where STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
+        AND (GW IN ('NFPGSX4','IPSGSX5')) 
+        AND RECORDTYPEID = 3 
+        AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
+        order by STARTTIME limit 10` ;
      
         const data = await db.mySQLQuery(query);
         return data;
@@ -51,7 +70,7 @@ getTargetCDR: async function(targetDateWithTimezone) {
     let resArr=[];
     for(let i=0;i<chunkArray.length;i++){
       const data =  getNextInsertBatch(chunkArray[i]);
-      res=await db.queryBatchInsert(data,CDR_SONUS_CS);
+      res=await db.queryBatchInsert(data,CDR_CS);
       resArr.push(res);
     }
     console.log("done"+ new Date());
@@ -65,7 +84,7 @@ getTargetCDR: async function(targetDateWithTimezone) {
         if(api){
           query=`update batch_date_control set date_set='${targetDate}'::date + interval '0' day , last_update=now() where date_id='${serviceId}'`;
         }else{
-          query=`update batch_date_control set date_set='${targetDate}'::date + interval '1' day , last_update=now() where date_id='${serviceId}'`;
+          query=`update batch_date_control set date_set='${targetDate}'::date + interval '3' day , last_update=now() where date_id='${serviceId}'`;
         }
         
         const updateBatchControlRes= await db.query(query,[]);
@@ -241,4 +260,9 @@ function chunk(array, size) {
     chunked_arr.push(copied.splice(0, size));
   }
   return chunked_arr;
+}
+
+
+function getDurationUse(duration){
+  
 }

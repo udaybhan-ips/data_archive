@@ -26,10 +26,10 @@ module.exports = {
           });    
            
       }
-      let html = '<div> this is test email for sonus outbound approval </div>'
+      
       if(req && req.body && req.body.status){
         if(req.body.status==='Approve'){
-          ApprovalSonusOutbound.sendApprovalNotification(html);
+          ApprovalSonusOutbound.sendApprovalNotification(req.body);
         }        
       }
       

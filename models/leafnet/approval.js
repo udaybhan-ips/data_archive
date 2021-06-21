@@ -44,12 +44,20 @@ module.exports = {
             return error;
         }
     }, 
-    sendApprovalNotification: async function(html){
+    sendApprovalNotification: async function(reqData){
+        let subject = `Approval Notification for ${reqData.customer_name} of ${utility.dateVsMonths[reqData.billing_month]}`;
+        let html = `<div>
+            <div> Hi Team, </div>
+            <div> Below is the billing status of ${reqData.customer_name} . This is approved by ${reqData.approved_by}.</div>
+            <div>http://10.168.22.40/services/leafnet</div>
+            <div> Thank you </div>
+        </div>`;
+
         let mailOption={
             from: 'ips_tech@sysmail.ipsism.co.jp',
             to: 'uday@ipsism.co.jp',
             //cc:'r_chong@ipsism.co.jp,y_ito@ipsism.co.jp',
-            subject:'Approval Notification',
+            subject,
             html
         }
     

@@ -120,9 +120,9 @@ module.exports = {
         //console.log("mysql connection string is=  "+mySQLConnectionString.MYSQL);
         console.log("query="+text+"----"+values);
         const pool=mysql.createPool({
-          host     : '192.168.11.252',
-          user     : 'ips',
-          password : 'ips0032',
+          host     : '10.168.11.252',
+          user     : 'ipstwo',
+          password : 'ipstwo0032',
           database : 'epart',
           timezone: 'Z'
         });

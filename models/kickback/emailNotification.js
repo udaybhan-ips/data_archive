@@ -87,7 +87,7 @@ module.exports = {
     let mailOption={
         from: 'ips_tech@sysmail.ipsism.co.jp',
         to: 'uday@ipsism.co.jp',
-        cc:'y_ito@ipsism.co.jp',
+        cc:'r_chong@ipsism.co.jp,y_ito@ipsism.co.jp',
    //     cc:'gaurav@ipsism.co.jp,abhilash@ipsism.co.jp,vijay@ipsism.co.jp',
         subject:'LEAFNET CDR CHECK',
         html
@@ -140,7 +140,7 @@ function tableCreate(rawData, processData) {
 
     try{
         table+= `<table class='some-table' border="2" style='${style}'>
-             <thead> <tr> <th>DATE</th> <th>SONUS RAW(10.168.11.252</th> <th>PRO(10.168.22.40)</th> <th> DIFFERENCE </th></tr> </thead>
+             <thead> <tr> <th>DATE</th> <th>SONUS RAW(192.168.11.252</th> <th>PRO(10.168.22.40)</th> <th> DIFFERENCE </th></tr> </thead>
         <tbody>
         ${tableRows}    
         </tbody>

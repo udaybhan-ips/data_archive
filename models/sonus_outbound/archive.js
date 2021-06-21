@@ -35,7 +35,7 @@ module.exports = {
         let where = "";
 
         if(customerId){
-          where = `WHERE customer_id= '${customerId}'`;
+          where = `WHERE customer_id= '${customerId}' `;
         }
         const query=`select customer_id, landline, mobile from sonus_outbound_rates ${where} `;
         const ratesRes= await db.query(query,[], ipsPortal=true);
@@ -53,7 +53,9 @@ module.exports = {
          let where = "";
 
           if(customerId && customerName){
-              where = `WHERE customer_id= '${customerId}' AND customer_name = '${customerName}' ` ;
+              where = `WHERE customer_id= '${customerId}' AND customer_name = '${customerName}' and deleted= false ` ;
+          }else{
+            where ='WHERE deleted = false';
           }
 
           const query=`select trunk_port, customer_name, customer_id,incallednumber from sonus_outbound_customer ${where}`;
@@ -85,35 +87,37 @@ module.exports = {
         return error;
     }
   },
-getTargetCDR: async function(targetDateWithTimezone, customerInfo) {
+getTargetCDR: async function(targetDateWithTimezone, customerInfo, trunkPortsVal, type) {
   try {
       let where='';
-      let trunkPortsVal='';
+      
+      if(type == 'incallednumber'){
+        let wherePart="";
+        for ( let i=0; i<customerInfo.length; i++){
+          wherePart = wherePart + ` (INGRPSTNTRUNKNAME in ('${customerInfo[i].trunk_port}') AND incallednumber like '${customerInfo[i]['incallednumber']}' ) OR` ;
+        }
+        //remove last  value (OR)
+        if(wherePart.substr(wherePart.length - 2)=='OR'){
+          wherePart = wherePart.substring(0, wherePart.length - 2);
+        }
 
-      if(customerInfo['incallednumber']){ 
-        where=` WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 9 DAY) AND 
-        INGRPSTNTRUNKNAME in ('${customerInfo.trunk_port}') AND incallednumber like '${customerInfo['incallednumber']}' AND RECORDTYPEID = 3 order by STARTTIME `;
+        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
+        (${wherePart}) AND RECORDTYPEID = 3  `;
+
       }else{
-        let trunkPorts = customerInfo.trunk_port;
-        let trunkPortsArr = trunkPorts.split(",");
-
-        for(let i=0; i<trunkPortsArr.length;i++){
-          trunkPortsVal = trunkPortsVal + `'${trunkPortsArr[i]}',`;
-        }
-        //remove last value (,)
-        if(trunkPortsVal.substr(trunkPortsVal.length - 1)==','){
-          trunkPortsVal = trunkPortsVal.substring(0, trunkPortsVal.length - 1);
-        }
-
-        where=`WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 9 DAY)  AND INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND RECORDTYPEID = 3 order by STARTTIME `;
+      
+        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
+        INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND RECORDTYPEID = 3  `;
+      
       }
 
       
-      //console.log("where="+where);
       
+      //console.log("where="+where);
+      //return null;
       const query=`SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
       CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW, CALLSTATUS,
-      CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73_202105  ${where} ` ;
+      CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  ${where} ` ;
       //console.log("query="+query);
       const data= await db.mySQLQuery(query);
       return data;
@@ -129,10 +133,11 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
       let where='';
       
       console.log("customer info");
-      console.log(JSON.stringify(customerInfo));
+     // console.log(JSON.stringify(customerInfo));
 
       if(customerInfo['incallednumber']){ 
-        where=` WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND 
+    //    where=` WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND 
+        where=` WHERE  STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
         INGRPSTNTRUNKNAME in ('${customerInfo.trunk_port}') AND incallednumber like '${customerInfo['incallednumber']}' AND RECORDTYPEID = 3 order by STARTTIME `;
       }else{
         let trunkPorts = customerInfo.trunk_port;
@@ -144,7 +149,7 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
       
       const query=`SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
       CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW, CALLSTATUS,
-      CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73_202105  ${where} ` ;
+      CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  ${where}  ` ;
       //console.log("query="+query);
       const data= await db.mySQLQuery(query);
       return data;
@@ -160,7 +165,7 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
     const dataSize=JSON_data.length;
     const chunkArray= await chunk(JSON_data,BATCH_SIZE);
     //console.log(chunkArray);
-    //console.log(JSON.stringify(customerInfo));
+    console.log(JSON.stringify(customerInfo));
     let res=[];
     let resArr=[];
     for(let i=0;i<chunkArray.length;i++){
@@ -181,7 +186,7 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
         if(api){
           query=`update batch_date_control set date_set='${targetDate}'::date + interval '0' day , last_update=now() where date_id='${serviceId}'`;
         }else{
-          query=`update batch_date_control set date_set='${targetDate}'::date + interval '4' day , last_update=now() where date_id='${serviceId}'`;
+          query=`update batch_date_control set date_set='${targetDate}'::date + interval '1' day , last_update=now() where date_id='${serviceId}'`;
         }
         
         const updateBatchControlRes= await db.query(query,[]);
@@ -289,22 +294,44 @@ function utcToDate(utcDate){
     return selectedCarrierID;
   }
 
-  async function getCompanyInfo(trunkPort, customerInfo,incallednumber){
-    let res={};
-    let startDigitofInCallNum=incallednumber.substring(0,3)+'%';
-    
-      if(customerInfo['incallednumber']==startDigitofInCallNum){        
-        res['comp_code']=customerInfo['customer_id'];
-        res['comp_name']=customerInfo['customer_name'];
-      }else {
-        let trunkPortsArr = customerInfo['trunk_port'].split(",");
-        for(let i=0; i<trunkPortsArr.length; i++){
-          if(trunkPortsArr[i]==trunkPort){
-            res['comp_code']=customerInfo['customer_id'];
-            res['comp_name']=customerInfo['customer_name'];
+  async function getCompanyInfo(trunkPort, customerInfo = [],incallednumber){
+    let res= {};
+    let startDigitofInCallNum=incallednumber.substring(0,4)+'%';
+    // let trunkPortsArr = customerInfo[j]['trunk_port'].split(",");
+    // customerInfo.forEach(item => {
+    //   let res = {}
+    //   if((item.incallednumber === startDigitofInCallNum) || item.trunk_port ===trunkPort){
+    //     res['comp_code']=item['customer_id'];
+    //     res['comp_name']=item['customer_name'];
+    //   }
+    // })
+  
+    try{
+      
+      for(j=0; j<customerInfo.length;j++){
+        
+        if(customerInfo[j]['incallednumber']){
+          if(customerInfo[j]['incallednumber']===startDigitofInCallNum) {
+            res['comp_code']=customerInfo[j]['customer_id'];
+            res['comp_name']=customerInfo[j]['customer_name'];
+            break;
           }
-        }  
+        }else {
+          let trunkPortsArr = customerInfo[j]['trunk_port'].split(",");
+          if(trunkPortsArr.includes(trunkPort)){
+            res['comp_code']=customerInfo[j]['customer_id'];
+            res['comp_name']=customerInfo[j]['customer_name'];
+            break;
+          }
+        }
+
       }
+
+    }catch(e){
+      console.log("Erro in get custoemr info--"+e.message);
+    }
+
+      
     //console.log(JSON.stringify(res));
     return res;
   }

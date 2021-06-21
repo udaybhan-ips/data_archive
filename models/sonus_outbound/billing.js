@@ -1,5 +1,5 @@
 var db = require('./../../config/database');
-
+var utility = require("../../public/javascripts/utility");
 module.exports = {
  
   getTargetDate: async function(date_id) {
@@ -92,6 +92,25 @@ module.exports = {
         console.log("Error---"+error.message);
         return error;
     }
+  },
+  sendNotification: async function(billingYear, billingMonth){
+    let subject = `${billingYear}年${billingMonth}月度 SONUS OUTBOUND`;
+    let html = `<div>
+        <div> Hi Team, </div>
+        <div> SONUS OUTBOUND billing has been finished, Please check at below link.</div>
+        <div>http://10.168.22.40/services/sonusoutbound/</div>
+        <div> Thank you </div>
+    </div>`;
+  
+    let mailOption={
+        from: 'ips_tech@sysmail.ipsism.co.jp',
+        to: 'telecom@ipsism.co.jp',
+        cc:'y_ito@ipsism.co.jp,uday@ipsism.co.jp',
+        subject,
+        html
+    }
+  
+   utility.sendEmail(mailOption);
   },
     
 }

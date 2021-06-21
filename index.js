@@ -9,12 +9,16 @@ var colors = require('colors');
 
 var jobLef = require('./controllers/cron/leafnet_cron');
 var jobSonusOut = require('./controllers/cron/sonus_outbund_cron');
+var jobKickback = require('./controllers/cron/kickback_cron');
+
+const dbSqlz = require("./models");
+
 
 // Create server
 var app = express();
 
 app.use(cors());
-
+// dbSqlz.sequelize.sync();
 
 // testing
  // jobSonusOut.archiverJobSonusOut.start();
@@ -23,6 +27,7 @@ app.use(cors());
   //jobLef.archiverJob.start();
 // //console.log("test");
 // Start listening
+
 
 
 

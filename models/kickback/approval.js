@@ -49,7 +49,6 @@ module.exports = {
         let html = `<div>
             <div> Hi Team, </div>
             <div> Below is the billing status of ${reqData.customer_name} Sonus Outbound. This is approved by ${reqData.approved_by}.</div>
-            <div>http://10.168.22.40/services/sonusoutbound</div>
             <div> Thank you </div>
         </div>`;
 
@@ -60,6 +59,7 @@ module.exports = {
             subject,
             html
         }
+    
        utility.sendEmail(mailOption);   
     }  
   

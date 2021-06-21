@@ -2,8 +2,8 @@
 const MYSQL={
   host     : (process.env.MYSQL_PORT || '10.168.11.252'),
   database : (process.env.MYSQL_DATABASE || 'epart'),
-  user     : (process.env.MYSQL_USER ||'ips'),
-  password : (process.env.MYSQL_PASSWORD || 'ips0032'),
+  user     : (process.env.MYSQL_USER ||'ipstwo'),
+  password : (process.env.MYSQL_PASSWORD || 'ipstwo0032'),
   timezone: 'Z'
 }
 
@@ -20,7 +20,14 @@ const SONUSDB={
   database : (process.env.POSTGRES_DATABASE || 'sonus_db'),
   user     : (process.env.POSTGRES_USER ||'postgres'),
   password : (process.env.POSTGRESL_PASSWORD || ''),
-  timezone: 'Z'
+  dialect : (process.env.POSTGRESL_PASSWORD || 'postgres'),
+  timezone: 'Z',
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  }
 }
 
 module.exports = {
