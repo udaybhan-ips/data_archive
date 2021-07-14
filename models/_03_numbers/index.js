@@ -1,11 +1,11 @@
-var config = require('./../../config/config');
-var db = require('./../../config/database');
+var db = require('../../config/database');
+
 
 module.exports = {
   findAll: async function() {
       try {
-        console.log("in rate");
-          const query="SELECT * FROM rate order by company_code asc";
+        
+          const query="SELECT * FROM _03numbers order by _03_numbers asc";
           const rateListRes= await db.queryIBS(query,[]);
           return rateListRes.rows;
       } catch (error) {
@@ -17,8 +17,10 @@ module.exports = {
     console.log(data);
     try {
       //  if(validateRateData()){
-            const query=`INSERT INTO rate (company_code,  date_start, date_expired, rate_setup, rate_second, rate_trunk_port, date_update, updated_by  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning rate_id`;
-            const value= [data.company_code, data.date_start, data.date_expired, data.rate_setup, data.rate_second, data.rate_trunk_port ,'now()', data.updated_by];
+            const query=`INSERT INTO _03numers (_03_numbers,customer_cd,use_switch,use_service,wro_number,kck_rate,kaisuu_rate,issue_date,start_date,return_date,stop_date,number_special_flag,use_flag 
+              ,valids_date,validf_date,valid_flag , rico_name ,rico_date,modi_name ,date_update) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) returning rate_id`;
+            const value= [data._03_number,data.customer_cd,data.use_switch,data.use_service,data.wro_number,data.kck_rate,data.kaisuu_rate,data.issue_date,data.start_date,data.return_date,
+              data.stop_date,data.number_special_flag,data.use_flag ,data.valids_date,data.validf_date,data.valid_flag ,data.rico_name ,data.rico_date,data.modi_name];
             const res = await db.queryIBS(query,value);
             return res.rows[0];
       //  }
@@ -26,7 +28,7 @@ module.exports = {
         return error;
     }
   },
-  updateRates: async function(data) {
+  updateNumbers: async function(data) {
     console.log(data);
     let updateData='';
     try {

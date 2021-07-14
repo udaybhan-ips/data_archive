@@ -27,7 +27,18 @@ router.use('/v1', require('./apiv1/sonus_outbound/archive.data.routes'));
 
 router.use('/v1', require('./apiv1/customer/customers.routes'));
 
+/** 03 numbers  details **/
 
+router.use('/v1', require('./apiv1/_03numbers/_03numbers.routes'));
+
+/** Kickback **/
+
+router.use('/v1', require('./apiv1/kickback/rates.routes'));
+router.use('/v1', require('./apiv1/kickback/billing.summary.routes'));
+router.use('/v1', require('./apiv1/kickback/archive.data.routes'));
+router.use('/v1', require('./apiv1/kickback/invoice.routes'));
+router.use('/v1', require('./apiv1/kickback/cdr.routes'));
+router.use('/v1', require('./apiv1/kickback/approval.routes'));
 
 
 // API Error routes

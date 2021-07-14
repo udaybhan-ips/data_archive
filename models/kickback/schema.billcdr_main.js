@@ -1,10 +1,22 @@
 module.exports = (sequelize, Sequelize) => {
-    const CDR = sequelize.define("cdr_202106", {
+    const CDR = sequelize.define("billcdr_main_06", {
       cdr_id: {
         type: Sequelize.BIGINT
       },
       date_bill: {
         type: Sequelize.DATE
+      },
+      company_code:{
+        type: Sequelize.STRING
+      },
+      carrier_code: {
+        type: Sequelize.STRING
+      },
+      in_outbound: {
+        type: Sequelize.STRING
+      },
+      dom_int_call: {
+        type: Sequelize.STRING
       },
       orig_ani: {
         type: Sequelize.STRING
@@ -24,12 +36,7 @@ module.exports = (sequelize, Sequelize) => {
       duration_use: {
         type: Sequelize.STRING
       },
-      in_outbound: {
-        type: Sequelize.STRING
-      },
-      dom_int_call: {
-        type: Sequelize.STRING
-      },
+      
       orig_carrier_id: {
         type: Sequelize.STRING
       },

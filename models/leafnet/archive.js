@@ -32,7 +32,7 @@ getTargetCDR: async function(targetDateWithTimezone) {
         const query=`SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
         CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW, CALLSTATUS,
          CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  where STARTTIME >= '${targetDateWithTimezone}' and 
-         startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  AND INGRPSTNTRUNKNAME = 'IPSLFIQ57APRII' AND RECORDTYPEID = 3 order by STARTTIME` ;
+         startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 5 DAY)  AND INGRPSTNTRUNKNAME = 'IPSLFIQ57APRII' AND RECORDTYPEID = 3 order by STARTTIME` ;
      
         const data = await db.mySQLQuery(query);
         return data;
@@ -42,9 +42,7 @@ getTargetCDR: async function(targetDateWithTimezone) {
 },
   insertByBatches: async function(records) {
   
-    const JSON_data = Object.values(JSON.parse(JSON.stringify(records)));
-    //const dataSize=JSON_data.length;
-    const chunkArray=chunk(JSON_data,BATCH_SIZE);
+    const chunkArray=chunk(records,BATCH_SIZE);
     //console.log(dataSize);
 
     let res=[];

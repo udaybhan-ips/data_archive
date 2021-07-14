@@ -87,9 +87,9 @@ let arr=[ { StartTime: '2019-08-01T00:50:28.000Z',
     GSX: 'nfpgsx4',
     ten: '10' } ]
 
-
+    
 function writeArrayToCSV(data,fileName){
-    fs.writeFile(fileName, '\ufeff' + data, { encoding: 'utf-8' }, function(err) {
+    fs.writeFile(fileName, '\ufeff' + data, { encoding: 'text/csv; charset=utf-8' }, function(err) {
       if(err){
         console.log(err);
       }else{

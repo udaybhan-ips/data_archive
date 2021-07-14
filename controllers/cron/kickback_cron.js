@@ -5,7 +5,7 @@ var CDRsController = require('../kickback/cdr.controller');
 var EmailController = require('../kickback/emailNotification.controller');
 
 
-var archiverJob = new CronJob ('21 13 * * *',function(){
+var archiverJob = new CronJob ('34 10 * * *',function(){
     console.log('This is kickback archiver start');
     archiveController.getData();
     console.log('This is kickback archiver End');6

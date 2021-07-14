@@ -26,7 +26,7 @@ var CDRController = require('../sonus_outbound/cdr.controller');
 //     console.log('You will see this message every second');
 // },null, true, 'Asia/Tokyo');
 
-// var CDRControllerJob = new CronJob ('3 12 * * *',function(){
+// var CDRControllerJob = new CronJob ('18 10 * * *',function(){
 //     console.log('You will see this message every second');
 //     CDRController.createCDR();
 //     console.log('You will see this message every second');

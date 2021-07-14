@@ -329,8 +329,8 @@ async function getInvoiceData(year, month) {
       .text(`${customerId}`, 50, y+25,{ width: 100, align: "center" })
       .text(`${customerId}-${billingYear}${billingMonth}-1`, 150, y+25,{ width: 100, align: "center" })
       .text(`${billingYear}/${billingMonth}/01`, 250, y+25,{ width: 100, align: "center" } )
-      .text(`1/${billingMonth}/${billingYear} ～ ${daysInMonth(billingMonth, billingYear)}/${billingMonth}/${billingYear}`, 350, y+25,{ width: 100, align: "center" })
-      .text(`${daysInMonth(currentMonthValue, currentYear)}/${currentMonthValue}/${currentYear}`, 450, y+25,{ width: 100, align: "center" })
+      .text(`${billingYear}/${billingMonth}/01～ ${billingYear}/${billingMonth}/${daysInMonth(billingMonth, billingYear)}`, 350, y+25,{ width: 100, align: "center" })
+      .text(`${currentYear}/${currentMonthValue}/${daysInMonth(currentMonthValue, currentYear)}`, 450, y+25,{ width: 100, align: "center" })
 
       //row(doc, 200)    
       .moveDown();      

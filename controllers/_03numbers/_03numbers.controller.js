@@ -1,12 +1,12 @@
-var Rate = require('../../models/kickback/rate');
+var _03Number = require('../../models/_03_numbers/index');
 
 module.exports = {
-  addRates: async function(req, res) {
+  addNumber: async function(req, res) {
     try {
-        const addRatesRes = await Rate.create(req.body);
+        const addNumberRes = await _03Number.create(req.body);
         return res.status(200).json({
             message: 'success! rate added sucessfully',
-            id: addRatesRes
+            id: addNumberRes
           });
     } catch (error) {
         return res.status(400).json({
@@ -14,20 +14,20 @@ module.exports = {
           });
     }    
   },
-  listRates: async function(req, res) {
+  listNumbers: async function(req, res) {
     try {
-        const listRatesRes = await Rate.findAll(req.body);
-        return res.status(200).json(listRatesRes);
+        const listNumbersRes = await _03Number.findAll(req.body);
+        return res.status(200).json(listNumbersRes);
     } catch (error) {
         return res.status(400).json({
             message: error.message
           });
     }    
   },
-  updateRates: async function(req, res) {
+  updateNumber: async function(req, res) {
     try {
-        const listRatesRes = await Rate.updateRates(req.body);
-        return res.status(200).json(listRatesRes);
+        const updateNumbersRes = await _03Number.updateNumbers(req.body);
+        return res.status(200).json(updateNumbersRes);
     } catch (error) {
         return res.status(400).json({
             message: error.message

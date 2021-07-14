@@ -11,12 +11,12 @@ module.exports = {
   },
   getAllSonusOutboundCustomer: async function() {
     try {
-          const query=`select  customer_name, customer_id   from sonus_outbound_customer where deleted=false group by customer_name, customer_id order by customer_id`;
+          const query=`select  customer_name, customer_id   from sonus_outbound_customer where customer_name!='Wiz' and deleted=false group by customer_name, customer_id order by customer_id`;
           const ipsPortal=true;
           const getAllSonusOutboundCustRes= await db.query(query,[],ipsPortal);
           if(getAllSonusOutboundCustRes.rows){
               return  getAllSonusOutboundCustRes.rows;
-            }
+          }
           return {err:'not found'};
       } catch (error) {
           console.log("Err "+ error.message);
@@ -42,26 +42,20 @@ module.exports = {
     let fileName = __dirname+`\\CDR\\${customer_name}CDR${year}${month}.csv`;
 
     let header =  [
-        {id: 'start_time', title: 'Start Time'},{id: 'stop_time', title: 'Disconnect Time'}, {id: 'duration_use', title: 'Call Duration (s)'}, 
-        {id: 'sonus_callingnumber', title: 'Calling Number'}, {id: 'sonus_egcallednumber', title: 'Called Number'},
-        {id: 'term_carrier_id', title: 'Carrier Code'}, {id: 'mobile_count', title: 'Mobile Calls Count'},
-        {id: 'landline_count', title: 'Landline Calls Count'},{id: 'mobile_duration', title: 'Mobile Duration'},
-        {id: 'landline_duration', title: 'Landline Duration'},{id:'mob_amount',title:'Mobile Amount'},
-        {id:'landline_amount',title:'Landline Amount'}, {id: 'total_amount', title: 'Total Call Amount'},
-        {id: 'total_duration', title: 'Total Duration'}
+        {id: 'start_time', title: '通話開始時間'},{id: 'stop_time', title: '通話終了時間'}, {id: 'duration', title: '通話時間（秒）'}, 
+        {id: 'sonus_callstatus', title: '呼STATUS'}, {id: 'sonus_callingnumber', title: '発信元番号'},
+        {id: 'sonus_egcallednumber', title: '発信先番号'}, {id: 'c_type', title: '端末'}
     ]
 
+
+    //SELECT ADDTIME(STARTTIME,'09:00:00') AS STARTCALL, ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPCALL, CALLDURATION*0.01 AS DURATIONKIRIAGE,
+    //CALLSTATUS,CALLINGNUMBER,EGCALLEDNUMBER,case when( LEFT (EGCALLEDNUMBER,2)=70 || LEFT (EGCALLEDNUMBER,2)=80 || LEFT (EGCALLEDNUMBER,2)=90)
+    // then '携帯' else '固定' end as c_type
+
     try{
-        let query=`select start_time, stop_time, duration_use , sonus_callingnumber, sonus_egcallednumber, term_carrier_id,
-        case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then 1 else 0 end as mobile_count,
-        case when ( left(sonus_egcallednumber,2)='70' OR  left(sonus_egcallednumber,2)='80' OR left(sonus_egcallednumber,2)='90' ) then 0 else 1 end as landline_count,
-        case when ( left(sonus_egcallednumber,2)='70' OR  left(sonus_egcallednumber,2)='80' OR left(sonus_egcallednumber,2)='90' ) then duration else 0 end as mobile_duration,
-        case when ( left(sonus_egcallednumber,2)='70' OR  left(sonus_egcallednumber,2)='80' OR left(sonus_egcallednumber,2)='90' ) then 0 else duration end as landline_duration,
-        case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then duration*0.115 else 0 end as mob_amount,
-        case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then 0 else duration*0.06 end as landline_amount,
-        case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then duration*0.115 else duration*0.06 end as total_amount,
-        duration as total_duration
-        from cdr_sonus_outbound where to_char(start_time, 'MM-YYYY') = '${month}-${year}' and billing_comp_code='${customer_id}' and billing_comp_name='${customer_name}' `;
+        let query=`select start_time, stop_time, duration , sonus_callstatus, sonus_callingnumber, sonus_egcallednumber, 
+        case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then 'mobile' else 'landline' end as c_type
+        from cdr_sonus_outbound where duration > 0 and to_char(start_time, 'MM-YYYY') = '${month}-${year}' and billing_comp_code='${customer_id}' and billing_comp_name='${customer_name}' order by start_time asc `;
          
         resChunkArr = await db.parserQuery(query, fileName, header,customer_name);
 

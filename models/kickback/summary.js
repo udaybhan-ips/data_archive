@@ -3,7 +3,7 @@ var db = require('./../../config/database');
 module.exports = {
     getSummary: async function() {
       try {
-          const query=`select * from cdr_sonus_outbound_summary where billing_year='2021'`;
+          const query=`select * from kickback_traffic_summary `;
           const ratesRes= await db.query(query,[]);
           
           if(ratesRes.rows){
