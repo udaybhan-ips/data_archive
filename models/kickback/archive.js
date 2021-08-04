@@ -61,6 +61,15 @@ module.exports = {
       return error;
     }
   },
+  deleteTargetBillableCDR: async function (targetDate, tableName) {
+    try {
+      const query = `delete FROM billcdr_main where START_TIME::date = '${targetDate}'::date`;
+      const deleteTargetDateRes = await db.queryIBS(query, []);
+      return deleteTargetDateRes;
+    } catch (error) {
+      return error;
+    }
+  },
   getTargetBillableCDR: async function (targetDate, tableName) {
     try {
       const query = `SELECT * from ${tableName} where (SONUS_GW IN ('nfpgsx4','IPSGSX5'))  AND ((TERM_ANI ILIKE '035050%')
@@ -191,7 +200,7 @@ module.exports = {
   },
   getKickCompanyInfo: async function () {
     try {
-      const query = `select _03_numbers, customer_cd from _03numbers `;
+      const query = `select _03_numbers, customer_cd from _03numbers  `;
       const getKickCompanyInfoRes = await db.queryIBS(query, []);
       if (getKickCompanyInfoRes.rows) {
         return getKickCompanyInfoRes.rows;
@@ -399,7 +408,7 @@ async function getNextInsertBatch(data, getCompanyCodeInfoRes, getRemoteControlN
 
 }
 
-async function getNextInsertBatchBillCDR(data, carrierInfo, companyInfo) {
+async function getNextInsertBatchBillCDR(data, companyInfo,carrierInfo ) {
   console.log("data preapering for bill cdr");
   let valueArray = [];
 
@@ -407,12 +416,12 @@ async function getNextInsertBatchBillCDR(data, carrierInfo, companyInfo) {
     for (let i = 0; i < data.length; i++) {
 
       let obj = {};
-      obj['cdr_id'] = data[i]['cdr_id'];
+      obj['cdr_id'] = data[i]['id'];
       obj['date_bill'] = data[i]['date_bill'];
       obj['company_code'] = data[i]['billing_company_code'];
       obj['carrier_code'] = data[i]['orig_carrier_id'];;
       obj['in_outbound'] = data[i]['in_outbound'];;
-    //  obj['dom_int_call'] = data[i]['dom_int_call'];;
+      obj['call_type'] = data[i]['dom_int_call'];
       obj['trunk_port_target'] = data[i]['trunk_port'];;
       obj['duration'] = data[i]['duration_use'];
       obj['start_time'] = data[i]['start_time'];
@@ -447,9 +456,16 @@ async function getNextInsertBatchBillCDR(data, carrierInfo, companyInfo) {
 }
 
 async function getTerminalUse(strOrigANI, carrierInfo) {
+ // console.log("called strOrigANI="+strOrigANI+"\n carrierInfo="+carrierInfo.length);
+ 
+  //console.log("typeof =="+typeof(carrierInfo));
 
   for (let i = 0; i < carrierInfo.length; i++) {
+
+    //console.log("carrierInfo[i]['carrier_code']==="+carrierInfo[i]['carrier_code']);
+    //console.log((carrierInfo[i]));
     if (carrierInfo[i]['carrier_code'] == strOrigANI) {
+      //console.log("term_usee"+carrierInfo[i]['term_use']);
       return carrierInfo[i]['term_use'];
     }
   }
@@ -457,9 +473,11 @@ async function getTerminalUse(strOrigANI, carrierInfo) {
 }
 
 async function getKickCompany(calledNumber, companyInfo) {
-
+  //console.log("called number="+calledNumber+"\n companyInfo="+companyInfo.length);
   for (let i = 0; i < companyInfo.length; i++) {
+    //console.log("ompanyInfo[i]['_03_numbers']==="+companyInfo[i]['_03_numbers']);
     if (companyInfo[i]['_03_numbers'] == '0' + calledNumber) {
+      //console.log("cus=="+companyInfo[i]['customer_cd']);
       return companyInfo[i]['customer_cd'];
     }
   }

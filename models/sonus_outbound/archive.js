@@ -107,7 +107,8 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo, trunkPortsVal
       }else{
       
         where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
-        INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND RECORDTYPEID = 3  `;
+        INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND 
+          `;
       
       }
 

@@ -100,15 +100,13 @@ function writeArrayToCSV(data,fileName){
 
 module.exports.createCSVWithWriter=async function(fileName, header, data){
 
-  const createCsvWriter = require('csv-writer').createObjectCsvWriter({ append: true ,header,path: fileName});
+  const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+  const csvWriter = createCsvWriter({ header,path: fileName});
 
-  try{
-    await writeData(data, createCsvWriter);    
-  }catch(err){
-    console.log("Err=="+err.message);
-  }
-  
-  
+  csvWriter.writeRecords(data)       // returns a promise
+    .then(() => {
+        console.log('...Done');
+    });
 }
 
 async function writeData(records, csvWriter){

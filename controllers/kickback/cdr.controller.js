@@ -1,46 +1,67 @@
 var CDRKickback = require('../../models/kickback/cdr');
-let dateId=3;
-
+let dateId=3
 module.exports = {
+
+  getCDRPath: async function(req, res) {
+    return { message: 'data',
+            id: ''
+      }
+  },
+
+  createCDR: async function(req, res) {
+
+  try{
+    const [Dates,targetDateErr] = await handleError(CDRKickback.getTargetDate(dateId));
+    if(targetDateErr) {
+      throw new Error('Could not fetch target date');  
+    } 
     
-    getCDRPath: async function(req, res) {
-    try {
-        const [cdrRes,cdrError] = await handleError(CDRKickback.getInvoiceData());
-        if(cdrError) {
-             throw new Error('Could not fetch the cdr path');  
-        }
-        return res.status(200).json(cdrRes);
-        
-    } catch (error) {
-      return res.status(400).json({
-        message: error.message
-      });
-    }    
+    const billingYear = new Date(Dates.target_billing_month).getFullYear();
+    let billingMonth = new Date(Dates.target_billing_month).getMonth() + 1;
+
+    if(parseInt(billingMonth,10)<10){
+      billingMonth='0'+billingMonth;
+    }
+
+    const [customerListRes,customerListErr] = await handleError(CDRKickback.getAllKickbackCustomer(dateId));
+    if(customerListErr) {
+      throw new Error('Could not fetch customer list');  
+    }
+
+    console.log("customer list=="+JSON.stringify(customerListRes));
+
+    for(let i=0; i<customerListRes.length;i++){
+      
+      const [createCDRRes, createCDRErr] = await handleError(CDRKickback.createCDR(customerListRes[i]['cdr_comp_name'], customerListRes[i]['customer_id'], billingYear, billingMonth));
+      if(createCDRErr) {
+        throw new Error('Error while creating cdr '+ createCDRErr.message);  
+      }
+    
+    }
+     
+    
+    // return {
+    //     message: 'success! data inserted sucessfully',
+    //    // id: addRatesRes
+    //   };
+} catch (error) {
+  console.log("Error!!"+error.message);
+    return {
+        message: error
+      };
+}   
   },
   
-  genrateCSV: async function(req, res){
+  async getKickbackCustomerList(req, res){
     try {
-
-      const [Dates,targetDateErr] = await handleError(CDRKickback.getTargetDate(dateId));
-      if(targetDateErr) {
-          throw new Error('Could not fetch target date');  
-       } 
+        const getKickbackCustListRes = await CDRKickback.getAllKickbackCustomer();
+        return res.status(200).json(getKickbackCustListRes);
       
-      const billingYear = new Date(Dates.target_billing_month).getFullYear();
-      let billingMonth = new Date(Dates.target_billing_month).getMonth() + 1;
-      
-      if(parseInt(billingMonth,10)<10){
-          billingMonth='0'+billingMonth;
-      }
-
-      const [genrateCSVRes,genrateCSVErr] = await handleError(CDRKickback.createCDR(billingYear,billingMonth));
-      if(genrateCSVErr) {
-           throw new Error('Could not fetch the cdr path');  
-      }
-      return cdrRes;
-    } catch (error) {
-      console.log("Error =="+error.message);
-    }
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message
+    });
+  }    
   },
 }
 

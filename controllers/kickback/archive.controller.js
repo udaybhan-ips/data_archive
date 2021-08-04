@@ -24,14 +24,17 @@ module.exports = {
 
       const getDataRes = await ArchiveKickback.insertByBatches(getTargetCDRRes, getCompanyCodeInfoRes, getRemoteControlNumberDataRes, null, null, 'raw_cdr');
 
+    //  const deleteTargetDateBillableData = await ArchiveKickback.deleteTargetBillableCDR(Dates.targetDate, tableName);
+    //  const getTargetBillableCDRRes = await ArchiveKickback.getTargetBillableCDR(Dates.targetDate, tableName);
+    //  const getCarrierInfoRes = await ArchiveKickback.getKickCompanyInfo();
+    //  const getTerminalUseInfoRes = await ArchiveKickback.getTerminalUseInfo();
 
-      const getTargetBillableCDRRes = await ArchiveKickback.getTargetBillableCDR(Dates.targetDate, tableName);
-      const getCarrierInfoRes = await ArchiveKickback.getKickCompanyInfo();
-      const getTerminalUseInfoRes = await ArchiveKickback.getTerminalUseInfo();
+       //console.log(JSON.stringify(getCarrierInfoRes));
+       //console.log(JSON.stringify(getTerminalUseInfoRes));
 
-      // console.log(JSON.stringify(getTargetCDRRes));
+       
 
-      const getDataBillabeRes = await ArchiveKickback.insertByBatches(getTargetBillableCDRRes, null, null, getCarrierInfoRes, getTerminalUseInfoRes, 'bill_cdr');
+      // const getDataBillabeRes = await ArchiveKickback.insertByBatches(getTargetBillableCDRRes, null, null, getCarrierInfoRes, getTerminalUseInfoRes, 'bill_cdr');
 
       const [updateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveKickback.updateBatchControl(dateId, Dates.targetDate));
       if (updateBatchControlErr) {
