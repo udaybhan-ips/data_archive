@@ -69,7 +69,7 @@ module.exports = {
                     rows = resDataArr.rows;
                 }
                 
-                console.log(JSON.stringify(rows));
+                //console.log(JSON.stringify(rows));
 
                 
 

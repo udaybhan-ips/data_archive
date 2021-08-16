@@ -12,6 +12,9 @@ var colors = require('colors');
 var jobLef = require('./controllers/cron/leafnet_cron');
 var jobSonusOut = require('./controllers/cron/sonus_outbund_cron');
 var jobKickback = require('./controllers/cron/kickback_cron');
+var jobSougo = require('./controllers/cron/sougo_cron');
+
+
 
 const dbSqlz = require("./models");
 

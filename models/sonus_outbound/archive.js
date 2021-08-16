@@ -107,8 +107,7 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo, trunkPortsVal
       }else{
       
         where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
-        INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND 
-          `;
+        INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND  RECORDTYPEID = 3        `;
       
       }
 
@@ -180,6 +179,7 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
     return resArr;
 
   },
+
 
   updateBatchControl: async function(serviceId,targetDate,api) {
     let query;

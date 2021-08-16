@@ -6,6 +6,14 @@ const MYSQL={
   password : (process.env.MYSQL_PASSWORD || 'ipstwo0032'),
   timezone: 'Z'
 }
+const MYSQL_WITHOUT_TIMEZONE={
+  host     : (process.env.MYSQL_PORT || '10.168.11.252'),
+  database : (process.env.MYSQL_DATABASE || 'epart'),
+  user     : (process.env.MYSQL_USER ||'ipstwo'),
+  password : (process.env.MYSQL_PASSWORD || 'ipstwo0032'),
+  
+  
+}
 
 const IPSPortal={
   host     : (process.env.POSTGRES_PORT || '10.168.22.40'),
@@ -22,6 +30,7 @@ const IBS={
   password : (process.env.POSTGRESL_PASSWORD || 'ips12345'),
   timezone: 'Z'
 }
+
 const SONUSDB={
   host     : (process.env.POSTGRES_PORT || '10.168.22.40'),
   database : (process.env.POSTGRES_DATABASE || 'sonus_db'),
@@ -45,6 +54,7 @@ module.exports = {
   SECRET: (process.env.SECRET || 'h3sqq%pb#dHh^XcU8&Uj8brVS_*$LGHW'),
   JWT_EXPIRATION: (process.env.JWT_EXPIRATION || 86400),
   MYSQL_DATABASE_URL:MYSQL,
+  MYSQL_DATABASE_URL_WITHOUT_TIMEZONE:MYSQL_WITHOUT_TIMEZONE,
   BATCH_SIZE:100000
 };
 

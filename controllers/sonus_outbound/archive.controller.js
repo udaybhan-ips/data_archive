@@ -54,9 +54,9 @@ module.exports = {
       
         // For incallednumber 
 
-        // let getTargetCDRWithIncalledRes = await  ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, TGsWithIncalledNum,null,"incallednumber" );
+         let getTargetCDRWithIncalledRes = await  ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, TGsWithIncalledNum,null,"incallednumber" );
         
-        // const getWithCalledDataRes = await  ArchiveSonusOutbound.insertByBatches(getTargetCDRWithIncalledRes, TGsWithIncalledNum, getRatesRes);
+         const getWithCalledDataRes = await  ArchiveSonusOutbound.insertByBatches(getTargetCDRWithIncalledRes, TGsWithIncalledNum, getRatesRes);
         
        
 

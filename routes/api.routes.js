@@ -41,6 +41,14 @@ router.use('/v1', require('./apiv1/kickback/cdr.routes'));
 router.use('/v1', require('./apiv1/kickback/approval.routes'));
 
 
+/** sougo **/
+
+router.use('/v1', require('./apiv1/sougo/rates.routes'));
+router.use('/v1', require('./apiv1/sougo/invoice.routes'));
+router.use('/v1', require('./apiv1/sougo/approval.routes'));
+
+
+
 // API Error routes
 router.use(function(req, res) {
   return res.status(404).json({

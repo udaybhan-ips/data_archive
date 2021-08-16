@@ -55,7 +55,7 @@ module.exports = {
         AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
         order by STARTTIME asc ` ;
 
-      const data = await db.mySQLQuery(query);
+      const data = await db.mySQLQuery(query,[],'kickback');
       return data;
     } catch (error) {
       return error;
@@ -91,6 +91,7 @@ module.exports = {
 
 
   insertByBatches: async function (records, getCompanyCodeInfoRes, getRemoteControlNumberDataRes, carrierInfo, companyInfo, __type) {
+  //  console.log("total records="+records.length);
 
     const chunkArray = chunk(records, BATCH_SIZE);
     let res = [];
@@ -200,7 +201,7 @@ module.exports = {
   },
   getKickCompanyInfo: async function () {
     try {
-      const query = `select _03_numbers, customer_cd from _03numbers  `;
+      const query = `select substring(_03_numbers, 2, 10) as _03_numbers, customer_cd from _03numbers  `;
       const getKickCompanyInfoRes = await db.queryIBS(query, []);
       if (getKickCompanyInfoRes.rows) {
         return getKickCompanyInfoRes.rows;
@@ -356,12 +357,16 @@ async function getCompanyCodeOnRelayCode(data, relayCode, carrierCode, pattern, 
 
 
 async function getNextInsertBatch(data, getCompanyCodeInfoRes, getRemoteControlNumberDataRes) {
-  console.log("data preapering");
+  const dataLen = data.length;
+  console.log("data preapering for ");
+ // console.log("getCompanyCodeInfoRes leng="+getCompanyCodeInfoRes.length);
+  //console.log("getRemoteControlNumberDataRes=="+getRemoteControlNumberDataRes.length);
+  
+  
   let valueArray = [];
 
   try {
-    for (let i = 0; i < data.length; i++) {
-
+    for (let i = 0; i < dataLen; i++) {
       const { TRUNKPORT, XFB, XFC, XFD, XFE, XFEF, XFEL, INOU, INDO, XFEC } = await getInOutbound(data[i]['INGRESSPROTOCOLVARIANT'], data[i]['INGRPSTNTRUNKNAME']);
       const companyCode = await getCompanyCode(XFB, XFC, XFD, XFE, data[i]['ORIGDATE'], data[i]['INCALLEDNUMBER'], getCompanyCodeInfoRes, getRemoteControlNumberDataRes);
 
@@ -371,8 +376,8 @@ async function getNextInsertBatch(data, getCompanyCodeInfoRes, getRemoteControlN
       obj['term_ani'] = data[i]['INCALLEDNUMBER'];
       obj['stop_time'] = data[i]['STOPTIME'];
       obj['start_time'] = data[i]['ORIGDATE'];
-      obj['duration'] = parseFloat(data[i]['DURATION'], 10);
-      obj['duration_use'] = getDurationUse(data[i]['DURATION']);
+      obj['duration'] = parseFloat(data[i]['DURATION']);
+      obj['duration_use'] =await getDurationUse(data[i]['DURATION']);
       obj['in_outbound'] = INOU;
       obj['dom_int_call'] = INDO;
       obj['orig_carrier_id'] = XFB;
@@ -398,10 +403,10 @@ async function getNextInsertBatch(data, getCompanyCodeInfoRes, getRemoteControlN
 
     }
   } catch (err) {
-    console.log("err" + err.message);
+    console.log("err in data preapring==" + err.message);
   }
 
-  //console.log("arr="+JSON.stringify(valueArray));
+  console.log("arr length="+(valueArray.length));
 
 
   return valueArray;
@@ -416,7 +421,7 @@ async function getNextInsertBatchBillCDR(data, companyInfo,carrierInfo ) {
     for (let i = 0; i < data.length; i++) {
 
       let obj = {};
-      obj['cdr_id'] = data[i]['id'];
+      obj['cdr_id'] = data[i]['cdr_id'];
       obj['date_bill'] = data[i]['date_bill'];
       obj['company_code'] = data[i]['billing_company_code'];
       obj['carrier_code'] = data[i]['orig_carrier_id'];;
@@ -476,7 +481,7 @@ async function getKickCompany(calledNumber, companyInfo) {
   //console.log("called number="+calledNumber+"\n companyInfo="+companyInfo.length);
   for (let i = 0; i < companyInfo.length; i++) {
     //console.log("ompanyInfo[i]['_03_numbers']==="+companyInfo[i]['_03_numbers']);
-    if (companyInfo[i]['_03_numbers'] == '0' + calledNumber) {
+    if (companyInfo[i]['_03_numbers'] == calledNumber) {
       //console.log("cus=="+companyInfo[i]['customer_cd']);
       return companyInfo[i]['customer_cd'];
     }
@@ -500,10 +505,17 @@ function chunk(array, size) {
 }
 
 
-function getDurationUse(duration) {
+async function getDurationUse(duration) {
   let durationArr = duration.toString().split(".");
+  if(durationArr[1]){
+    if(durationArr[1].length==1){
+      return durationArr[0]+'.'+durationArr[1];
+    }
+  }
+  
 
   let tmp = parseInt(durationArr[1]);
+  
   let decimalVal = 0;
   decimalVal = Math.round(tmp / 10);
 
@@ -525,6 +537,8 @@ async function getInOutbound(INGRESSPROTOCOLVARIANT, INGRPSTNTRUNKNAME) {
   //,,,,,,,,,,,,,,,,,,,,,,,,,,,,,3,0,0,,,,0,1,,,4,,,,,,,,,,,,,,,0,0,,,32000,32000,,,,,,1-1,1-0,,,,,,,,,,,,,,,,,
   //,,,,,,,1,0xfe,2233,32000,0x22,1,0xfe,2013,47600,,1,0xfb,2030,,,,,,,,,,"
   let XFB = "", XFC = "", XFD = "", XFE = "", XFEF = "", XFEL = "", INOU = 0, INDO = 0, XFEC = 0, TRUNKPORT = 0;
+
+  //return { TRUNKPORT, XFB, XFC, XFD, XFE, XFEF, XFEL, INOU, INDO, XFEC };
 
 
   if (INGRESSPROTOCOLVARIANT) {
