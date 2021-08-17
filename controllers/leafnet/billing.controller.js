@@ -31,27 +31,27 @@ module.exports = {
             throw new Error('Error while billing '+ billingErr);  
         }
 
-        const [deleteSummaryRes, deleteSummaryErr] = await handleError(BillingLeafnet.deleteSummaryData(customerId, billingYear, billingMonth));
-        if(deleteSummaryErr) {
-            throw new Error('Error while delete summary data '+ deleteSummaryErr);  
-        }
+        // const [deleteSummaryRes, deleteSummaryErr] = await handleError(BillingLeafnet.deleteSummaryData(customerId, billingYear, billingMonth));
+        // if(deleteSummaryErr) {
+        //     throw new Error('Error while delete summary data '+ deleteSummaryErr);  
+        // }
 
-        const [createSummaryRes, createSummaryErr] = await handleError(BillingLeafnet.createSummaryData(customerId,billingYear, billingMonth));
-        if(createSummaryErr) {
-            throw new Error('Error while creating summary data '+ createSummaryErr);  
-        }
+        // const [createSummaryRes, createSummaryErr] = await handleError(BillingLeafnet.createSummaryData(customerId,billingYear, billingMonth));
+        // if(createSummaryErr) {
+        //     throw new Error('Error while creating summary data '+ createSummaryErr);  
+        // }
         
-        const [createInvoiceRes, createInvoiceErr] = await handleError(BillingLeafnet.genrateInvoice(customerId, billingYear, billingMonth,Dates.current_montth));
+        // const [createInvoiceRes, createInvoiceErr] = await handleError(BillingLeafnet.genrateInvoice(customerId, billingYear, billingMonth,Dates.current_montth));
 
-        if(createInvoiceErr) {
-            throw new Error('Error while creating invoice '+ createInvoiceErr.message);  
-        }
+        // if(createInvoiceErr) {
+        //     throw new Error('Error while creating invoice '+ createInvoiceErr.message);  
+        // }
         
-        const [sendNotificationRes, sendNotificationErr] = await handleError(BillingLeafnet.sendNotification(customerId, billingYear, billingMonth,Dates.current_montth));
+        // const [sendNotificationRes, sendNotificationErr] = await handleError(BillingLeafnet.sendNotification(customerId, billingYear, billingMonth,Dates.current_montth));
 
-        if(sendNotificationErr) {
-            throw new Error('Error while creating invoice '+ sendNotificationErr.message);  
-        }
+        // if(sendNotificationErr) {
+        //     throw new Error('Error while creating invoice '+ sendNotificationErr.message);  
+        // }
 
 
         return {

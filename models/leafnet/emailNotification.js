@@ -87,13 +87,13 @@ module.exports = {
     let mailOption={
         from: 'ips_tech@sysmail.ipsism.co.jp',
         to: 'uday@ipsism.co.jp',
-        cc:'y_ito@ipsism.co.jp',
+    //    cc:'y_ito@ipsism.co.jp',
    //     cc:'gaurav@ipsism.co.jp,abhilash@ipsism.co.jp,vijay@ipsism.co.jp',
         subject:'LEAFNET CDR CHECK',
         html
     }
 
-   utility.sendEmail(mailOption);                
+  // utility.sendEmail(mailOption);                
     
   },
   
@@ -115,7 +115,14 @@ function tableCreate(rawData, processData) {
 
     for(let i=0;i<rawData.length;i++){
         let diff=rawData[i]['total']-processData[i]['total'];
+        
+        console.log("rawData[i]['day']="+rawData[i]['day']);
+        console.log("processData[i]['day']="+processData[i]['day']);
+
+
         let loc= new Date(rawData[i]['day']);
+        console.log("loc="+loc);
+
         let locArr=loc.toLocaleString().split(",");
         let rawValue = utility.numberWithCommas(rawData[i]['total']);
         let processValue = utility.numberWithCommas(processData[i]['total']);

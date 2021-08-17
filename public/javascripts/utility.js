@@ -98,16 +98,31 @@ function writeArrayToCSV(data,fileName){
  })
 }
 
+// module.exports.createCSVWithWriter=async function(fileName, header, data){
+
+//   const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+//   const csvWriter = createCsvWriter({ header,path: fileName});
+
+//   csvWriter.writeRecords(data)       // returns a promise
+//     .then(() => {
+//         console.log('...Done');
+//     });
+// }
+
+
 module.exports.createCSVWithWriter=async function(fileName, header, data){
 
-  const createCsvWriter = require('csv-writer').createObjectCsvWriter;
-  const csvWriter = createCsvWriter({ header,path: fileName});
+  const createCsvWriter = require('csv-writer').createObjectCsvWriter({ append: true ,header,path: fileName});
 
-  csvWriter.writeRecords(data)       // returns a promise
-    .then(() => {
-        console.log('...Done');
-    });
+  try{
+    await writeData(data, createCsvWriter);    
+  }catch(err){
+    console.log("Err=="+err.message);
+  }
+  
+  
 }
+
 
 async function writeData(records, csvWriter){
   try{

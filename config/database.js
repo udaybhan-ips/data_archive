@@ -74,6 +74,7 @@ module.exports = {
     } else {
       connectionString = config.DATABASE_URL_SONUS_DB;
     }
+    
     if (customerName == 'Kickback') {
       connectionString = config.DATABASE_URL_IBS;
     }
@@ -161,7 +162,7 @@ module.exports = {
 
   },
   queryIBS: async function (text, values) {
-    // console.log("query="+text+"----"+values);
+     console.log("query="+text+"----"+values);
     try {
       types.setTypeParser(1114, function (stringValue) {
         return stringValue;
