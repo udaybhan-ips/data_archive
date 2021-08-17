@@ -5,7 +5,7 @@ module.exports = {
   findAll: async function() {
       try {
         console.log("in route");
-          const query="SELECT *, (select carrier_name from carrier where carrier.carrier_code=route.carrier_code limit 1)as carrier_name FROM route order by carrier_code asc";
+          const query="SELECT *, (select carrier_name from carrier where carrier.carrier_code=route.carrier_code limit 1)as carrier_name FROM route where deleted=false order by carrier_code asc";
           const rateListRes= await db.queryIBS(query,[]);
           return rateListRes.rows;
       } catch (error) {
@@ -43,6 +43,8 @@ module.exports = {
             // }
            
             updateData = updateData + 'relay_code='+`'${data.relay_code}'`+',';
+            updateData = updateData + 'deleted='+`'${data.deleted}'`+',';
+           
             updateData = updateData + 'pattern='+data.pattern+',';
             updateData = updateData + 'modified_by='+`'${data.modified_by}'`+',';
             updateData = updateData + 'company_code1='+`'${data.company_code1}'`+',';
