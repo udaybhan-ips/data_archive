@@ -5,7 +5,7 @@ module.exports = {
   findAll: async function() {
       try {
         console.log("in rate");
-          const query="SELECT *, (select company_name from company where company.company_code=rate.company_code limit 1) as company_name  FROM rate order by company_code asc";
+          const query="SELECT *, (select company_name from company where company.company_code=rate.company_code limit 1) as company_name  FROM rate where deleted=false order by company_code asc";
           const rateListRes= await db.queryIBS(query,[]);
           return rateListRes.rows;
       } catch (error) {
@@ -32,8 +32,8 @@ module.exports = {
     try {
       //  if(validateRateData()){
           // create history   
-            const query=`INSERT INTO rate_history (company_code, date_start, date_expired, rate_setup, rate_second, rate_trunk_port, date_updated, updated_by ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11) returning rate_id`;
-            const value= [ data.company_code, data.date_start, data.date_expired, data.rate_setup, data.rate_second, data.rate_trunk_port, 'now()', data.updated_by];
+            const query=`INSERT INTO rate_history (company_code, date_start, date_expired, rate_setup, rate_second, rate_trunk_port, date_update, updated_by ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11) returning rate_id`;
+            const value= [ data.company_code, data.date_start, data.date_expired, data.rate_setup, data.rate_second, data.rate_trunk_port, 'now()', data.update];
             const res = await db.queryIBS(query,value);
 
             // if(data.carrier_code){
@@ -63,8 +63,16 @@ module.exports = {
             }
             
             if(data.rate_second){
-              updateData = updateData+ 'rate_second='+data.rate_second;
+              updateData = updateData+ 'rate_second='+data.rate_second+',';
             }
+            if(data.deleted){
+              updateData = updateData +'deleted='+data.deleted+',';
+            }
+
+            if(data.modified_by){
+              updateData = updateData +'updated_by='+`'${data.modified_by}'`+',';
+            }
+
 
             // remove ',' from last character
             if(updateData.substr(updateData.length - 1)==','){
