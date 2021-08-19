@@ -304,6 +304,7 @@ async function getCompanyCode(STRXFB, STRXFC, STRXFD, STRXFE, DATSTARTTIME, STRT
 
 async function getCompanyCodeOnRelayCode(data, relayCode, carrierCode, pattern, company_code1) {
   try {
+    
     if (pattern == '2') {
       for (let i = 0; data.length; i++) {
         if (data[i]['carrier_code'] === carrierCode && data[i]['relay_code'] === relayCode) {

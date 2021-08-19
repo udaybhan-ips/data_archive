@@ -51,7 +51,7 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main where company_code not in ('1011000038','1011000046') `;
+      const query = `select distinct(company_code) as company_code from billcdr_main where company_code  in ('1011000038','1011000046') `;
       const billNoRes = await db.queryIBS(query, []);
       
       return billNoRes.rows;
