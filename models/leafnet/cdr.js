@@ -28,7 +28,7 @@ module.exports = {
     let fileName = __dirname+`\\CDR\\LeafnetCDR${year}${month}.csv`;
 
     let header =  [
-        {id: 'start_time', title: 'Start Time'},{id: 'disconnect_time', title: 'Disconnect Time'}, {id: 'duration_use', title: 'Call Duration (s)'}, 
+        {id: 'start_time', title: 'Start Time'},{id: 'stop_time', title: 'Disconnect Time'}, {id: 'duration_use', title: 'Call Duration (s)'}, 
         {id: 'sonus_callingnumber', title: 'Calling Number'}, {id: 'sonus_egcallednumber', title: 'Called Number'},{id: 'term_carrier_id', title: 'Carrier Code'}, 
         {id: 'rate_setup', title: 'BLEG AC'}, {id: 'rate_second', title: 'BLEG Rate'},{id: 'bleg_call_amount', title: 'BLEG Call Amount'},
         {id: 'ips_call_amount', title: 'IPS Call Amount'},{id: 'total_amount', title: 'Total Call Amount'}
@@ -36,7 +36,7 @@ module.exports = {
 
     try{
         let query=`select b.start_time, b.stop_time, b.Duration_Use , b.SONUS_CALLINGNUMBER, b.SONUS_EGCALLEDNUMBER,b.Term_Carrier_ID, 
-        c.Rate_Setup, c.Rate_Second, a.BLEG_Call_amount , a.IPS_Call_amount, a.Total_amount  from CDR_SONUS_BILLING a, CDR_SONUS b,
+        c.Rate_Setup, c.Rate_Second, a.BLEG_Call_amount , a.IPS_Call_amount, a.Total_amount  from CDR_SONUS_BILLING a, CDR_SONUS_07 b,
          CDR_SONUS_RATE c where to_char(b.start_time, 'MM-YYYY') = '${month}-${year}' and a.CDR_ID = b.CDR_ID and a.Rate_ID = c.Rate_ID 
          order by b.START_TIME `;
 

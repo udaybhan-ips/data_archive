@@ -17,8 +17,9 @@ module.exports = {
     console.log(data);
     try {
       //  if(validateRateData()){
-            const query=`INSERT INTO route (carrier_code,relay_code,  date_expired, pattern, company_code1, company_code2, date_update, relay_carrier  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning carrier_code`;
-            const value= [data.carrier_code, data.relay_code, data.date_expired, data.pattern, data.company_code1, data.company_code2 ,'now()', data.relay_carrier];
+            const query=`INSERT INTO route (carrier_code,relay_code,  date_expired, pattern, term_carrier_id, company_code1, company_code2,
+               date_update, relay_carrier  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning carrier_code`;
+            const value= [data.carrier_code, data.relay_code, data.date_expired, data.pattern, data.term_carrier_id, data.company_code1, data.company_code2 ,'now()', data.relay_carrier];
             const res = await db.queryIBS(query,value);
             return res.rows[0];
       //  }
@@ -33,9 +34,9 @@ module.exports = {
     try {
       //  if(validateRateData()){
           // create history   
-            const query=`INSERT INTO route_history (id,carrier_code,relay_code,  date_expired, pattern, company_code1, company_code2,
-               date_update, relay_carrier ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9) returning id`;
-            const value= [data.id,data.carrier_code, data.relay_code, data.date_expired, data.pattern, data.company_code1, data.company_code2 ,'now()', data.relay_carrier];
+            const query=`INSERT INTO route_history (id,carrier_code,relay_code, term_carrier_id, date_expired, pattern, company_code1, company_code2,
+               date_update, relay_carrier ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10) returning id`;
+            const value= [data.id,data.carrier_code, data.relay_code, data.term_carrier_id, data.date_expired, data.pattern, data.company_code1, data.company_code2 ,'now()', data.relay_carrier];
             const res = await db.queryIBS(query,value);
 
             // if(data.carrier_code){
@@ -49,6 +50,7 @@ module.exports = {
             updateData = updateData + 'modified_by='+`'${data.modified_by}'`+',';
             updateData = updateData + 'company_code1='+`'${data.company_code1}'`+',';
             updateData = updateData + 'company_code2='+`'${data.company_code2}'`+',';
+            updateData = updateData + 'term_carrier_id='+`'${data.term_carrier_id}'`+',';
             updateData = updateData + 'relay_carrier='+`'${data.relay_carrier}'`;
             
             // remove ',' from last character

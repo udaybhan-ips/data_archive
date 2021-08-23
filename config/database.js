@@ -95,7 +95,7 @@ module.exports = {
       // adding header manually
 
       let headerValue = {
-        'start_time': 'Start Time', 'disconnect_time': 'Disconnect Time', 'duration_use': 'Call Duration (s)', 'sonus_callingnumber': 'Calling Number'
+        'start_time': 'Start Time', 'stop_time': 'Disconnect Time', 'duration_use': 'Call Duration (s)', 'sonus_callingnumber': 'Calling Number'
         , 'sonus_egcallednumber': 'Called Number', 'term_carrier_id': 'Carrier Code', 'rate_setup': 'BLEG AC', 'rate_second': 'BLEG Rate', 'bleg_call_amount': 'BLEG Call Amount',
         'ips_call_amount': 'IPS Call Amount', 'total_amount': 'Total Call Amount'
       };

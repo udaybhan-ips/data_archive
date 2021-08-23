@@ -47,6 +47,7 @@ router.use('/v1', require('./apiv1/sougo/rates.routes'));
 router.use('/v1', require('./apiv1/sougo/invoice.routes'));
 router.use('/v1', require('./apiv1/sougo/route.routes'))
 router.use('/v1', require('./apiv1/sougo/company.routes'))
+router.use('/v1', require('./apiv1/sougo/carrier.routes'))
 router.use('/v1', require('./apiv1/sougo/approval.routes'));
 
 
