@@ -21,15 +21,15 @@ module.exports = {
            billingMonth='0'+billingMonth;
         }
   
-        // const [getCDRRes, getCDRResErr] = await handleError( BillingLeafnet.getTargetCDR(billingYear, billingMonth));
-        // if(getCDRResErr) {
-        //     throw new Error('Could not fetch CDRes');  
-        // }
+        const [getCDRRes, getCDRResErr] = await handleError( BillingLeafnet.getTargetCDR(billingYear, billingMonth));
+        if(getCDRResErr) {
+            throw new Error('Could not fetch CDRes');  
+        }
     
-        // const [billing, billingErr] = await handleError(BillingLeafnet.insertByBatches(getCDRRes, ratesDetails));
-        // if(billingErr) {
-        //     throw new Error('Error while billing '+ billingErr);  
-        // }
+        const [billing, billingErr] = await handleError(BillingLeafnet.insertByBatches(getCDRRes, ratesDetails));
+        if(billingErr) {
+            throw new Error('Error while billing '+ billingErr);  
+        }
 
         const [deleteSummaryRes, deleteSummaryErr] = await handleError(BillingLeafnet.deleteSummaryData(customerId, billingYear, billingMonth));
         if(deleteSummaryErr) {

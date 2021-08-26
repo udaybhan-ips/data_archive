@@ -40,7 +40,7 @@ module.exports = {
 getTargetCDR: async function(year, month) {
 
     try {
-        const query=`SELECT billing_comp_code, term_carrier_id, duration_use, cdr_id  from CDR_SONUS_07 where to_char(start_time, 'MM-YYYY') = '${month}-${year}'` ;
+        const query=`SELECT billing_comp_code, term_carrier_id, duration_use, cdr_id  from CDR_SONUS where to_char(start_time, 'MM-YYYY') = '${month}-${year}'` ;
         const data= await db.query(query);
         return data.rows;
     } catch (error) {
@@ -64,7 +64,7 @@ createSummaryData: async function(customer_id, year, month) {
       
       const getSummaryData=`select SUM(FLOOR(total_amount))as total_amount, sum(total_duration) as total_duration  from  
       (select b.Term_Carrier_ID  || '-' || c.Carrier_Name as carrier_name_id, SUM(b.Duration_Use) as total_duration, 
-      round(SUM(a.total_amount), 2) as total_amount from CDR_SONUS_BILLING a, CDR_SONUS_07 b, CDR_SONUS_RATE c 
+      round(SUM(a.total_amount), 2) as total_amount from CDR_SONUS_BILLING a, CDR_SONUS b, CDR_SONUS_RATE c 
       where a.CDR_ID = b.CDR_ID and a.Rate_ID = c.Rate_ID and to_char(b.start_time, 'MM-YYYY') = '${month}-${year}' 
       group by b.Term_Carrier_ID, c.Carrier_Name )as foo` ;
       const sonusDataRows= await db.query(getSummaryData,[]);
@@ -164,7 +164,7 @@ insertByBatches: async function(records, ratesData) {
 async function getInvoiceData(year, month) {
     try {
         const query=`select b.Term_Carrier_ID  || '-' || c.Carrier_Name as carrier_name_id, SUM(b.Duration_Use) as total_duration, 
-        round(SUM(a.total_amount), 2) as total_amount from CDR_SONUS_BILLING a, CDR_SONUS_07 b, CDR_SONUS_RATE c
+        round(SUM(a.total_amount), 2) as total_amount from CDR_SONUS_BILLING a, CDR_SONUS b, CDR_SONUS_RATE c
          where a.CDR_ID = b.CDR_ID and a.Rate_ID = c.Rate_ID and to_char(b.start_time, 'MM-YYYY') = '${month}-${year}' 
          group by b.Term_Carrier_ID, c.Carrier_Name order by b.Term_Carrier_ID`;
         const ratesRes= await db.query(query,[]);

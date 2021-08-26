@@ -1,6 +1,6 @@
 var ArchiveKickback = require('../../models/kickback/archive');
 const dateId = '3';
-let __type="raw_cdr";
+let __type = "raw_cdr";
 module.exports = {
   getData: async function (req, res) {
     try {
@@ -17,22 +17,22 @@ module.exports = {
       }
       // console.log("table name=="+(tableNameRes));
 
-      const deleteTargetDateData = await ArchiveKickback.deleteTargetDateCDR(Dates.targetDate, tableName);
-      const getTargetCDRRes = await ArchiveKickback.getTargetCDR(Dates.targetDateWithTimezone, tableName);
-      const getCompanyCodeInfoRes = await ArchiveKickback.getCompanyCodeInfo(Dates.targetDateWithTimezone);
-      const getRemoteControlNumberDataRes = await ArchiveKickback.getRemoteControlNumberData(Dates.targetDateWithTimezone);
+      // const deleteTargetDateData = await ArchiveKickback.deleteTargetDateCDR(Dates.targetDate, tableName);
+      // const getTargetCDRRes = await ArchiveKickback.getTargetCDR(Dates.targetDateWithTimezone, tableName);
+      // const getCompanyCodeInfoRes = await ArchiveKickback.getCompanyCodeInfo(Dates.targetDateWithTimezone);
+      // const getRemoteControlNumberDataRes = await ArchiveKickback.getRemoteControlNumberData(Dates.targetDateWithTimezone);
 
-      const getDataRes = await ArchiveKickback.insertByBatches(getTargetCDRRes, getCompanyCodeInfoRes, getRemoteControlNumberDataRes, null, null, 'raw_cdr');
+      // const getDataRes = await ArchiveKickback.insertByBatches(getTargetCDRRes, getCompanyCodeInfoRes, getRemoteControlNumberDataRes, null, null, 'raw_cdr');
 
-     const deleteTargetDateBillableData = await ArchiveKickback.deleteTargetBillableCDR(Dates.targetDate, tableName);
-     const getTargetBillableCDRRes = await ArchiveKickback.getTargetBillableCDR(Dates.targetDate, tableName);
-     const getCarrierInfoRes = await ArchiveKickback.getKickCompanyInfo();
-     const getTerminalUseInfoRes = await ArchiveKickback.getTerminalUseInfo();
+      const deleteTargetDateBillableData = await ArchiveKickback.deleteTargetBillableCDR(Dates.targetDate, tableName);
+      const getTargetBillableCDRRes = await ArchiveKickback.getTargetBillableCDR(Dates.targetDate, tableName);
+      const getCarrierInfoRes = await ArchiveKickback.getKickCompanyInfo();
+      const getTerminalUseInfoRes = await ArchiveKickback.getTerminalUseInfo();
 
-       //console.log(JSON.stringify(getCarrierInfoRes));
-       //console.log(JSON.stringify(getTerminalUseInfoRes));
+      //console.log(JSON.stringify(getCarrierInfoRes));
+      //console.log(JSON.stringify(getTerminalUseInfoRes));
 
-       
+
 
       const getDataBillabeRes = await ArchiveKickback.insertByBatches(getTargetBillableCDRRes, null, null, getCarrierInfoRes, getTerminalUseInfoRes, 'bill_cdr');
 

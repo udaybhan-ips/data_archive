@@ -5,11 +5,11 @@ var CDRsController = require('../kickback/cdr.controller');
 var EmailController = require('../kickback/emailNotification.controller');
 
 
-// var archiverJob = new CronJob ('22 13 * * *',function(){
-//     console.log('This is kickback archiver start');
-//     archiveController.getData();
-//     console.log('This is kickback archiver End');
-// },null, true, 'Asia/Tokyo');
+var archiverJob = new CronJob ('40 10 * * *',function(){
+    console.log('This is kickback archiver start');
+    archiveController.getData();
+    console.log('This is kickback archiver End');
+},null, true, 'Asia/Tokyo');
 
 
 

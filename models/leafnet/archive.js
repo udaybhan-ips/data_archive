@@ -19,7 +19,7 @@ module.exports = {
   },
   deleteTargetDateCDR: async function(targetDate) {
     try {
-        const query=`delete FROM cdr_sonus_07 where START_TIME::date = '${targetDate}'::date`;
+        const query=`delete FROM cdr_sonus where START_TIME::date = '${targetDate}'::date`;
         const deleteTargetDateRes= await db.query(query,[]);
         return deleteTargetDateRes;
     } catch (error) {

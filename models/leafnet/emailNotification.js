@@ -28,7 +28,8 @@ module.exports = {
 
       
       try {
-          const query=`select count(*) as total, sum(duration_use) as duration, start_time::date as day from cdr_sonus where to_char(start_time, 'MM-YYYY') = '${month}-${year}' group by start_time::date order by start_time::date asc `;
+          const query=`select count(*) as total, sum(duration_use) as duration, start_time::date as day from cdr_sonus where 
+          to_char(start_time, 'MM-YYYY') = '${month}-${year}' group by start_time::date order by start_time::date asc `;
           const ratesRes= await db.query(query,[]);
           
           if(ratesRes.rows){
@@ -58,7 +59,14 @@ module.exports = {
 
 
     try {
-        const query=`select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as day from COLLECTOR_73 where INGRPSTNTRUNKNAME = 'IPSLFIQ57APRII' AND RECORDTYPEID = 3 AND starttime>='${actualStartDate}' and starttime <='${targetDateWithTimezone}' group by cast(addtime(starttime,'09:00:00') as Date) order by cast(addtime(starttime,'09:00:00') as Date) asc`;
+        const query=`select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as day from COLLECTOR_73 
+        where EGRTGNAME in ('IPSSHG5423J7','IPSSHGF59EJ', 'IPSKRG5A00J', 'IPSKRG6BIIJ', 'IPSFUS10NWJ' ) 
+        AND BILLNUM = '5050506751' 
+        AND RECORDTYPEID = 3 
+        AND starttime>='${actualStartDate}' and starttime <='${targetDateWithTimezone}' 
+        group by cast(addtime(starttime,'09:00:00') as Date) 
+        order by cast(addtime(starttime,'09:00:00') as Date) asc`;
+
         //console.log(query);
         const rawData= await db.mySQLQuery(query,[]);
         //console.log(JSON.stringify(rawData));
