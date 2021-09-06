@@ -258,12 +258,6 @@ async function getCompanyCode(STRXFB, STRXFC, STRXFD, STRXFE, DATSTARTTIME, STRT
 
       if (companyCodeInfoArr[i]['carrier_code'] == STRXFB && (companyCodeInfoArr[i]['relay_code'] == '')) {
 
-        //  console.log("carr"+companyCodeInfoArr[i]['carrier_code']);
-        //   console.log("STRXFB="+STRXFB);
-        //  console.log("pattern="+companyCodeInfoArr[i]['pattern']);
-        //  console.log("STRXFD="+STRXFD);
-
-
         if (companyCodeInfoArr[i]['pattern'] == '1') {
           // console.log("pattern="+companyCodeInfoArr[i]['pattern']);
           let compCode = await getCompanyCodePattern_1(companyCodeInfoArr, STRXFB, STRXFC);
@@ -273,11 +267,13 @@ async function getCompanyCode(STRXFB, STRXFC, STRXFD, STRXFE, DATSTARTTIME, STRT
             return companyCode;
           }
 
-
         } else if (companyCodeInfoArr[i]['pattern'] == '2') {
           //          console.log("aa"+STRXFD.length);
-
-          if (STRXFD == '' || STRXFD == null) {
+          let compCode = await getCompanyCodePattern_2(companyCodeInfoArr, STRXFB, STRXFC);
+          if(compCode){
+            return compCode;
+          }
+          else if (STRXFD == '' || STRXFD == null) {
             //          console.log("if");
             return companyCodeInfoArr[i]['company_code1'].replace(" ", "");
           } else {
@@ -383,6 +379,30 @@ async function getCompanyCodePattern_1(data, carrierCode, term_carrier_id) {
   }
   return null;
 }
+
+
+
+async function getCompanyCodePattern_2(data, carrierCode, term_carrier_id) {
+
+  let tmpObj = data.filter((obj) => {
+    if (obj['carrier_code'] == carrierCode)
+      return true;
+  });
+
+  for (let i = 0; i < tmpObj.length; i++) {
+    if (tmpObj[i]['term_carrier_id'] == term_carrier_id) {
+      return tmpObj[i]['company_code1'].replace(" ", "");
+    }
+  }
+  // for (let i = 0; i < tmpObj.length; i++) {
+  //   if (tmpObj[i]['term_carrier_id'] == '' || tmpObj[i]['term_carrier_id'] == null || tmpObj[i]['term_carrier_id'] == 'null') {
+
+  //     return tmpObj[i]['company_code1'].replace(" ", "");
+  //   }
+  // }
+  return null;
+}
+
 
 async function getNextInsertBatch(data, getCompanyCodeInfoRes, getRemoteControlNumberDataRes) {
   const dataLen = data.length;

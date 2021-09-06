@@ -51,7 +51,7 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main where company_code  in ('1011000038','1011000046') `;
+      const query = `select distinct(company_code) as company_code from billcdr_main  `;
       const billNoRes = await db.queryIBS(query, []);
       
       return billNoRes.rows;
@@ -268,11 +268,13 @@ async function getResInfo(data,company_code, ratesInfo, carrierInfo, billingMont
     case6['remarks'] = termCarrierName + "-" + data['term_carrier_id'] + "着信" +  billingMonth + "月分";
 
     res.push(case1);
-    res.push(case2);
+    
     res.push(case3);
+    res.push(case2);
     res.push(case4);
-    res.push(case5);
+    
     res.push(case6);
+    res.push(case5);
 
   } catch (err) {
     console.log("error in get res..." + err.message);

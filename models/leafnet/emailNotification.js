@@ -101,7 +101,7 @@ module.exports = {
         html
     }
 
-  // utility.sendEmail(mailOption);                
+   utility.sendEmail(mailOption);                
     
   },
   

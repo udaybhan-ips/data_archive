@@ -45,7 +45,7 @@ module.exports = {
         console.log("bill_no " + BillNoArr.max_bill_no);
 
         let bill_no = parseInt(BillNoArr.max_bill_no, 10) + 1;
-       // let bill_no = 2200;
+       //let bill_no = 2200;
 
         const [getCDRRes, getCDRResErr] = await handleError(BillingSougo.getTargetCDR( getCompListRes[i]['company_code'], billingYear, billingMonth));
         if (getCDRResErr) {

@@ -4,10 +4,10 @@ var db = require('./../../config/database');
 module.exports = {
   findAll: async function() {
       try {
-        console.log("in rate");
-          const query="SELECT * FROM rate order by company_code asc";
-          const rateListRes= await db.queryIBS(query,[]);
-          return rateListRes.rows;
+        console.log("in rate_kickback");
+          const query="SELECT * FROM rate_kickback where deleted =false order by company_code asc";
+          const rate_kickbackListRes= await db.queryIBS(query,[]);
+          return rate_kickbackListRes.rows;
       } catch (error) {
           return error;
       }
@@ -16,8 +16,9 @@ module.exports = {
   create: async function(data) {
     console.log(data);
     try {
-      //  if(validateRateData()){
-            const query=`INSERT INTO rate (company_code,  date_start, date_expired, rate_setup, rate_second, rate_trunk_port, date_update, updated_by  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning rate_id`;
+      //  if(validaterate_kickbackData()){
+            const query=`INSERT INTO rate_kickback (company_code,  date_start, date_expired, rate_setup, rate_second,
+               rate_trunk_port, date_update, updated_by  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning company_code`;
             const value= [data.company_code, data.date_start, data.date_expired, data.rate_setup, data.rate_second, data.rate_trunk_port ,'now()', data.updated_by];
             const res = await db.queryIBS(query,value);
             return res.rows[0];
@@ -32,8 +33,10 @@ module.exports = {
     try {
       //  if(validateRateData()){
           // create history   
-            const query=`INSERT INTO rate_history (company_code, date_start, date_expired, rate_setup, rate_second, rate_trunk_port, date_updated, updated_by ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11) returning rate_id`;
-            const value= [ data.company_code, data.date_start, data.date_expired, data.rate_setup, data.rate_second, data.rate_trunk_port, 'now()', data.updated_by];
+            const query=`INSERT INTO rate_kickback_history (company_code, date_start, date_expired, rate_setup, rate_second, 
+              rate_trunk_port, date_update, updated_by ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning company_code`;
+            const value= [ data.company_code, data.date_start, data.date_expired, data.rate_setup, 
+              data.rate_second, data.rate_trunk_port, 'now()', data.updated_by];
             const res = await db.queryIBS(query,value);
 
             // if(data.carrier_code){
@@ -63,7 +66,15 @@ module.exports = {
             }
             
             if(data.rate_second){
-              updateData = updateData+ 'rate_second='+data.rate_second;
+              updateData = updateData+ 'rate_second='+data.rate_second+',';
+            }
+
+            if(data.deleted){
+              updateData = updateData +'deleted='+data.deleted+',';
+            }
+
+            if(data.updated_by){
+              updateData = updateData +'updated_by='+`'${data.updated_by}'`+',';
             }
 
             // remove ',' from last character
@@ -71,7 +82,7 @@ module.exports = {
               updateData = updateData.substring(0, updateData.length - 1);
             }
 
-            const queryUpdate= `update rate set ${updateData} where  company_code='${data.company_code}'`;
+            const queryUpdate= `update rate_kickback set ${updateData} where  company_code='${data.company_code}'`;
             const resUpdate = await db.queryIBS(queryUpdate,[]);
 
             return resUpdate.rows[0];
