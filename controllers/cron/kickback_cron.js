@@ -30,7 +30,7 @@ var EmailController = require('../kickback/emailNotification.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var billingControllerJob = new CronJob ('29 23 * * *',function(){
+// var billingControllerJob = new CronJob ('33 10 * * *',function(){
 //     console.log('This is kickback  billing start');
 //     billingController.getData();
 //     console.log('This is kickback email notification end');

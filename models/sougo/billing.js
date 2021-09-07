@@ -51,7 +51,7 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main  `;
+      const query = `select distinct(company_code) as company_code from billcdr_main where company_code   in ('1011000055') order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       
       return billNoRes.rows;
@@ -69,7 +69,7 @@ module.exports = {
       const targetDateRes = await db.query(query, []);
       //console.log(targetDateRes);
       if (targetDateRes.rows) {
-        return { 'target_billing_month': (targetDateRes.rows[0].target_billing_month), 'current_montth': (targetDateRes.rows[0].current_montth) };
+        return { 'target_billing_month': (targetDateRes.rows[0].target_billing_month), 'current_month': (targetDateRes.rows[0].current_montth) };
       }
       return { err: 'not found' };
     } catch (error) {
@@ -106,11 +106,14 @@ module.exports = {
       let amount = 0 ;
       let billAmount = 0;
       let tax = 0;
+      
 
       for(let i=0; i<data.length;i++){
-        let info = await getResInfo(data[i], company_code, ratesDetails, carrierInfo,month);
-            for (let ii=0;ii<info.length;ii++) {
+        
+        let info = await getResInfo(data[i], company_code, ratesDetails, carrierInfo,month, i);
 
+            for (let ii=0;ii<info.length;ii++) {
+              
               call_count = call_count + parseInt(info[ii]['call_count'],10);
               duration =  duration + parseInt(info[ii]['call_sec'],10);
               if(parseInt(info[ii]['amount'],10)>1){
@@ -196,7 +199,7 @@ module.exports = {
 
 
 
-async function getResInfo(data,company_code, ratesInfo, carrierInfo, billingMonth) {
+async function getResInfo(data,company_code, ratesInfo, carrierInfo, billingMonth, lineCounter) {
 
   console.log("company_code==" + company_code);
   console.log("carrier_code==" + data['carrier_code']);
@@ -211,70 +214,72 @@ async function getResInfo(data,company_code, ratesInfo, carrierInfo, billingMont
     let termCarrierName = await getCarrierName(carrierInfo, data['term_carrier_id']);
 
     case1['call_count'] = data['total_calls'];
-    case1['line_no'] = 1;
+    case1['line_no'] = lineCounter*6+1;
     case1['item_type'] = 1;
     case1['item_name'] = data['carrier_code'] + "-" + carrierName + "発信分 通話回数（国内）";
     case1['call_sec'] = data['total_calls'];
     case1['amount'] = data['total_calls'] * rate['rate_setup'];
     case1['rate'] = rate['rate_setup'];
-    case1['remarks'] = termCarrierName  + "-" + data['term_carrier_id'] +"着信 " + billingMonth + "月分";
+    case1['remarks'] =  data['term_carrier_id'] +"着信 " + billingMonth + "月分";
 
     case2['call_count'] = 0;
-    case2['line_no'] = 2;
+    case2['line_no'] = lineCounter*6+2;
     case2['item_type'] = 2;
     case2['item_name'] = data['carrier_code'] + "-" + carrierName + "発信分 通話秒数（国内）";
     case2['call_sec'] = data['total_duration'];
     case2['amount'] = data['total_duration'] * rate['rate_sec'];
     case2['rate'] = rate['rate_sec'];
-    case2['remarks'] = termCarrierName + "-" + data['term_carrier_id'] +"着信 " + billingMonth + "月分";
+    case2['remarks'] =  data['term_carrier_id'] +"着信 " + billingMonth + "月分";
 
 
     case3['call_count'] = data['total_duration'];
-    case3['line_no'] = 3;
+    case3['line_no'] = lineCounter*6+3;
     case3['item_type'] = 3;
     case3['item_name'] = data['carrier_code'] + "-" + carrierName +"発信分 ﾄﾗﾝｸﾎﾟｰﾄ接続料（国内）";
     case3['call_sec'] = data['total_duration'];
       case3['amount'] = rate['rate_trunk_port'] *  data['total_duration'];
       case3['rate'] = rate['rate_trunk_port'];
     
-    case3['remarks'] = termCarrierName + "-" + data['term_carrier_id'] +"着信 "+ billingMonth + "月分";
+    case3['remarks'] =  data['term_carrier_id'] +"着信 "+ billingMonth + "月分";
 
     case4['call_count'] =0;
-    case4['line_no'] = 4;
+    case4['line_no'] = lineCounter*6+4;
     case4['item_type'] = 1;
     case4['item_name'] = data['carrier_code'] + "-" + carrierName + "発信分 通話回数（国際）"
     case4['call_sec'] = 0;
     case4['amount'] =0 * rate['rate_setup'];
     case4['rate'] = rate['rate_setup'];
-    case4['remarks'] = termCarrierName + "-" + data['term_carrier_id'] + "着信" + billingMonth + "月分";
+    case4['remarks'] =  data['term_carrier_id'] + "着信" + billingMonth + "月分";
 
     case5['call_count'] = 0;
-    case5['line_no'] = 5;
+    case5['line_no'] = lineCounter*6+5;
     case5['item_type'] = 2;
     case5['item_name'] = data['carrier_code'] + "-" + carrierName +"発信分 通話秒数（国際）";
     case5['call_sec'] = 0;
     case5['amount'] = 0 * rate['rate_sec'];
     case5['rate'] = rate['rate_sec'];
-    case5['remarks'] = termCarrierName + "-" + data['term_carrier_id'] + "着信" + billingMonth + "月分";
+    case5['remarks'] =  data['term_carrier_id'] + "着信" + billingMonth + "月分";
 
 
     case6['call_count'] = 0;
-    case6['line_no'] = 6;
+    case6['line_no'] = lineCounter*6+6;
     case6['item_type'] = 3;
     case6['item_name'] = data['carrier_code'] + "-" + carrierName + "発信分 ﾄﾗﾝｸﾎﾟｰﾄ接続料（国際）";
     case6['call_sec'] = 0;
     case6['amount'] = 0;
     case6['rate'] = rate['rate_trunk_port'];
-    case6['remarks'] = termCarrierName + "-" + data['term_carrier_id'] + "着信" +  billingMonth + "月分";
+    case6['remarks'] =  data['term_carrier_id'] + "着信" +  billingMonth + "月分";
+    
 
     res.push(case1);
-    
-    res.push(case3);
     res.push(case2);
+    res.push(case3);
     res.push(case4);
-    
-    res.push(case6);
     res.push(case5);
+    res.push(case6);
+   
+    
+
 
   } catch (err) {
     console.log("error in get res..." + err.message);
@@ -341,10 +346,10 @@ async function getCustomerInfo(company_code) {
 
 async function getInvoiceData(company_code, year, month) {
   try {
-    const query = `select * from (select bill_no, item_name, rate, call_sec, amount , remarks from bill_detail where amount>1)as lj join 
+    const query = `select * from (select bill_no,line_no, item_name, rate, call_sec, amount , remarks from bill_detail where amount>1)as lj join 
     (select bill_no, company_code, date_bill  from bill_history
       where company_code='${company_code}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}') as rj
-       on (lj.bill_no=rj.bill_no) order by lj.item_name` ;
+       on (lj.bill_no=rj.bill_no) order by line_no` ;
     const ratesRes = await db.queryIBS(query, []);
 
     if (ratesRes.rows) {
@@ -372,11 +377,11 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
 
   let y = generateCustomerInformation(company_code, billingYear, billingMonth, doc, invoice, 200, currentMonth,totalCallAmount);
 
-  drawLine(doc, 198);
+  //drawLine(doc, 198);
 
   
   console.log("y=--"+y);
-  addTableHeaderFC(doc, 50, y + 30, totalCallAmount,totalCallDuration, billingYear, billingMonth);
+  addTableHeaderFC(doc, 50, y + 45, totalCallAmount,totalCallDuration, billingYear, billingMonth);
   y = customTableFC(doc, y + 55, invoice, MAXY);
   
   y = tableSummary(doc, 350, y, subTotal);
@@ -396,11 +401,22 @@ function tableSummary(doc, x, y, subTotal) {
     .text(`小合計 (Sub-Total)`, x + 50, y + 20, { width: 100, align: "left" })
 
     .text(`消費税 (Tax)`, x + 50, y + 35, { width: 100, align: "left" })
-  drawLine(doc, y + 48, x + 50, 500)
+ // drawLine(doc, y + 48, x + 50, 500)
     .text(`合計 (Total Amount)`, x + 50, y + 50, { width: 100, align: "left" })
     .text(`${utility.numberWithCommas(subTotal)}`, x + 100, y + 20, { width: 100, align: "right" })
     .text(`${utility.numberWithCommas(tax)}`, x + 100, y + 35, { width: 100, align: "right" })
     .text(utility.numberWithCommas(totalCallAmount), x + 100, y + 50, { width: 100, align: "right" })
+
+
+    doc.rect(380,  y+15, 110 ,15   ).stroke()
+    doc.rect(380,  y+30, 110 ,15   ).stroke()
+    doc.rect(380,  y+45, 110 ,15   ).stroke()  
+   
+
+    doc.rect(490,  y+15, 70 ,15   ).stroke()
+    doc.rect(490,  y+30, 70 ,15   ).stroke()
+    doc.rect(490,  y+45, 70 ,15   ).stroke()  
+
     .moveDown();
   return y + 100;
 }
@@ -435,14 +451,21 @@ async function generateHeader(customerDetails, doc, totalCallAmount) {
 
 }
 
-function generateFooter(doc, y) {
+async function generateFooter(doc, y) {
+  console.log("in footer")
   doc
     .fontSize(8)
-    .text("※この書類は㈱IPSから御社にお支払いする手数料についての通知書です。",50, y + 20,{ align: "left", width: 500 })
-    .text("内容をご確認の上、請求書を上記住所までご送付くださいますようお願いいたします。",50, y + 30,{ align: "left", width: 500 })
-    .text("This serves as the notice of commission details to be paid by IPS to your company.",50, y + 40,{ align: "left", width: 500 })
-    .text("Kindly issue to IPS an invoice statement upon receipt of this notice by sending to address above.",50, y + 50,{ align: "left", width: 500 })
+    .text("※この書類は㈱IPSから御社にお支払いする手数料についての通知書です。",50, y + 50)
+    .moveDown()
+    .text("内容をご確認の上、請求書を上記住所までご送付くださいますようお願いいたします。")
+    .moveDown()
+    .text("This serves as the notice of commission details to be paid by IPS to your company.")
+    .moveDown()
+    .text("Kindly issue to IPS an invoice statement upon receipt of this notice by sending to address above.")
+    .moveDown()
+    
 }
+
 
 function row(doc, heigth) {
   doc.lineJoin('miter')
@@ -456,12 +479,12 @@ function customTableFC(doc, y, data, MAXY) {
   let height = y;
   for (let i = 0; i < data.length; i++) {
     height = height + 20;
-    textInRowFirst(doc, i+1, 50, height);
-    textInRowFirst(doc, data[i].item_name, 75, height);
-    textInRowFirst(doc, data[i].rate, 200, height, "right");
-    textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].call_sec)), 275, height, "right");
-    textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].amount)), 330, height, "right");
-    textInRowFirst(doc, (data[i].remarks), 450, height, "right");
+    textInRowFirst(doc, i+1, 50, height, "center", 15);
+    textInRowFirst(doc, data[i].item_name, 65, height, null, 265);
+    textInRowFirst(doc, data[i].rate, 330, height,  "right", 50);
+    textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].call_sec)), 380, height, "right",60);
+    textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].amount)), 440, height, "right",50);
+    textInRowFirst(doc, (data[i].remarks), 490, height, "right",70);
    // textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].total_amount)), 400, height, "right");
 
     if (height >= 680) {
@@ -483,26 +506,41 @@ function addTableHeader(doc, x, y,totalAmount, totalCallDuration, billingYear, b
   .text(`手数料種類`, 150, y, { width: 100, align: "center" })
   .text(`着信時間（分数）`, 250, y, { width: 100, align: "center" })
   .text(`ご請求期間`, 350, y, { width: 100, align: "center" })
-  .text(`手数料`, 450, y, { width: 100, align: "center" })
+  .text(`手数料`, 450, y, { width: 110, align: "center" })
+
+  doc.rect(50,  y-5, 100 ,30   ).stroke()
+  doc.rect(150,  y-5, 100 ,30   ).stroke()
+  doc.rect(250,  y-5, 100 ,30   ).stroke()
+  doc.rect(350,  y-5, 100 ,30   ).stroke()
+  doc.rect(450,  y-5, 110 ,30   ).stroke()
+
 
 
   .text(`SERVICE ITEM`, 50, y + 10, { width: 100, align: "center" })
   .text(`COMMISSION TYPE`, 150, y + 10, { width: 100, align: "center" })
   .text(`TIME (MIN)`, 250, y + 10, { width: 100, align: "center" })
   .text(`PERIOD`, 350, y + 10, { width: 100, align: "center" })
-  .text(`COMMISSION FEE`, 450, y + 10, { width: 100, align: "center" })
-drawLine(doc, y)
+  .text(`COMMISSION FEE`, 450, y + 10, { width: 110, align: "center" })
+//drawLine(doc, y)
   .fontSize(8)
   .text(`音声着信サービス`, 50, y + 25, { width: 100, align: "center" })
   .text(`1ヶ月間の累積着信分数`, 150, y + 25, { width: 100, align: "center" })
   .text(`${totalCallDuration}`, 250, y + 25, { width: 100, align: "center" })
   .text(`${billingYear}/${billingMonth}/1 ～ ${billingYear}/${billingMonth}/${daysInMonth(billingMonth, billingYear)}`, 350, y + 25, { width: 100, align: "center" })
-  .text(`${utility.numberWithCommas(totalAmount)}`, 450, y + 25, { width: 100, align: "center" })
+  .text(`${utility.numberWithCommas(totalAmount)}`, 450, y + 25, { width: 110, align: "center" })
 
   .text(`Voice Receiver Service`, 50, y + 37, { width: 100, align: "center" })
   .text(`1 Month(s) Accumulative`, 150, y + 37, { width: 100, align: "center" })
 
-  drawLine(doc, y + 22)
+  
+  doc.rect(50,  y+25, 100 ,30   ).stroke()
+  doc.rect(150,  y+25, 100 ,30   ).stroke()
+  doc.rect(250,  y+25, 100 ,30   ).stroke()
+  doc.rect(350,  y+25, 100 ,30   ).stroke()
+  doc.rect(450,  y+25, 110 ,30   ).stroke()
+
+
+  //drawLine(doc, y + 22)
     .moveDown();
 }
 
@@ -511,32 +549,38 @@ function addTableHeaderFC(doc, x, y,totalAmount, totalCallDuration, billingYear,
 
   doc
   .fontSize(10)
-  .text(`No.`, 50, y, { width: 25, align: "center" })
-  .text(`内訳 (DETAILS) `, 75, y, { width: 175, align: "center" })
-  .text(`単価 (PRICE)`, 250, y, { width: 75, align: "center" })
-  .text(`数量 (QUANTITY)`, 325, y, { width: 60, align: "center" })
-  .text(`金額 (TOTAL)`, 385, y, { width: 60, align: "center" })
-  .text(`備考 (REMARKS)`, 445, y, { width: 105, align: "center" })
+  .text(`No`, 50, y, { width: 15, align: "center" })
+  doc.rect(50,  y-5, 15 ,30   ).stroke()
+  .text(`内訳 (DETAILS) `, 65, y, { width: 265, align: "center" })
+  doc.rect(65,  y-5, 265 ,30   ).stroke()
+  .text(`単価 (PRICE)`, 330, y, { width: 50, align: "center" })
+  doc.rect(330,  y-5, 50 ,30   ).stroke()
+  .text(`数量 (QUANTITY)`, 380, y, { width: 60, align: "center" })
+  doc.rect(380,  y-5, 60 ,30   ).stroke()
+  .text(`金額 (TOTAL)`, 440, y, { width: 50, align: "center" })
+  doc.rect(440,  y-5, 50 ,30   ).stroke()
+  .text(`備考 (REMARKS)`, 490, y, { width: 70, align: "center" })
+  doc.rect(490,  y-5, 70 ,30   ).stroke()
   
-drawLine(doc, y)
-drawLine(doc, y+23)
+//drawLine(doc, y)
     .moveDown();
 }
 
 
-function textInRowFirst(doc, text, x, heigth, align) {
+
+
+function textInRowFirst(doc, text, x, heigth, align, width) {
 
   doc.y = heigth;
   doc.x = x;
   doc.fontSize(8)
   doc.fillColor('black')
-  if (align == 'right') {
-    doc.text(text, { width: 100, align: "right" })
-  } else {
-    doc.text(text)
-  }
+  doc.text(text, { width, align})
+  doc.rect(x,  heigth-5, width ,20   ).stroke()
+
   return doc;
 }
+
 
 
 function generateCustomerInformation(company_code, billingYear, billingMonth, doc, invoice, y, currentMonth, totalAmount) {
@@ -560,14 +604,28 @@ function generateCustomerInformation(company_code, billingYear, billingMonth, do
     .text(`Invoice Number`, 150, y + 10, { width: 100, align: "center" })
     .text(`Date of Issue`, 250, y + 10, { width: 100, align: "center" })
     .text(`Billing Period`, 350, y + 10, { width: 100, align: "center" })
-    .text(`PAYMENT DUE DATE`, 450, y + 10, { width: 100, align: "center" })
-  drawLine(doc, y + 22)
+    .text(`PAYMENT DUE DATE`, 450, y + 10, { width: 110, align: "center" })
+   
+    doc.rect(50,  y-5, 100 ,30   ).stroke()
+    doc.rect(150,  y-5, 100 ,30   ).stroke()
+    doc.rect(250,  y-5, 100 ,30   ).stroke()
+    doc.rect(350,  y-5, 100 ,30   ).stroke()
+    doc.rect(450,  y-5, 110 ,30   ).stroke()
+
+  //drawLine(doc, y + 22)
     .fontSize(8)
-    .text(`${company_code}`, 50, y + 25, { width: 100, align: "center" })
-    .text(`${company_code}-${billingYear}${billingMonth}-1`, 150, y + 25, { width: 100, align: "center" })
-    .text(`${billingYear}/${billingMonth}/01`, 250, y + 25, { width: 100, align: "center" })
+    .text(`${company_code}`, 50, y + 30, { width: 100, align: "center" })
+    .text(`${company_code}-${billingYear}${billingMonth}-1`, 150, y + 30, { width: 100, align: "center" })
+    .text(`${billingYear}/${billingMonth}/01`, 250, y + 30, { width: 100, align: "center" })
     .text(`${billingYear}/${billingMonth}/1 ～ ${billingYear}/${billingMonth}/${daysInMonth(billingMonth, billingYear)}`, 350, y + 25, { width: 100, align: "center" })
-    .text(`${billingYear}/${billingMonth}/30`, 450, y + 25, { width: 100, align: "center" })
+    .text(`${currentYear}/${currentMonthValue}/30`, 450, y + 30, { width: 110, align: "center" })
+
+    doc.rect(50,  y+25, 100 ,25   ).stroke()
+    doc.rect(150,  y+25, 100 ,25   ).stroke()
+    doc.rect(250,  y+25, 100 ,25   ).stroke()
+    doc.rect(350,  y+25, 100 ,25   ).stroke()
+    doc.rect(450,  y+25, 110 ,25   ).stroke()
+ 
 
     //row(doc, 200)    
     .moveDown();

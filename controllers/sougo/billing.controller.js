@@ -31,6 +31,7 @@ module.exports = {
         billingMonth = '0' + billingMonth;
       }
 
+
       const [ratesDetails, ratesErr] = await handleError(BillingSougo.getRates());
       if (ratesErr) {
         throw new Error('Could not fetch Rates details');
@@ -57,7 +58,7 @@ module.exports = {
           throw new Error('Could not fetch CDRes');
         }
 
-        const [createInvoiceFCRes, createInvoiceFCErr] = await handleError(BillingSougo.genrateInvoice(getCompListRes[i]['company_code'], billingYear, billingMonth, Dates.current_montth));
+        const [createInvoiceFCRes, createInvoiceFCErr] = await handleError(BillingSougo.genrateInvoice(getCompListRes[i]['company_code'], billingYear, billingMonth, Dates.current_month));
 
         if (createInvoiceFCErr) {
           throw new Error('Error while creating invoice ' + createInvoiceFCErr.message);

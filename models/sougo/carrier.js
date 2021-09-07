@@ -17,9 +17,11 @@ module.exports = {
     console.log(data);
     try {
       //  if(validatecarrierData()){
-            const query=`INSERT INTO carrier (carrier_code,carrier_name,  carrier_name_hikari, date_update, term_use ) 
-            VALUES ($1, $2, $3, $4, $5) returning carrier_code`;
-            const value= [data.carrier_code, data.carrier_name, data.carrier_name_hikari,'now()',  data.term_use ];
+            const query=`INSERT INTO carrier (carrier_code,carrier_name,  carrier_name_hikari, date_update, term_use,date_start
+              ,date_expired,rate_setup,  rate_second, rate_trunk_port) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,$10 ) returning carrier_code`;
+            const value= [data.carrier_code, data.carrier_name, data.carrier_name_hikari,'now()',  data.term_use, 
+          data.date_start, data.date_expired, data.rate_setup, data.rate_second, data.rate_trunk_port ];
             const res = await db.queryIBS(query,value);
             return res.rows[0];
       //  }
@@ -34,9 +36,11 @@ module.exports = {
     try {
       //  if(validatecarrierData()){
           // create history   
-            const query=`INSERT INTO carrier_history (carrier_code,carrier_name,  carrier_name_hikari, date_update,  term_use ) 
-            VALUES ($1, $2, $3, $4, $5) returning id`;
-            const value= [data.carrier_code, data.carrier_name, data.carrier_name_hikari,'now()',  data.term_use];
+            const query=`INSERT INTO carrier_history (carrier_code,carrier_name,  carrier_name_hikari, date_update,  term_use ,date_start
+              ,date_expired,rate_setup,  rate_second, rate_trunk_port) 
+            VALUES ($1, $2, $3, $4, $5,  $6, $7, $8, $9,$10) returning id`;
+            const value= [data.carrier_code, data.carrier_name, data.carrier_name_hikari,'now()',  data.term_use, 
+            data.date_start, data.date_expired, data.rate_setup, data.rate_second, data.rate_trunk_port];
             const res = await db.queryIBS(query,value);
 
             // if(data.carrier_code){
@@ -50,12 +54,31 @@ module.exports = {
            // updateData = updateData + 'modified_by='+`'${data.modified_by}'`+',';
           //  updateData = updateData + 'valid_flag='+data.valid_flag+',';
            // updateData = updateData + 'carrier_code2='+`'${data.carrier_code2}'`+',';
-            updateData = updateData + 'term_use='+`'${data.term_use}'`;
+            updateData = updateData + 'term_use='+`'${data.term_use}'`+',';
             
-            // remove ',' from last character
-            // if(updateData.substr(updateData.length - 1)==','){
-            //   updateData = updateData.substring(0, updateData.length - 1);
-            // }
+            if(data.date_start){
+              updateData = updateData + 'date_start='+`'${data.date_start}'`+',';
+            }
+           if(data.date_expired){
+            updateData = updateData + 'date_expired='+`'${data.date_expired}'`+',';
+           }
+
+            if(data.rate_setup){
+              updateData = updateData + 'rate_setup='+`'${data.rate_setup}'`+',';
+            }
+           if(data.rate_second){
+            updateData = updateData + 'rate_second='+`'${data.rate_second}'`+',';
+           }
+            if(data.rate_trunk_port){
+              updateData = updateData + 'rate_trunk_port='+`'${data.rate_trunk_port}'`;
+            }
+            
+
+            
+            //remove ',' from last character
+            if(updateData.substr(updateData.length - 1)==','){
+              updateData = updateData.substring(0, updateData.length - 1);
+            }
 
             const queryUpdate= `update carrier set ${updateData} where  carrier_code='${data.carrier_code}'`;
             const resUpdate = await db.queryIBS(queryUpdate,[]);
