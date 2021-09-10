@@ -7,7 +7,7 @@ var fs = require("fs");
 module.exports = {
   getRates: async function () {
     try {
-      const query = `select company_code, date_start, date_expired, rate_setup, rate_second, rate_trunk_port from rate`;
+      const query = `select carrier_code, date_start, date_expired, rate_setup, rate_second, rate_trunk_port from carrier where deleted =false`;
       const ratesRes = await db.queryIBS(query, []);
 
       // console.log("ratesRes="+JSON.stringify(ratesRes.rows));
@@ -51,7 +51,7 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main where company_code   in ('1011000055') order by company_code `;
+      const query = `select distinct(company_code) as company_code from billcdr_main where company_code not  in ('1011000055') order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       
       return billNoRes.rows;
@@ -209,7 +209,7 @@ async function getResInfo(data,company_code, ratesInfo, carrierInfo, billingMont
   let res = [], case1 = {}, case2 = {}, case3 = {}, case4 = {}, case5 = {}, case6 = {};
   try {
 
-    let rate = await getSougoRates(ratesInfo, company_code);
+    let rate = await getSougoRates(ratesInfo, data['carrier_code']);
     let carrierName = await getCarrierName(carrierInfo, data['carrier_code']);
     let termCarrierName = await getCarrierName(carrierInfo, data['term_carrier_id']);
 
@@ -306,15 +306,15 @@ async function getCarrierName(data, carrier_code) {
 
 
 
-async function getSougoRates(data, company_code) {
+async function getSougoRates(data, carrier_code) {
   let res = {};
 
-  console.log("comp code=="+company_code);
+  console.log("carrier code=="+carrier_code);
   console.log("data=="+data.length);
 
   try{
     for (let i = 0; i < data.length; i++) {
-      if (data[i]['company_code'] == company_code) {
+      if (data[i]['carrier_code'] == carrier_code) {
         res['rate_setup'] = data[i]['rate_setup'];
         res['rate_sec'] = data[i]['rate_second'];
         res['rate_trunk_port'] = data[i]['rate_trunk_port'];
@@ -403,9 +403,9 @@ function tableSummary(doc, x, y, subTotal) {
     .text(`消費税 (Tax)`, x + 50, y + 35, { width: 100, align: "left" })
  // drawLine(doc, y + 48, x + 50, 500)
     .text(`合計 (Total Amount)`, x + 50, y + 50, { width: 100, align: "left" })
-    .text(`${utility.numberWithCommas(subTotal)}`, x + 100, y + 20, { width: 100, align: "right" })
-    .text(`${utility.numberWithCommas(tax)}`, x + 100, y + 35, { width: 100, align: "right" })
-    .text(utility.numberWithCommas(totalCallAmount), x + 100, y + 50, { width: 100, align: "right" })
+    .text(`¥${utility.numberWithCommas(subTotal)}`, x + 100, y + 20, { width: 100, align: "right" })
+    .text(`¥${utility.numberWithCommas(tax)}`, x + 100, y + 35, { width: 100, align: "right" })
+    .text('¥'+utility.numberWithCommas(totalCallAmount), x + 100, y + 50, { width: 100, align: "right" })
 
 
     doc.rect(380,  y+15, 110 ,15   ).stroke()
@@ -424,8 +424,14 @@ function tableSummary(doc, x, y, subTotal) {
 async function generateHeader(customerDetails, doc, totalCallAmount) {
 
   let postNumber = customerDetails[0]['zip_code'];
+  
   let customerName = customerDetails[0]['company_name'];
   let address = customerDetails[0]['address1'] + customerDetails[0]['address2'] ;
+  let person_incharge = customerDetails[0]['person_incharge'];
+
+  if(postNumber){
+    postNumber = [postNumber.slice(0, 3), '-', postNumber.slice(3)].join('');
+  }
 
   doc
     // .image("logo.png", 50, 45, { width: 50 })
@@ -434,6 +440,7 @@ async function generateHeader(customerDetails, doc, totalCallAmount) {
     .text(`〒${postNumber}`, 50, 57)
     .text(`${address}`, 50, 70)
     .text(`${customerName}`, 50, 83)
+    .text(`${person_incharge}`, 50, 96)
     
     .text("株式会社アイ・ピー・エス", 10, 57, { align: "right" })
     .text("〒104－0045", 10, 70, { align: "right" })
@@ -441,7 +448,7 @@ async function generateHeader(customerDetails, doc, totalCallAmount) {
     .text("TEL: 03-3549-7626 FAX : 03-3545-7331", 10, 96, { align: "right" })
     
 
-    .text("ご 利 用 明 細 書", 0, 142, { align: "center" })
+    .text("請 求 書", 0, 142, { align: "center" })
     
 
     // .text("下記のとおりご請求申し上げます。", 50, 170)
@@ -452,7 +459,7 @@ async function generateHeader(customerDetails, doc, totalCallAmount) {
 }
 
 async function generateFooter(doc, y) {
-  console.log("in footer")
+ // console.log("in footer")
   doc
     .fontSize(8)
     .text("※この書類は㈱IPSから御社にお支払いする手数料についての通知書です。",50, y + 50)
@@ -483,7 +490,7 @@ function customTableFC(doc, y, data, MAXY) {
     textInRowFirst(doc, data[i].item_name, 65, height, null, 265);
     textInRowFirst(doc, data[i].rate, 330, height,  "right", 50);
     textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].call_sec)), 380, height, "right",60);
-    textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].amount)), 440, height, "right",50);
+    textInRowFirst(doc,'¥' + utility.numberWithCommas(parseInt(data[i].amount)), 440, height, "right",50);
     textInRowFirst(doc, (data[i].remarks), 490, height, "right",70);
    // textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].total_amount)), 400, height, "right");
 
@@ -616,8 +623,8 @@ function generateCustomerInformation(company_code, billingYear, billingMonth, do
     .fontSize(8)
     .text(`${company_code}`, 50, y + 30, { width: 100, align: "center" })
     .text(`${company_code}-${billingYear}${billingMonth}-1`, 150, y + 30, { width: 100, align: "center" })
-    .text(`${billingYear}/${billingMonth}/01`, 250, y + 30, { width: 100, align: "center" })
-    .text(`${billingYear}/${billingMonth}/1 ～ ${billingYear}/${billingMonth}/${daysInMonth(billingMonth, billingYear)}`, 350, y + 25, { width: 100, align: "center" })
+    .text(`${currentYear}/${currentMonthValue}/01`, 250, y + 30, { width: 100, align: "center" })
+    .text(`${billingYear}/${billingMonth}/1 ～ ${billingYear}/${billingMonth}/${daysInMonth(billingMonth, billingYear)}`, 350, y + 30, { width: 100, align: "center" })
     .text(`${currentYear}/${currentMonthValue}/30`, 450, y + 30, { width: 110, align: "center" })
 
     doc.rect(50,  y+25, 100 ,25   ).stroke()

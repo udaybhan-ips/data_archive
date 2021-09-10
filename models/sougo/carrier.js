@@ -5,7 +5,7 @@ module.exports = {
   findAll: async function() {
       try {
         console.log("in carrier");
-          const query="select * from carrier where deleted=false order by carrier_code asc";
+          const query="select *, (select company_name from company where company.company_code=carrier.company_code limit 1) as company_name from carrier where deleted=false order by carrier_code asc";
           const carrierListRes= await db.queryIBS(query,[]);
           return carrierListRes.rows;
       } catch (error) {
@@ -17,10 +17,10 @@ module.exports = {
     console.log(data);
     try {
       //  if(validatecarrierData()){
-            const query=`INSERT INTO carrier (carrier_code,carrier_name,  carrier_name_hikari, date_update, term_use,date_start
+            const query=`INSERT INTO carrier (carrier_code,carrier_name, company_code, carrier_name_hikari, date_update, term_use,date_start
               ,date_expired,rate_setup,  rate_second, rate_trunk_port) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,$10 ) returning carrier_code`;
-            const value= [data.carrier_code, data.carrier_name, data.carrier_name_hikari,'now()',  data.term_use, 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,$10,$11 ) returning carrier_code`;
+            const value= [data.carrier_code, data.carrier_name, data.company_code, data.carrier_name_hikari,'now()',  data.term_use, 
           data.date_start, data.date_expired, data.rate_setup, data.rate_second, data.rate_trunk_port ];
             const res = await db.queryIBS(query,value);
             return res.rows[0];
@@ -36,10 +36,10 @@ module.exports = {
     try {
       //  if(validatecarrierData()){
           // create history   
-            const query=`INSERT INTO carrier_history (carrier_code,carrier_name,  carrier_name_hikari, date_update,  term_use ,date_start
+            const query=`INSERT INTO carrier_history (carrier_code,carrier_name, company_code, carrier_name_hikari, date_update,  term_use ,date_start
               ,date_expired,rate_setup,  rate_second, rate_trunk_port) 
-            VALUES ($1, $2, $3, $4, $5,  $6, $7, $8, $9,$10) returning id`;
-            const value= [data.carrier_code, data.carrier_name, data.carrier_name_hikari,'now()',  data.term_use, 
+            VALUES ($1, $2, $3, $4, $5,  $6, $7, $8, $9,$10, $11) returning id`;
+            const value= [data.carrier_code, data.carrier_name, data.company_code, data.carrier_name_hikari,'now()',  data.term_use, 
             data.date_start, data.date_expired, data.rate_setup, data.rate_second, data.rate_trunk_port];
             const res = await db.queryIBS(query,value);
 
@@ -80,7 +80,13 @@ module.exports = {
               updateData = updateData.substring(0, updateData.length - 1);
             }
 
-            const queryUpdate= `update carrier set ${updateData} where  carrier_code='${data.carrier_code}'`;
+            let where =  `where carrier_code='${data.carrier_code}'`;
+
+            if(data.company_code){
+              where = where + `and company_code ='${data.company_code}'`;
+            }
+
+            const queryUpdate= `update carrier set ${updateData} ${where} `;
             const resUpdate = await db.queryIBS(queryUpdate,[]);
 
             return resUpdate.rows[0];
