@@ -5,7 +5,7 @@ var CDRsController = require('../leafnet/cdr.controller');
 var EmailController = require('../leafnet/emailNotification.controller');
 
 
-// var archiverJob = new CronJob ('37 12 * * *',function(){
+// var archiverJob = new CronJob ('49 10 * * *',function(){
 //     console.log('This is leafnet archiver start');
 //     archiveController.getData();
 //     console.log('This is leafnet archiver End');

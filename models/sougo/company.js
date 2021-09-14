@@ -17,9 +17,9 @@ module.exports = {
     console.log(data);
     try {
       //  if(validatecompanyData()){
-            const query=`INSERT INTO company (company_code,company_name,  company_name_abb, date_update, valid_flag, obic ) 
+            const query=`INSERT INTO company (company_code,company_name,payment_due_date,  company_name_abb, date_update, valid_flag, obic ) 
             VALUES ($1, $2, $3, $4, $5, $6) returning company_code`;
-            const value= [data.company_code, data.company_name, data.company_name_abb,'now()', data.valid_flag, data.obic ];
+            const value= [data.company_code, data.company_name,data.payment_due_date, data.company_name_abb,'now()', data.valid_flag, data.obic ];
             const res = await db.queryIBS(query,value);
             return res.rows[0];
       //  }
@@ -34,9 +34,9 @@ module.exports = {
     try {
       //  if(validatecompanyData()){
           // create history   
-            const query=`INSERT INTO company_history (company_code,company_name,  company_name_abb, date_update, valid_flag, obic ) 
+            const query=`INSERT INTO company_history (company_code,company_name,payment_due_date,  company_name_abb, date_update, valid_flag, obic ) 
             VALUES ($1, $2, $3, $4, $5, $6) returning id`;
-            const value= [data.company_code, data.company_name, data.company_name_abb,'now()', data.valid_flag, data.obic];
+            const value= [data.company_code, data.company_name,data.payment_due_date, data.company_name_abb,'now()', data.valid_flag, data.obic];
             const res = await db.queryIBS(query,value);
 
             // if(data.carrier_code){
@@ -45,7 +45,7 @@ module.exports = {
            
             updateData = updateData + 'company_name='+`'${data.company_name}'`+',';
             updateData = updateData + 'deleted='+`'${data.deleted}'`+',';
-           
+            updateData = updateData + 'payment_due_date='+`'${data.payment_due_date}'`+',';
             updateData = updateData + 'company_name_abb='+`'${data.company_name_abb}'`+',';
             updateData = updateData + 'modified_by='+`'${data.modified_by}'`+',';
             updateData = updateData + 'valid_flag='+data.valid_flag+',';

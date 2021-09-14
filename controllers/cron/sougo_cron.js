@@ -30,12 +30,12 @@ var EmailController = require('../sougo/emailNotification.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-var billingControllerJob = new CronJob ('15 12 * * *',function(){
-    console.log('This is sougo  billing start');
-    billingController.getData();
-    console.log('This is sougo email notification end');
+// var billingControllerJob = new CronJob ('44 11 * * *',function(){
+//     console.log('This is sougo  billing start');
+//     billingController.getData();
+//     console.log('This is sougo email notification end');
 
-},null, true, 'Asia/Tokyo');
+// },null, true, 'Asia/Tokyo');
 
 
 

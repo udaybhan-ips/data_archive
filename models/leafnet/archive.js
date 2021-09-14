@@ -37,7 +37,7 @@ getTargetCDR: async function(targetDateWithTimezone) {
          const query= `SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME,
          CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW,
           CALLSTATUS, CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  where STARTTIME >= '${targetDateWithTimezone}' and 
-          startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 5 DAY) and BILLNUM = '5050506751' AND EGRTGNAME in ('IPSSHG5423J7', 
+          startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY) and BILLNUM = '5050506751' AND EGRTGNAME in ('IPSSHG5423J7', 
           'IPSSHGF59EJ', 'IPSKRG5A00J', 'IPSKRG6BIIJ', 'IPSFUS10NWJ' )  AND RECORDTYPEID = 3 order by STARTTIME`
 
         const data = await db.mySQLQuery(query);
@@ -70,7 +70,7 @@ getTargetCDR: async function(targetDateWithTimezone) {
         if(api){
           query=`update batch_date_control set date_set='${targetDate}'::date + interval '0' day , last_update=now() where date_id='${serviceId}'`;
         }else{
-          query=`update batch_date_control set date_set='${targetDate}'::date + interval '5' day , last_update=now() where date_id='${serviceId}'`;
+          query=`update batch_date_control set date_set='${targetDate}'::date + interval '1' day , last_update=now() where date_id='${serviceId}'`;
         }
         
         const updateBatchControlRes= await db.query(query,[]);

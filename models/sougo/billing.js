@@ -7,7 +7,7 @@ var fs = require("fs");
 module.exports = {
   getRates: async function () {
     try {
-      const query = `select carrier_code, date_start, date_expired, rate_setup, rate_second, rate_trunk_port from carrier where deleted =false`;
+      const query = `select carrier_code, date_start, date_expired, rate_setup, rate_second, rate_trunk_port, company_code from carrier where deleted =false`;
       const ratesRes = await db.queryIBS(query, []);
 
       // console.log("ratesRes="+JSON.stringify(ratesRes.rows));
@@ -24,7 +24,7 @@ module.exports = {
   },
   getCarrierInfo: async function () {
     try {
-      const query = `select carrier_code, carrier_name from carrier `;
+      const query = `select carrier_code, carrier_name, company_code from carrier `;
       const carrierRes = await db.queryIBS(query, []);
       if (carrierRes.rows) {
         return (carrierRes.rows);
@@ -51,7 +51,7 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main where company_code not  in ('1011000055') order by company_code `;
+      const query = `select distinct(company_code) as company_code from billcdr_main where company_code in ('1011000003')  order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       
       return billNoRes.rows;
@@ -65,7 +65,8 @@ module.exports = {
 
   getTargetDate: async function (date_id) {
     try {
-      const query = `SELECT max(date_set)::date - interval '1 month' as target_billing_month, max(date_set)::date as current_montth FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
+      const query = `SELECT max(date_set)::date - interval '1 month' as target_billing_month, max(date_set)::date as current_montth 
+       FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
       const targetDateRes = await db.query(query, []);
       //console.log(targetDateRes);
       if (targetDateRes.rows) {
@@ -209,7 +210,7 @@ async function getResInfo(data,company_code, ratesInfo, carrierInfo, billingMont
   let res = [], case1 = {}, case2 = {}, case3 = {}, case4 = {}, case5 = {}, case6 = {};
   try {
 
-    let rate = await getSougoRates(ratesInfo, data['carrier_code']);
+    let rate = await getSougoRates(ratesInfo, data['carrier_code'], company_code);
     let carrierName = await getCarrierName(carrierInfo, data['carrier_code']);
     let termCarrierName = await getCarrierName(carrierInfo, data['term_carrier_id']);
 
@@ -306,19 +307,48 @@ async function getCarrierName(data, carrier_code) {
 
 
 
-async function getSougoRates(data, carrier_code) {
+async function getSougoRates(data, carrier_code, company_code) {
   let res = {};
 
   console.log("carrier code=="+carrier_code);
+  console.log("company_code=="+company_code);
   console.log("data=="+data.length);
 
+  let tmpObj = data.filter((obj) => {
+    if (obj['carrier_code'] == carrier_code)
+      return true;
+  });
+
+  console.log("tmpObj="+JSON.stringify(tmpObj));
+
+  let filterLength = tmpObj.length;
+
+  console.log("lenght=="+filterLength);
+
+  if(filterLength==1){
+        res['rate_setup'] = tmpObj[0]['rate_setup'];
+        res['rate_sec'] = tmpObj[0]['rate_second'];
+        res['rate_trunk_port'] = tmpObj[0]['rate_trunk_port']; 
+        return res;
+  }
+
   try{
-    for (let i = 0; i < data.length; i++) {
-      if (data[i]['carrier_code'] == carrier_code) {
-        res['rate_setup'] = data[i]['rate_setup'];
-        res['rate_sec'] = data[i]['rate_second'];
-        res['rate_trunk_port'] = data[i]['rate_trunk_port'];
-        break;
+    for (let i = 0; i < tmpObj.length; i++) {
+      if (tmpObj[i]['carrier_code'] == carrier_code && tmpObj[i]['company_code'] == company_code) {
+        res['rate_setup'] = tmpObj[i]['rate_setup'];
+        res['rate_sec'] = tmpObj[i]['rate_second'];
+        res['rate_trunk_port'] = tmpObj[i]['rate_trunk_port'];
+        console.log("res in side company code")
+        return res;
+      }
+    }
+    for (let i = 0; i < tmpObj.length; i++) {
+      if (tmpObj[i]['carrier_code'] == carrier_code && (tmpObj[i]['company_code'] == '' || tmpObj[i]['company_code'] == null)) {
+        res['rate_setup'] = tmpObj[i]['rate_setup'];
+        res['rate_sec'] = tmpObj[i]['rate_second'];
+        res['rate_trunk_port'] = tmpObj[i]['rate_trunk_port'];
+        console.log("res in side not company code")
+        return res;
       }
     }
 
@@ -332,7 +362,10 @@ async function getSougoRates(data, carrier_code) {
 
 async function getCustomerInfo(company_code) {
   try {
-    const query = `select *, (select company_name from company where company_code='${company_code}' limit 1)as company_name  from bill_info where company_code='${company_code}'`;
+    const query = `select *, (select payment_due_date from company where company_code='${company_code}' limit 1)as payment_due_date
+    ,(select company_name from company where company_code='${company_code}' limit 1)as company_name  from bill_info 
+    where company_code='${company_code}'`;
+
     const ratesRes = await db.queryIBS(query, [],true);
 
     if (ratesRes.rows) {
@@ -373,9 +406,38 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
   let MAXY = doc.page.height - 50;
   let fontpath = (__dirname + '\\..\\..\\controllers\\font\\ipaexg.ttf');
   doc.font(fontpath);
+
+  let paymentDueDate = "";
+  let tmpPaymentDate = "";
+  if(address && address[0]){
+    tmpPaymentDate = address[0]['payment_due_date'];
+  }
+
+  const currentYear = new Date(currentMonth).getFullYear();
+  let currentMonthValue = new Date(currentMonth).getMonth() + 1;
+  if (parseInt(currentMonthValue, 10) < 10) {
+    currentMonthValue = '0' + currentMonthValue;
+  }
+
+  if(currentMonthValue)
+
+  if(tmpPaymentDate=='yearly'){
+    if(currentMonthValue>4)
+       paymentDueDate=`${currentYear+1}/04/30`;
+    else
+      paymentDueDate=`${currentYear}/04/30`;
+  }else if(tmpPaymentDate=='half_yearly'){
+    if(currentMonthValue>10)
+      paymentDueDate=`${currentYear}/04/30`;
+    else
+      paymentDueDate=`${currentYear}/10/31`;
+  }else{
+    paymentDueDate=`${currentYear}/${currentMonthValue}/30`;
+  }
+
   await generateHeader(address,doc, totalCallAmount);
 
-  let y = generateCustomerInformation(company_code, billingYear, billingMonth, doc, invoice, 200, currentMonth,totalCallAmount);
+  let y = generateCustomerInformation(company_code, billingYear, billingMonth, doc, invoice, 200, currentMonth,totalCallAmount,paymentDueDate);
 
   //drawLine(doc, 198);
 
@@ -385,6 +447,7 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
   y = customTableFC(doc, y + 55, invoice, MAXY);
   
   y = tableSummary(doc, 350, y, subTotal);
+  genrateAccountInfo(doc,y);
   generateFooter(doc, y);
   doc.end();
   doc.pipe(fs.createWriteStream(path));
@@ -419,6 +482,21 @@ function tableSummary(doc, x, y, subTotal) {
 
     .moveDown();
   return y + 100;
+}
+
+function genrateAccountInfo(doc, y){
+  doc
+    .fontSize(8)
+    .text("<<   お振込先   >>",150, y-40)
+    .moveDown()
+    .text("三菱ＵＦＪ銀行　新富町支店",150)
+    .moveDown()
+    .text("普通預金　0019761")
+    .moveDown()
+    .text("株式会社アイピーエス")
+    .moveDown()
+    
+
 }
 
 async function generateHeader(customerDetails, doc, totalCallAmount) {
@@ -484,6 +562,7 @@ function row(doc, heigth) {
 function customTableFC(doc, y, data, MAXY) {
   console.log("in table FC");
   let height = y;
+  let counter = 1 ;
   for (let i = 0; i < data.length; i++) {
     height = height + 20;
     textInRowFirst(doc, i+1, 50, height, "center", 15);
@@ -495,12 +574,16 @@ function customTableFC(doc, y, data, MAXY) {
    // textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].total_amount)), 400, height, "right");
 
     if (height >= 680) {
+      doc.text(counter,500,720)
       doc.addPage({ margin: 50 })
       height = 50;
+      counter ++;
       //addTableHeader(doc, 50, 50);
 
     }
   }
+  doc.text(counter,500,720)
+      
   return height;
 }
 
@@ -590,7 +673,7 @@ function textInRowFirst(doc, text, x, heigth, align, width) {
 
 
 
-function generateCustomerInformation(company_code, billingYear, billingMonth, doc, invoice, y, currentMonth, totalAmount) {
+function generateCustomerInformation(company_code, billingYear, billingMonth, doc, invoice, y, currentMonth, totalAmount,paymentDueDate) {
 
   const currentYear = new Date(currentMonth).getFullYear();
   let currentMonthValue = new Date(currentMonth).getMonth() + 1;
@@ -625,7 +708,7 @@ function generateCustomerInformation(company_code, billingYear, billingMonth, do
     .text(`${company_code}-${billingYear}${billingMonth}-1`, 150, y + 30, { width: 100, align: "center" })
     .text(`${currentYear}/${currentMonthValue}/01`, 250, y + 30, { width: 100, align: "center" })
     .text(`${billingYear}/${billingMonth}/1 ～ ${billingYear}/${billingMonth}/${daysInMonth(billingMonth, billingYear)}`, 350, y + 30, { width: 100, align: "center" })
-    .text(`${currentYear}/${currentMonthValue}/30`, 450, y + 30, { width: 110, align: "center" })
+    .text(paymentDueDate, 450, y + 30, { width: 110, align: "center" })
 
     doc.rect(50,  y+25, 100 ,25   ).stroke()
     doc.rect(150,  y+25, 100 ,25   ).stroke()
