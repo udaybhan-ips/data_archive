@@ -51,7 +51,7 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main where company_code in ('1011000003')  order by company_code `;
+      const query = `select distinct(company_code) as company_code from billcdr_main where company_code !='1011000019' order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       
       return billNoRes.rows;
@@ -180,7 +180,7 @@ module.exports = {
     let subject = `Approval Notification for ${reqData.customer_name} of ${utility.dateVsMonths[reqData.billing_month]}`;
     let html = `<div>
       <div> Hi Team, </div>
-      <div> Below is the billing status of ${reqData.customer_name} Sonus Outbound. This is approved by ${reqData.approved_by}.</div>
+      <div> Below is the billing status of ${reqData.customer_name} Sougo. This is approved by ${reqData.approved_by}.</div>
       <div> Thank you </div>
   </div>`;
 
@@ -504,7 +504,8 @@ async function generateHeader(customerDetails, doc, totalCallAmount) {
   let postNumber = customerDetails[0]['zip_code'];
   
   let customerName = customerDetails[0]['company_name'];
-  let address = customerDetails[0]['address1'] + customerDetails[0]['address2'] ;
+  let address1 = customerDetails[0]['address1'] ;
+  let address2 = customerDetails[0]['address2'] ;
   let person_incharge = customerDetails[0]['person_incharge'];
 
   if(postNumber){
@@ -515,18 +516,20 @@ async function generateHeader(customerDetails, doc, totalCallAmount) {
     // .image("logo.png", 50, 45, { width: 50 })
     //.fillColor("#444444")
     .fontSize(10)
-    .text(`〒${postNumber}`, 50, 57)
-    .text(`${address}`, 50, 70)
-    .text(`${customerName}`, 50, 83)
-    .text(`${person_incharge}`, 50, 96)
+    .text(`〒${postNumber}`, 65, 12)
+    .text(`${address1}`, 65, 25)
+    .text(`${address2}`, 65, 38)
+    .text(`${customerName}`, 65, 51)
+    .text(`${person_incharge}`, 65, 65)
     
-    .text("株式会社アイ・ピー・エス", 10, 57, { align: "right" })
-    .text("〒104－0045", 10, 70, { align: "right" })
-    .text("東京都中央区築地4-1-1東劇ビル8階", 10, 83, { align: "right" })
-    .text("TEL: 03-3549-7626 FAX : 03-3545-7331", 10, 96, { align: "right" })
+    .text("株式会社アイ・ピー・エス", 10, 110, { align: "right" })
+    .text("〒104－0045", 10, 123, { align: "right" })
+    .text("東京都中央区築地4-1-1東劇ビル8階", 10, 136, { align: "right" })
+    .text("TEL : 03-3549-7626", 10, 149, { align: "right" })
+    .text("FAX : 03-3545-7331", 10, 162, { align: "right" })
     
 
-    .text("請 求 書", 0, 142, { align: "center" })
+    .text("請 求 書", 0, 173, { align: "center" })
     
 
     // .text("下記のとおりご請求申し上げます。", 50, 170)

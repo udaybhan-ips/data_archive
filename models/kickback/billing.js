@@ -102,7 +102,7 @@ module.exports = {
   getKickCompList: async function () {
     
     try {
-      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable where  service_type !='rate_base'   `;
+      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable  where service_type!='rate_base' and customer_id!='00000715' `;
       const getKickCompListRes = await db.queryIBS(query, []);
 
       if (getKickCompListRes.rows) {
@@ -306,7 +306,7 @@ module.exports = {
       let tax = 0;
 
       for(let i=0; i<data.length;i++){
-        let info = await getResInfo(data[i], ratesDetails, carrierInfo,month,service_type);
+        let info = await getResInfo(data[i], ratesDetails, carrierInfo,month,service_type, i);
             for (let ii=0;ii<info.length;ii++) {
 
               call_count = call_count + parseInt(info[ii]['call_count'],10);
@@ -530,7 +530,7 @@ async function getDistinctCarrierCode(data, company_code) {
   return Object.keys(res);
 }
 
-async function getResInfo(data, ratesInfo, carrierInfo, billingMonth, service_type) {
+async function getResInfo(data, ratesInfo, carrierInfo, billingMonth, service_type,lineCounter) {
 
   console.log("company_code==" + data['company_code']);
   console.log("carrier_code==" + data['carrier_code']);
@@ -546,16 +546,16 @@ async function getResInfo(data, ratesInfo, carrierInfo, billingMonth, service_ty
     let termCarrierName = await getCarrierName(carrierInfo, data['term_carrier_id']);
 
     case1['call_count'] = data['total_calls'];
-    case1['line_no'] = 1;
+    case1['line_no'] = lineCounter*6+1;;
     case1['item_type'] = 1;
     case1['item_name'] = data['carrier_code'] + "-" + carrierName + "発信分 通話回数（国内）";
     case1['call_sec'] = 0;
-    case1['amount'] = data['total_calls'] * rate['rate_setup'];
+    case1['amount'] = data['total_calls'] * rate['rate_setup' ];
     case1['rate'] = rate['rate_setup'];
     case1['remarks'] =  data['term_carrier_id'] + billingMonth + "月分着信";
 
-    case2['call_count'] = 0;
-    case2['line_no'] = 2;
+    case2['call_count'] = data['total_duration'];
+    case2['line_no'] = lineCounter*6+2;
     case2['item_type'] = 2;
     case2['item_name'] = data['carrier_code'] + "-" + carrierName + "発信分 通話秒数（国内）";
     case2['call_sec'] = data['total_duration'];
@@ -564,16 +564,19 @@ async function getResInfo(data, ratesInfo, carrierInfo, billingMonth, service_ty
     case2['remarks'] = data['term_carrier_id'] + billingMonth + "月分着信";
 
 
-    case3['call_count'] = 0;
-    case3['line_no'] = 3;
+    
+    case3['line_no'] = lineCounter*6+3;
     case3['item_type'] = 3;
-    case3['item_name'] = data['carrier_code'] + "-" + carrierName + "発信分 トランクポート接続料（国内）";
+    
     case3['call_sec'] = data['total_duration'];
     if(service_type=='rate_base_with_facility'){
+      case3['item_name'] = data['carrier_code'] + "-" + carrierName + "他社設備利用料（国内）";
       case3['amount'] = -(parseFloat(data['total_duration']) *0.003);
       case3['rate'] ='-0.003';
-
+      case3['call_count'] =  data['total_duration'];
     }else{
+      case3['item_name'] = data['carrier_code'] + "-" + carrierName + "発信分 トランクポート接続料（国内）";
+      case3['call_count'] = 0;
       case3['amount'] = 0;
       case3['rate'] = rate['rate_trunk_port'];
     }
@@ -583,7 +586,7 @@ async function getResInfo(data, ratesInfo, carrierInfo, billingMonth, service_ty
     case3['remarks'] = data['term_carrier_id'] + billingMonth + "月分着信";
 
     case4['call_count'] =0;
-    case4['line_no'] = 4;
+    case4['line_no'] = lineCounter*6+4;
     case4['item_type'] = 1;
     case4['item_name'] = data['carrier_code'] + "-" + carrierName + "発信分 通話回数（国内）";
     case4['call_sec'] = 0;
@@ -592,7 +595,7 @@ async function getResInfo(data, ratesInfo, carrierInfo, billingMonth, service_ty
     case4['remarks'] = data['term_carrier_id'] + "着信" + billingMonth + "月分着信";
 
     case5['call_count'] = 0;
-    case5['line_no'] = 5;
+    case5['line_no'] = lineCounter*6+5;
     case5['item_type'] = 2;
     case5['item_name'] = data['carrier_code'] + "-" + carrierName + "発信分 通話秒数（国内）";
     case5['call_sec'] = 0;
@@ -602,7 +605,7 @@ async function getResInfo(data, ratesInfo, carrierInfo, billingMonth, service_ty
 
 
     case6['call_count'] = 0;
-    case6['line_no'] = 6;
+    case6['line_no'] = lineCounter*6+6;
     case6['item_type'] = 3;
     case6['item_name'] = data['carrier_code'] + "-" + carrierName + "発信分 トランクポート接続料（国内）";
     case6['call_sec'] = 0;
@@ -690,10 +693,11 @@ async function getInvoiceData(customerId, serviceType, year, month) {
        on (lj.bill_no=rj.bill_no) order by lj.item_name` ;
 
     }else{
-      query = ` select * from (select bill_no, item_name, call_sec, rate, remarks, amount from kickback_detail_irregular where   amount::int!=0)as lj join 
+      query = ` select * from (select bill_no, item_name, call_count, rate, remarks, amount, line_no from kickback_detail_irregular 
+        where   amount::int!=0)as lj join 
       (select bill_no, customer_code, date_bill  from kickback_history 
       where customer_code='${customerId}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}') as rj
-       on (lj.bill_no=rj.bill_no) order by lj.item_name` ;
+       on (lj.bill_no=rj.bill_no) order by lj.line_no`  ;
 
     }
        
@@ -729,7 +733,7 @@ async function createInvoice(customerId, serviceType, billingYear, billingMonth,
   
   console.log("y=--"+y);
   if(serviceType=='rate_base'){
-    drawLine(doc, y+20 );
+    drawLine(doc, y+25 );
     addTableHeader(doc, 50, y + 40, totalCallAmount,totalCallDuration, billingYear, billingMonth);
     y = customTable(doc, y + 85, invoice, MAXY);
   }else{
@@ -791,7 +795,7 @@ async function generateHeader(customerDetails, doc, totalCallAmount) {
     .fontSize(10)
     .text(`〒${postNumber}`, 50, 57)
     .text(`${address}`, 50, 70)
-    .text(`${customerName}`, 50, 83)
+    .text(`${customerName} 御中`, 50, 83)
     
     .text("株式会社アイ・ピー・エス", 10, 57, { align: "right" })
     .text("〒104－0045", 10, 70, { align: "right" })
@@ -838,22 +842,11 @@ function customTable(doc, y, data, MAXY) {
   for (let i = 0; i < data.length; i++) {
     
 
-    if(i%2==0){
-     textInRowFirst(doc, data[i].item_name, 50, height,"center", 125);
-     textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].call_minute)), 175, height, "right", 125);
-     if(length-1==i){
-      textInRowFirst(doc, '', 300, height,"center", 125);
-      textInRowFirst(doc, '', 425, height, "right", 125);
-     }
-    }else{
-      textInRowFirst(doc, data[i].item_name, 300, height,"center", 125);
-      textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].call_minute)), 425, height, "right", 135);
-      if(length-1!=i)
-        height = height + 20;
-    }
     
-   // textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].total_amount)), 400, height, "right");
-
+     textInRowFirst(doc, data[i].item_name, 50, height,"center", 250);
+     textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].call_minute)), 300, height, "right", 260);
+     
+     height = height + 20;
     if (height >= 680) {
       doc.addPage({ margin: 50 })
       height = 50;
@@ -872,7 +865,7 @@ async function customTableFC(doc, y, data, MAXY) {
     textInRowFirst(doc, i+1, 50, height, "center", 15);
     textInRowFirst(doc, data[i].item_name, 65, height, null, 265);
     textInRowFirst(doc, data[i].rate, 330, height, "right", 50);
-    textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].call_sec)), 380, height, "right",60);
+    textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].call_count)), 380, height, "right",60);
     textInRowFirst(doc,utility.numberWithCommas(parseInt(data[i].amount)), 440, height, "right", 50);
     textInRowFirst(doc, data[i].remarks, 490, height, "right", 70);
    // textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].total_amount)), 400, height, "right");
@@ -1019,7 +1012,7 @@ function generateCustomerInformation(customerId, billingYear, billingMonth, doc,
   return y + 35;
 }
 
-function drawLine(doc, startX, Y = 50, Z = 550) {
+function drawLine(doc, startX, Y = 50, Z = 560) {
   doc
     .moveTo(Y, startX)                            // set the current point
     .lineTo(Z, startX)                            // draw a line

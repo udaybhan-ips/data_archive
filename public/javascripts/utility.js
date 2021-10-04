@@ -3,7 +3,11 @@ var path = require('path');
 
  const dateVsMonths={'01':'Jan','02':'Feb','03':'March','04':'April','05':'May','06':'June','07':'July','08':'Augest','09':'Sept','10':'Oct','11':'Nov','12':'Dec'};
  
+ const dateVsMonthsWithoutZero={'1':'Jan','2':'Feb','3':'March','4':'April','5':'May','6':'June','7':'July','8':'Augest','9':'Sept','10':'Oct','11':'Nov','12':'Dec'};
+ 
+
  module.exports={dateVsMonths};
+ module.exports={dateVsMonthsWithoutZero};
 
 
 
@@ -262,6 +266,21 @@ module.exports.createFolder=function createFolder(folderName){
     }       
 
 }
+
+module.exports.formatDate = function  (date) {
+  var d = new Date(date),
+      month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
+
+  if (month.length < 2) 
+      month = '0' + month;
+  if (day.length < 2) 
+      day = '0' + day;
+
+  return [year, month, day].join('/');
+}
+
 
 module.exports.splitDate=function(date){
   let year='',month='',monthName='';

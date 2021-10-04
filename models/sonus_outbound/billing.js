@@ -104,9 +104,9 @@ module.exports = {
   
     let mailOption={
         from: 'ips_tech@sysmail.ipsism.co.jp',
-       // to: 'telecom@ipsism.co.jp',
-        //cc:'y_ito@ipsism.co.jp,uday@ipsism.co.jp',
-        to:'uday@ipsism.co.jp',
+        to: 'telecom@ipsism.co.jp',
+        cc:'y_ito@ipsism.co.jp,uday@ipsism.co.jp',
+       // to:'uday@ipsism.co.jp',
         subject,
         html
     }

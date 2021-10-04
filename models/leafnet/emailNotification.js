@@ -119,24 +119,24 @@ function tableCreate(rawData, processData) {
     locE= new Date(rawData[length-1]['day']);
     locEA=locE.toLocaleString().split(",");
 
-    console.log("1="+locEA[0]);
+//    console.log("1="+locEA[0]);
 
     for(let i=0;i<rawData.length;i++){
         let diff=rawData[i]['total']-processData[i]['total'];
         
-        console.log("rawData[i]['day']="+rawData[i]['day']);
-        console.log("processData[i]['day']="+processData[i]['day']);
+        //console.log("rawData[i]['day']="+rawData[i]['day']);
+        //console.log("processData[i]['day']="+processData[i]['day']);
 
 
-        let loc= new Date(rawData[i]['day']);
-        console.log("loc="+loc);
+        //let loc= new Date(rawData[i]['day']);
+       // console.log("loc="+loc);
 
-        let locArr=loc.toLocaleString().split(",");
+        //let locArr=loc.toLocaleString().split(",");
         let rawValue = utility.numberWithCommas(rawData[i]['total']);
         let processValue = utility.numberWithCommas(processData[i]['total']);
 
         tableRows+='<tr>';
-        tableRows+=`<td class="day">${locArr[0]}</td>`;
+        tableRows+=`<td class="day">${utility.formatDate(rawData[i]['day'])}</td>`;
         tableRows+=`<td style="text-align:right" class="Raw Data">${rawValue}</td>`;
         tableRows+=`<td style="text-align:right" class="Processed Data">${processValue}</td>`;
         tableRows+=`<td style="text-align:right" class="Difference">${diff}</td>`;

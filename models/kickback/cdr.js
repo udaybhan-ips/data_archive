@@ -13,7 +13,9 @@ module.exports = {
     },
     getAllKickbackCustomer: async function () {
         try {
-            const query = `select customer_id, service_type, cell_phone_limit,cdr_comp_name from kickback_billable where customer_id in ('00000705','00000784','00000893') and service_type ='rate_base'`;
+            const query = `select customer_id, service_type, cell_phone_limit,cdr_comp_name, (select 
+                customer_name from m_customer where customer_cd = kickback_billable.customer_id limit 1
+                ) as customer_name from kickback_billable`;
 
             const getAllKickbackCustRes = await db.queryIBS(query, [], true);
             if (getAllKickbackCustRes.rows) {

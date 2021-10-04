@@ -29,7 +29,7 @@ const CDR_CS = new pgp.helpers.ColumnSet(['date_bill', 'orig_ani', 'term_ani', '
 'dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_company_code', 'trunk_port',
  'sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_anani', 
  'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'registerdate', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus', 
- 'sonus_callingnumber'], { table: 'cdr_202108' });
+ 'sonus_callingnumber'], { table: 'cdr_202109' });
 const BILLCDR_CS = new pgp.helpers.ColumnSet(['cdr_id', 'date_bill', 'company_code', 'carrier_code', 'in_outbound', 'call_type', 'trunk_port_target'
   , 'duration', 'start_time', 'stop_time', 'orig_ani', 'term_ani', 'route_info', 'date_update', 'orig_carrier_id', 'term_carrier_id',
   'transit_carrier_id', 'selected_carrier_id', 'trunk_port_name', 'gw', 'session_id', 'call_status', 'kick_company', 'term_use'], { table: 'billcdr_main' });

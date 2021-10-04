@@ -1,9 +1,9 @@
-var ApprovalLeafnet = require('../../models/leafnet/approval');
+var ApprovalKickback = require('../../models/kickback/approval');
 
 module.exports = {
     getStatusByInvoiceNo: async function(req, res) {
     try {
-        const [getApprovalStatusRes,getApprovalStatusError] = await handleError(ApprovalLeafnet.getStatusByInvoiceNo(req.body));
+        const [getApprovalStatusRes,getApprovalStatusError] = await handleError(ApprovalKickback.getStatusByInvoiceNo(req.body));
         if(getApprovalStatusError) {
             return res.status(400).json({
                 message: getApprovalStatusError
@@ -46,7 +46,7 @@ module.exports = {
     // }
 
     try {
-      const [addApprovalRes,addApprovalErr] = await handleError(ApprovalLeafnet.addApprovalStatus(req.body));
+      const [addApprovalRes,addApprovalErr] = await handleError(ApprovalKickback.addApprovalStatus(req.body));
       if(addApprovalErr) {
         return res.status(400).json({
             message: addApprovalErr
@@ -55,7 +55,7 @@ module.exports = {
       }
       if(req && req.body && req.body.status){
         if(req.body.status==='Approve'){
-          ApprovalLeafnet.sendApprovalNotification(req.body);
+          ApprovalKickback.sendApprovalNotification(req.body);
         }        
       }
       
