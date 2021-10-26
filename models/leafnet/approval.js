@@ -56,7 +56,7 @@ module.exports = {
         let mailOption={
             from: 'ips_tech@sysmail.ipsism.co.jp',
             to: 'uday@ipsism.co.jp',
-            //cc:'r_chong@ipsism.co.jp,y_ito@ipsism.co.jp',
+            cc:'y_ito@ipsism.co.jp',
             subject,
             html
         }

@@ -1,8 +1,9 @@
 var ArchiveKickback = require('../../models/kickback/archive');
-const dateId = '3';
-let __type = "raw_cdr";
+
+
 module.exports = {
   getData: async function (req, res) {
+    const dateId = '3';
     try {
 
       const [Dates, targetDateErr] = await handleError(ArchiveKickback.getTargetDate(dateId));
@@ -17,13 +18,43 @@ module.exports = {
       }
       // console.log("table name=="+(tableNameRes));
 
-      // const deleteTargetDateData = await ArchiveKickback.deleteTargetDateCDR(Dates.targetDate, tableName);
-      // const getTargetCDRRes = await ArchiveKickback.getTargetCDR(Dates.targetDateWithTimezone, tableName);
-      // const getCompanyCodeInfoRes = await ArchiveKickback.getCompanyCodeInfo(Dates.targetDateWithTimezone);
-      // const getRemoteControlNumberDataRes = await ArchiveKickback.getRemoteControlNumberData(Dates.targetDateWithTimezone);
+      const deleteTargetDateData = await ArchiveKickback.deleteTargetDateCDR(Dates.targetDate, tableName);
+      const getTargetCDRRes = await ArchiveKickback.getTargetCDR(Dates.targetDateWithTimezone, tableName);
+      const getCompanyCodeInfoRes = await ArchiveKickback.getCompanyCodeInfo(Dates.targetDateWithTimezone);
+      const getRemoteControlNumberDataRes = await ArchiveKickback.getRemoteControlNumberData(Dates.targetDateWithTimezone);
 
-      // const getDataRes = await ArchiveKickback.insertByBatches(getTargetCDRRes, getCompanyCodeInfoRes, getRemoteControlNumberDataRes, null, null, 'raw_cdr');
+      const getDataRes = await ArchiveKickback.insertByBatches(getTargetCDRRes, getCompanyCodeInfoRes, getRemoteControlNumberDataRes, null, null, 'raw_cdr');
  
+      const [updateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveKickback.updateBatchControl(dateId, Dates.targetDate));
+      if (updateBatchControlErr) {
+        throw new Error('Err: while updating target date');
+      }
+
+      return res.status(200).json({
+        message: 'success! data inserted sucessfully',
+
+      });
+    } catch (error) {
+      return error;
+    }
+  },
+  getProData: async function (req, res) {
+    const dateId = 4;
+    try {
+
+      const [Dates, targetDateErr] = await handleError(ArchiveKickback.getTargetDate(dateId));
+      if (targetDateErr) {
+        throw new Error('Could not fetch target date');
+      }
+      // console.log(JSON.stringify(Dates));
+
+      const [tableName, tableNameErr] = await handleError(ArchiveKickback.getTableName(Dates.targetDate));
+      if (tableNameErr) {
+        throw new Error('Could not fetch table name');
+      }
+      // console.log("table name=="+(tableNameRes));
+
+     
       /***** for billcdr main ******/
 
       const deleteTargetDateBillableData = await ArchiveKickback.deleteTargetBillableCDR(Dates.targetDate, tableName);

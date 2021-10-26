@@ -102,7 +102,7 @@ module.exports = {
   getKickCompList: async function () {
     
     try {
-      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable  where service_type!='rate_base' and customer_id!='00000715' `;
+      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable  where customer_id='00000697' `;
       const getKickCompListRes = await db.queryIBS(query, []);
 
       if (getKickCompListRes.rows) {
@@ -184,15 +184,26 @@ module.exports = {
         query = `select count(*) as total_calls, sum(duration) as total_duration , term_ani 
       from billcdr_main where term_ani in (${_03_numbers}) and duration>1 and call_status in (16, 31) group by term_ani order by term_ani  `;
       }else{
-        if(isExceed){
+        if(isExceed || kickCompany=='00000697'){
           let queryTermUse1=`select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
-          from billcdr_main where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=1 group by   company_code, carrier_code, term_carrier_id 
+          from billcdr_main where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers 
+          from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=1 group by   company_code, carrier_code, term_carrier_id 
           order by  company_code, carrier_code, term_carrier_id`;
+          let queryTermUse2="";
 
-          let queryTermUse2=`select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
-          from billcdr_main where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=2 and start_time<='${exceedLimitTime}' group by   company_code, carrier_code, term_carrier_id 
-          order by  company_code, carrier_code, term_carrier_id`;
-
+          if(isExceed){
+            queryTermUse2=`select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
+            from billcdr_main where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
+             from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=2 and start_time<='${exceedLimitTime}' group by   company_code, carrier_code, term_carrier_id 
+            order by  company_code, carrier_code, term_carrier_id`;
+  
+          }else{
+            queryTermUse2=`select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
+            from billcdr_main where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
+             from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=2 group by   company_code, carrier_code, term_carrier_id 
+            order by  company_code, carrier_code, term_carrier_id`;
+  
+          }
           console.log("queryTermUse1==" + queryTermUse1);
           console.log("queryTermUse2==" + queryTermUse2);
       
@@ -201,6 +212,10 @@ module.exports = {
           const combineData = await combineTwoArray(termUse1Res.rows, termUse2Res.rows);
 
           console.log("combineData"+JSON.stringify(combineData));
+
+          if(kickCompany=='00000697'){
+            return {'term_use1':termUse1Res.rows, 'term_use2':termUse2Res.rows};
+          }
 
           return combineData;
 
@@ -311,9 +326,10 @@ module.exports = {
 
               call_count = call_count + parseInt(info[ii]['call_count'],10);
               duration =  duration + parseInt(info[ii]['call_sec'],10);
-              if(parseInt(info[ii]['amount'],10)>1){
-                amount = amount + parseInt(info[ii]['amount'],10);
-              }
+              
+                amount = amount + (parseInt(info[ii]['amount'],10));
+              
+              
               
 
               let query = `insert into kickback_detail_irregular (bill_no,line_no, item_type , item_name, call_count, call_sec,rate,
@@ -419,16 +435,21 @@ module.exports = {
     return resArr;
 
   },
-  genrateInvoice: async function (customerId,serviceType, billingYear, billingMonth, currentMonth) {
+  genrateInvoice: async function (customerId,serviceType, billingYear, billingMonth, currentMonth, term_use, bill_no) {
     try {
 
-      let path = __dirname + `\\Invoice\\${customerId}${billingYear}${billingMonth}.pdf`;
+      let path ;
+      if(customerId=='00000697'){
+        path = __dirname + `\\Invoice\\${customerId}${billingYear}${billingMonth}${bill_no}.pdf`;
+      }else{
+        path = __dirname + `\\Invoice\\${customerId}${billingYear}${billingMonth}.pdf`;
+      }
 
-      const invoiceData = await getInvoiceData(customerId, serviceType, billingYear, billingMonth);
+      const invoiceData = await getInvoiceData(customerId, serviceType, billingYear, billingMonth, term_use, bill_no);
       const customerAddress = await getCustomerInfo(customerId);
       let totalCallAmount = 0;
       let totalCallDuration =0;
-
+      let invoiceNo ;
       invoiceData.map(obj => {
         if(serviceType=='rate_base'){
           totalCallAmount = parseInt(obj.total_amount);
@@ -437,11 +458,11 @@ module.exports = {
         }else{
           totalCallAmount = totalCallAmount + parseInt(obj.amount);
           totalCallDuration = totalCallDuration + parseInt(obj.call_sec);
-  
+          invoiceNo = obj.bill_no;
         }
   
       });
-      await createInvoice(customerId, serviceType, billingYear, billingMonth, invoiceData, path, totalCallAmount, currentMonth, customerAddress,totalCallDuration);
+      await createInvoice(customerId, serviceType, billingYear, billingMonth, invoiceData, path, totalCallAmount, currentMonth, customerAddress,totalCallDuration,invoiceNo);
       console.log("Done...")
     } catch (err) {
       console.log("error...." + err.message);
@@ -683,7 +704,7 @@ async function getCustomerInfo(customerId) {
   }
 }
 
-async function getInvoiceData(customerId, serviceType, year, month) {
+async function getInvoiceData(customerId, serviceType, year, month, term_use, bill_no) {
   try {
     let query="";
     if(serviceType=='rate_base'){
@@ -693,12 +714,19 @@ async function getInvoiceData(customerId, serviceType, year, month) {
        on (lj.bill_no=rj.bill_no) order by lj.item_name` ;
 
     }else{
+      if(customerId=='00000697'){
+        query = ` select * from (select bill_no, item_name, call_count, rate, remarks, amount, line_no from kickback_detail_irregular 
+          where   amount::int!=0 and  bill_no='${bill_no}')as lj join 
+        (select bill_no, customer_code, date_bill  from kickback_history 
+        where customer_code='${customerId}' and bill_no='${bill_no}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}') as rj
+         on (lj.bill_no=rj.bill_no) order by lj.line_no`  ;
+      }else{
       query = ` select * from (select bill_no, item_name, call_count, rate, remarks, amount, line_no from kickback_detail_irregular 
         where   amount::int!=0)as lj join 
       (select bill_no, customer_code, date_bill  from kickback_history 
       where customer_code='${customerId}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}') as rj
        on (lj.bill_no=rj.bill_no) order by lj.line_no`  ;
-
+      }
     }
        
     const ratesRes = await db.queryIBS(query, []);
@@ -716,7 +744,7 @@ async function getInvoiceData(customerId, serviceType, year, month) {
 
 
 
-async function createInvoice(customerId, serviceType, billingYear, billingMonth, invoice, path, subTotal, currentMonth, address,totalCallDuration) {
+async function createInvoice(customerId, serviceType, billingYear, billingMonth, invoice, path, subTotal, currentMonth, address,totalCallDuration,invoiceNo) {
 
   let tax = parseInt(subTotal * .1);
   let totalCallAmount = parseInt(subTotal) + (tax);
@@ -724,25 +752,28 @@ async function createInvoice(customerId, serviceType, billingYear, billingMonth,
   let MAXY = doc.page.height - 50;
   let fontpath = (__dirname + '\\..\\..\\controllers\\font\\ipaexg.ttf');
   doc.font(fontpath);
-  await generateHeader(address,doc, totalCallAmount);
+  await generateHeader(address,doc, totalCallAmount, serviceType);
 
-  let y = generateCustomerInformation(customerId, billingYear, billingMonth, doc, invoice, 210, currentMonth,totalCallAmount);
+  let y = generateCustomerInformation(customerId, billingYear, billingMonth, doc, invoice, 210, currentMonth,totalCallAmount,invoiceNo);
 
  // drawLine(doc, 208);
 
   
   console.log("y=--"+y);
+  let compType ;
   if(serviceType=='rate_base'){
     drawLine(doc, y+25 );
     addTableHeader(doc, 50, y + 40, totalCallAmount,totalCallDuration, billingYear, billingMonth);
     y = customTable(doc, y + 85, invoice, MAXY);
+    compType = "IPS";
   }else{
     addTableHeaderFC(doc, 50, y + 40, totalCallAmount,totalCallDuration, billingYear, billingMonth);
     y = await customTableFC(doc, y + 50, invoice, MAXY);
+    compType = "ELI";
   }
   
   y = await tableSummary(doc, 350, y, subTotal);
-  await generateFooter(doc, y);
+  await generateFooter(doc, y, compType);
   doc.end();
   doc.pipe(fs.createWriteStream(path));
 }
@@ -783,11 +814,29 @@ async function tableSummary(doc, x, y, subTotal) {
   return y + 100;
 }
 
-async function generateHeader(customerDetails, doc, totalCallAmount) {
+async function generateHeader(customerDetails, doc, totalCallAmount,serviceType) {
 
   let postNumber = customerDetails[0]['post_number'];
   let customerName = customerDetails[0]['customer_name'];
   let address = customerDetails[0]['address'];
+
+  let ElIAddress1 , ELIPostNumber, ElIAddress2,ElIAddress3, ELIPhone, ELIFax;
+  
+  if(serviceType=='rate_base'){
+    ElIAddress1="株式会社アイ・ピー・エス";
+    ELIPostNumber ="〒104－0045";
+    ElIAddress2 ="東京都中央区築地4-1-1";
+    ElIAddress3 ="東劇ビル8階";
+    ELIPhone ="TEL: 03-3549-7626";
+    ELIFax ="FAX : 03-3545-7331";
+  }else{
+    ElIAddress1="株式会社ELI";
+    ELIPostNumber ="〒100-0005";
+    ElIAddress2 ="東京都千代田区丸の内1-8-3";
+    ElIAddress3 ="丸の内トラストタワー本館20F";    
+    ELIPhone ="TEL 03-5288-5192";
+    ELIFax ="FAX 03-5288-5193";
+  }
 
   doc
     // .image("logo.png", 50, 45, { width: 50 })
@@ -796,11 +845,14 @@ async function generateHeader(customerDetails, doc, totalCallAmount) {
     .text(`〒${postNumber}`, 50, 57)
     .text(`${address}`, 50, 70)
     .text(`${customerName} 御中`, 50, 83)
+
     
-    .text("株式会社アイ・ピー・エス", 10, 57, { align: "right" })
-    .text("〒104－0045", 10, 70, { align: "right" })
-    .text("東京都中央区築地4-1-1東劇ビル8階", 10, 83, { align: "right" })
-    .text("TEL: 03-3549-7626 FAX : 03-3545-7331", 10, 96, { align: "right" })
+    .text(`${ElIAddress1}`, 10, 57, { align: "right" })
+    .text(`${ELIPostNumber}`, 10, 70, { align: "right" })
+    .text(`${ElIAddress2}`, 10, 83, { align: "right" })
+    .text(`${ElIAddress3}`, 10, 96, { align: "right" })
+    .text(`${ELIPhone}`, 10, 109, { align: "right" })
+    .text(`${ELIFax}`, 10, 122, { align: "right" })
     
 
     .text("手 数 料 計 算 書", 50, 142, { align: "center" })
@@ -813,17 +865,17 @@ async function generateHeader(customerDetails, doc, totalCallAmount) {
 
 }
 
-async function generateFooter(doc, y) {
+async function generateFooter(doc, y, compType) {
   console.log("in footer")
   doc
     .fontSize(8)
-    .text("※この書類は㈱IPSから御社にお支払いする手数料についての通知書です。",50, y + 50)
+    .text(`※この書類は㈱${compType}から御社にお支払いする手数料についての通知書です。`,50, y + 50)
     .moveDown()
     .text("内容をご確認の上、請求書を上記住所までご送付くださいますようお願いいたします。")
     .moveDown()
-    .text("This serves as the notice of commission details to be paid by IPS to your company.")
+    .text(`This serves as the notice of commission details to be paid by ${compType} to your company.`)
     .moveDown()
-    .text("Kindly issue to IPS an invoice statement upon receipt of this notice by sending to address above.")
+    .text(`Kindly issue to ${compType} an invoice statement upon receipt of this notice by sending to address above.`)
     .moveDown()
     
 }
@@ -964,7 +1016,7 @@ function textInRowFirst(doc, text, x, heigth, align, width) {
 }
 
 
-function generateCustomerInformation(customerId, billingYear, billingMonth, doc, invoice, y, currentMonth, totalAmount) {
+function generateCustomerInformation(customerId, billingYear, billingMonth, doc, invoice, y, currentMonth, totalAmount,invoiceNo) {
 
   const currentYear = new Date(currentMonth).getFullYear();
   let currentMonthValue = new Date(currentMonth).getMonth() + 1;
@@ -996,8 +1048,8 @@ function generateCustomerInformation(customerId, billingYear, billingMonth, doc,
  
     .fontSize(8)
     .text(`${customerId}`, 50, y + 30, { width: 100, align: "center" })
-    .text(`${customerId}-${billingYear}${billingMonth}-1`, 150, y + 30, { width: 100, align: "center" })
-    .text(`${billingYear}/${billingMonth}/01`, 250, y + 30, { width: 100, align: "center" })
+    .text(`${invoiceNo}`, 150, y + 30, { width: 100, align: "center" })
+    .text(`${currentYear}/${currentMonthValue}/01`, 250, y + 30, { width: 100, align: "center" })
     .text(`${billingYear}/${billingMonth}/1 ～ ${billingYear}/${billingMonth}/${daysInMonth(billingMonth, billingYear)}`, 350, y + 30, { width: 100, align: "center" })
     .fontSize(12)
     .text(`¥${utility.numberWithCommas(totalAmount)}`, 450, y + 30, { width: 110, align: "center" })

@@ -190,7 +190,7 @@ module.exports.sendEmail=function(mailOptions){
     port:587,
     auth: {
       user: 'ips_tech@sysmail.ipsism.co.jp',
-      pass: '9k7rLZ2T'
+      pass: 't2oqa$5sPlNix2zuT$'
     }
   });
   

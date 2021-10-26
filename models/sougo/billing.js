@@ -51,7 +51,7 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main where company_code !='1011000019' order by company_code `;
+      const query = `select distinct(company_code) as company_code from billcdr_main where company_code ='1011000017' order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       
       return billNoRes.rows;
@@ -447,8 +447,8 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
   y = customTableFC(doc, y + 55, invoice, MAXY);
   
   y = tableSummary(doc, 350, y, subTotal);
-  genrateAccountInfo(doc,y);
-  generateFooter(doc, y);
+  y = genrateAccountInfo(doc,y);
+  generateFooter(doc, y+10);
   doc.end();
   doc.pipe(fs.createWriteStream(path));
 }
@@ -487,7 +487,7 @@ function tableSummary(doc, x, y, subTotal) {
 function genrateAccountInfo(doc, y){
   doc
     .fontSize(8)
-    .text("<<   お振込先   >>",150, y-40)
+    .text("<<   お振込先   >>",150, y)
     .moveDown()
     .text("三菱ＵＦＪ銀行　新富町支店",150)
     .moveDown()
@@ -495,8 +495,9 @@ function genrateAccountInfo(doc, y){
     .moveDown()
     .text("株式会社アイピーエス")
     .moveDown()
+    .moveDown()
+    .moveDown()
     
-
 }
 
 async function generateHeader(customerDetails, doc, totalCallAmount) {
@@ -543,7 +544,7 @@ async function generateFooter(doc, y) {
  // console.log("in footer")
   doc
     .fontSize(8)
-    .text("※この書類は㈱IPSから御社にお支払いする手数料についての通知書です。",50, y + 50)
+    .text("※この書類は㈱IPSから御社にお支払いする手数料についての通知書です。",50)
     .moveDown()
     .text("内容をご確認の上、請求書を上記住所までご送付くださいますようお願いいたします。")
     .moveDown()

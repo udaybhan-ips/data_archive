@@ -39,24 +39,24 @@ module.exports = {
 
       for (let i = 0; i < getCompListRes.length; i++) {
 
-        const [BillNoArr, getBillNoErr] = await handleError(BillingSougo.getBillNoInfo());
-        if (getBillNoErr) {
-          throw new Error('Could not fetch bill no');
-        }
-        console.log("bill_no " + BillNoArr.max_bill_no);
+      //   const [BillNoArr, getBillNoErr] = await handleError(BillingSougo.getBillNoInfo());
+      //   if (getBillNoErr) {
+      //     throw new Error('Could not fetch bill no');
+      //   }
+      //   console.log("bill_no " + BillNoArr.max_bill_no);
 
-        let bill_no = parseInt(BillNoArr.max_bill_no, 10) + 1;
-       //let bill_no = 2200;
+      //   let bill_no = parseInt(BillNoArr.max_bill_no, 10) + 1;
+      //  //let bill_no = 2200;
 
-        const [getCDRRes, getCDRResErr] = await handleError(BillingSougo.getTargetCDR( getCompListRes[i]['company_code'], billingYear, billingMonth));
-        if (getCDRResErr) {
-          throw new Error('Could not fetch CDRes');
-        }
+      //   const [getCDRRes, getCDRResErr] = await handleError(BillingSougo.getTargetCDR( getCompListRes[i]['company_code'], billingYear, billingMonth));
+      //   if (getCDRResErr) {
+      //     throw new Error('Could not fetch CDRes');
+      //   }
 
-        const [createDetailDataRes, createDetailDataErr] = await handleError(BillingSougo.createDetailData(bill_no, getCompListRes[i]['company_code'], billingYear, billingMonth,ratesDetails, getCDRRes  ,getCarrierInfoRes));
-        if (createDetailDataErr) {
-          throw new Error('Could not fetch CDRes');
-        }
+      //   const [createDetailDataRes, createDetailDataErr] = await handleError(BillingSougo.createDetailData(bill_no, getCompListRes[i]['company_code'], billingYear, billingMonth,ratesDetails, getCDRRes  ,getCarrierInfoRes));
+      //   if (createDetailDataErr) {
+      //     throw new Error('Could not fetch CDRes');
+      //   }
 
         const [createInvoiceFCRes, createInvoiceFCErr] = await handleError(BillingSougo.genrateInvoice(getCompListRes[i]['company_code'], billingYear, billingMonth, Dates.current_month));
 
