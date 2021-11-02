@@ -514,7 +514,7 @@ module.exports = {
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
             to: 'uday@ipsism.co.jp',
-            cc: 'y_ito@ipsism.co.jp',
+            //cc: 'y_ito@ipsism.co.jp',
             //     cc:'gaurav@ipsism.co.jp,abhilash@ipsism.co.jp,vijay@ipsism.co.jp',
             subject,
             html
@@ -753,7 +753,7 @@ function tableCreateAllData(processData, rawData) {
     } catch (err) {
         throw Error("Error !" + err);
     }
-    let div = `<div style="margin: auto;width: 50%;padding: 10px;">${table}</div>`;
+    let div = `<div style="margin: auto;width: 100%;padding: 0px;">${table}</div>`;
     html += div;
     html += "Thank you";
     // console.log("sdfsdf"+html);

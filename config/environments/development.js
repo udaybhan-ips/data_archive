@@ -15,6 +15,24 @@ const MYSQL_WITHOUT_TIMEZONE={
   
 }
 
+const MSSQLServer = {
+  user: 'advent',
+  password: 'advent',
+  server: '192.168.11.53', // You can use 'localhost\\instance' to connect to named instance
+  database: 'EXCEL2DB',
+  pool: {
+    max: 10,
+    min: 0,
+    idleTimeoutMillis: 30000
+  },
+  options: {
+    encrypt: false, // for azure
+    trustServerCertificate: false // change to true for local dev / self-signed certs
+  },
+  requestTimeout : 500000,
+  connectionTimeout: 20000,
+}
+
 const IPSPortal={
   host     : (process.env.POSTGRES_PORT || '10.168.22.40'),
   database : (process.env.POSTGRES_DATABASE || 'ips_portal'),
@@ -54,6 +72,7 @@ module.exports = {
   SECRET: (process.env.SECRET || 'h3sqq%pb#dHh^XcU8&Uj8brVS_*$LGHW'),
   JWT_EXPIRATION: (process.env.JWT_EXPIRATION || 86400),
   MYSQL_DATABASE_URL:MYSQL,
+  MSSQLServer,
   MYSQL_DATABASE_URL_WITHOUT_TIMEZONE:MYSQL_WITHOUT_TIMEZONE,
   BATCH_SIZE:100000
 };

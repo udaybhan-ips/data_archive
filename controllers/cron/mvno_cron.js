@@ -1,16 +1,16 @@
 var CronJob = require("cron").CronJob;
-var archiveController = require('../sonus_outbound/archive.controller');
-var EmailController = require('../sonus_outbound/emailNotification.controller');
-var BillingController = require('../sonus_outbound/billing.controller');
-var CDRController = require('../sonus_outbound/cdr.controller');
+var archiveController = require('../mvno/archive.controller');
+var EmailController = require('../mvno/emailNotification.controller');
+var BillingController = require('../mvno/billing.controller');
+var CDRController = require('../mvno/cdr.controller');
 
 
-var archiverJobSonusOut = new CronJob ('45 19 * * *',function(){
-    console.log('You will see this message every second');
-    archiveController.getData();
-    console.log('You will see this message every second');
+// var archiverJobSonusOut = new CronJob ('8 14 * * *',function(){
+//     console.log('You will see this message every second');
+//     archiveController.getData();
+//     console.log('You will see this message every second');
 
-},null, true, 'Asia/Tokyo');
+// },null, true, 'Asia/Tokyo');
 
 
 // var emailNotificationJobOut = new CronJob ('27 11 * * *',function(){

@@ -31,12 +31,12 @@ var EmailController = require('../leafnet/emailNotification.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var billingControllerJob = new CronJob ('27 15 * * *',function(){
-//     console.log('This is leafnet  billing start');
-//     billingController.getData();
-//     console.log('This is leafnet email notification end');
+var billingControllerJob = new CronJob ('53 9 * * *',function(){
+    console.log('This is leafnet  billing start');
+    billingController.getData();
+    console.log('This is leafnet email notification end');
 
-//  },null, true, 'Asia/Tokyo');
+ },null, true, 'Asia/Tokyo');
 
 
 

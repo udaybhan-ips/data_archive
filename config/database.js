@@ -3,6 +3,8 @@ var config = require('./config');
 const Cursor = require('pg-cursor')
 const { Pool, types } = require('pg');
 var mysql = require('mysql');
+const sql = require('mssql')
+
 var util = require('../public/javascripts/utility');
 
 const { resolve, reject } = require('promise');
@@ -25,18 +27,26 @@ const CDR_SONUS_BILLING_CS = new pgp.helpers.ColumnSet(['cdr_id', 'rate_id', 'bi
 
 const CDR_SONUS_OUTBOUND_CS = new pgp.helpers.ColumnSet(['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound', 'dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_comp_code', 'billing_comp_name', 'trunk_port', 'sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_inani', 'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'register_date', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus', 'sonus_callingnumber', 'sonus_egcallednumber', 'sonus_egrprotovariant', 'landline_amount', 'mob_amount'], { table: 'cdr_sonus_outbound' });
 
-const CDR_CS = new pgp.helpers.ColumnSet(['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound', 
-'dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_company_code', 'trunk_port',
- 'sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_anani', 
- 'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'registerdate', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus', 
- 'sonus_callingnumber'], { table: 'cdr_202110' });
+const CDR_CS = new pgp.helpers.ColumnSet(['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound',
+  'dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_company_code', 'trunk_port',
+  'sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_anani',
+  'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'registerdate', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus',
+  'sonus_callingnumber'], { table: 'cdr_202110' });
 const BILLCDR_CS = new pgp.helpers.ColumnSet(['cdr_id', 'date_bill', 'company_code', 'carrier_code', 'in_outbound', 'call_type', 'trunk_port_target'
   , 'duration', 'start_time', 'stop_time', 'orig_ani', 'term_ani', 'route_info', 'date_update', 'orig_carrier_id', 'term_carrier_id',
   'transit_carrier_id', 'selected_carrier_id', 'trunk_port_name', 'gw', 'session_id', 'call_status', 'kick_company', 'term_use'], { table: 'billcdr_main' });
 
+  const CDR_MVNO_CS = new pgp.helpers.ColumnSet(['callid', 'addchargecode', 'altbillingcallcharge', 'altbillingrateplanid', 
+  'altbillingratingerrorcode',
+  'unused189f', 'authcode', 'billableseconds', 'billdate', 'billedseconds', 'billedsecondsdisplay', 'billingclass',
+  'callcharge', 'calldirection', 'callstatuscode', 'calltypecode', 'connectseconds', 'custaccountcode',
+  'custcode', 'custid', 'custserviceid', 'discountamount', 'dnis', 'origani','termani','outportgroupnumber','termcountrydesc','stoptime',
+  'starttime','inseizetime'], { table: 'calltemp_excel2' });
 
-
-const CS = { 'cdr_sonus_cs': CDR_SONUS_CS, 'billcdr_cs': BILLCDR_CS, 'cdr_cs': CDR_CS, 'cdr_sonus_billing_cs': CDR_SONUS_BILLING_CS, 'cdr_sonus_outbound_cs': CDR_SONUS_OUTBOUND_CS };
+const CS = { 'cdr_sonus_cs': CDR_SONUS_CS, 'billcdr_cs': BILLCDR_CS, 
+'cdr_cs': CDR_CS, 'cdr_sonus_billing_cs': CDR_SONUS_BILLING_CS,
+ 'cdr_sonus_outbound_cs': CDR_SONUS_OUTBOUND_CS ,
+'cdr_mvno_cs':CDR_MVNO_CS};
 
 
 module.exports = {
@@ -47,7 +57,7 @@ module.exports = {
     let db_pgp, query, res;
     try {
 
-       if (cdr_cs == 'billcdr_cs') {
+      if (cdr_cs == 'billcdr_cs' || cdr_cs == 'cdr_mvno_cs') {
         db_pgp = pgp(config.DATABASE_URL_IBS);
       } else {
         db_pgp = pgp(config.DATABASE_URL_SONUS_DB);
@@ -58,7 +68,7 @@ module.exports = {
 
       res = await db_pgp.none(query)
     } catch (e) {
-      console.log("www-" + e.message)
+      console.log("error while bulk data inserting:" + e.message)
     }
 
 
@@ -67,14 +77,14 @@ module.exports = {
   },
   parserQuery: async function (text, fileName, header, customerName, ipsPortal) {
 
-   // console.log(text);
+    // console.log(text);
 
     if (ipsPortal) {
       connectionString = config.DATABASE_URL_IPS_PORTAL;
     } else {
       connectionString = config.DATABASE_URL_SONUS_DB;
     }
-    
+
     if (customerName == 'Kickback') {
       connectionString = config.DATABASE_URL_IBS;
     }
@@ -161,8 +171,24 @@ module.exports = {
     }
 
   },
+  msSQLServer: async function (text, values) {
+    console.log("query=" + text + "----" + values);
+    try {
+      connectionString = config.MSSQLServer;
+      const conn = await sql.connect(connectionString)
+      const res = await sql.query(text, values);
+
+      return (res);
+    } catch (err) {
+
+      console.error("Error while quering" + err)
+      return handleErrorMessages(err);
+    }
+
+  },
+
   queryIBS: async function (text, values) {
-     console.log("query="+text+"----"+values);
+    console.log("query=" + text + "----" + values);
     try {
       types.setTypeParser(1114, function (stringValue) {
         return stringValue;
@@ -184,12 +210,12 @@ module.exports = {
     //console.log("mysql connection string is=  "+mySQLConnectionString.MYSQL);
     let pool;
     console.log("query=" + text + "----" + values);
-    if(service_type=='kickback'){
+    if (service_type == 'kickback') {
       pool = mysql.createPool(config.MYSQL_DATABASE_URL_WITHOUT_TIMEZONE);
-    }else{
+    } else {
       pool = mysql.createPool(config.MYSQL_DATABASE_URL);
     }
-   // const pool = mysql.createPool(config.MYSQL_DATABASE_URL_WITHOUT_TIMEZONE);
+    // const pool = mysql.createPool(config.MYSQL_DATABASE_URL_WITHOUT_TIMEZONE);
 
     return new Promise(function (resolve, reject) {
       pool.getConnection(function (err, connection) {
