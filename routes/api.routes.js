@@ -51,6 +51,16 @@ router.use('/v1', require('./apiv1/sougo/carrier.routes'))
 router.use('/v1', require('./apiv1/sougo/approval.routes'));
 
 
+/** mvno **/
+
+
+router.use('/v1', require('./apiv1/mvno/invoice.routes'));
+// router.use('/v1', require('./apiv1/sougo/route.routes'))
+// router.use('/v1', require('./apiv1/sougo/company.routes'))
+//router.use('/v1', require('./apiv1/sougo/carrier.routes'))
+router.use('/v1', require('./apiv1/mvno/approval.routes'));
+
+
 
 // API Error routes
 router.use(function(req, res) {

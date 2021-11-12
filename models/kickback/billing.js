@@ -102,7 +102,7 @@ module.exports = {
   getKickCompList: async function () {
     
     try {
-      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable  where customer_id='00000697' `;
+      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable  where customer_id !='00000902' and  service_type='rate_base' `;
       const getKickCompListRes = await db.queryIBS(query, []);
 
       if (getKickCompListRes.rows) {
@@ -281,6 +281,9 @@ module.exports = {
   createDetailData: async function (bill_no, customer_id, year, month, _03_numbers, data) {
     console.log("details"+JSON.stringify(_03_numbers));
 
+    console.log("length="+_03_numbers.length)
+    console.log("data len="+data.length);
+
     try {
 
       for (let i = 0; i < _03_numbers.length; i++) {
@@ -292,6 +295,9 @@ module.exports = {
             call_count++;
           }
         }
+
+        //console.log("duration=="+duration);
+
         if (duration > 0) {
           duration = parseInt(duration / 60, 10);
         }
@@ -299,7 +305,7 @@ module.exports = {
         let query = `insert into kickback_detail (bill_no, item_no , item_name, call_minute, amount, remarks, date_update,
           name_update, date_insert, name_insert, call_count) VALUES('${bill_no}', '${item_no}', '${_03_numbers[i]['_03_numbers']}', '${duration}', 0, '' ,'now()','', 'now()',
            'system','${call_count}')`;
-        console.log("query==" + query);
+       // console.log("query==" + query);
         let insertBillingdetailsRes = await db.queryIBS(query, []);
 
       }
@@ -378,13 +384,17 @@ module.exports = {
       let call_count =0;
 
       for (let j = 0; j < data.length; j++) {
-        duration = duration + parseFloat(data[j]['total_duration']);
+        let tmp = parseInt(data[j]['total_duration'],10)  ;
+        if(tmp>0){
+          duration = duration + parseInt(tmp/60,10)
+        }
+        //duration = duration + parseInt(data[j]['total_duration']);
         call_count ++;
       }
 
-      if (duration > 0) {
-        duration = parseInt(duration / 60, 10);
-      }
+      // if (duration > 0) {
+      //   duration = parseInt(duration/60);
+      // }
 
       let amount = duration * ratesInfo[0]['minute_rate'];
       let tax = amount * .1;
@@ -454,7 +464,7 @@ module.exports = {
         if(serviceType=='rate_base'){
           totalCallAmount = parseInt(obj.total_amount);
           totalCallDuration = totalCallDuration + parseInt(obj.call_minute);
-  
+          invoiceNo = obj.bill_no;
         }else{
           totalCallAmount = totalCallAmount + parseInt(obj.amount);
           totalCallDuration = totalCallDuration + parseInt(obj.call_sec);

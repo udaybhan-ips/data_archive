@@ -51,7 +51,7 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main where company_code ='1011000017' order by company_code `;
+      const query = `select distinct(company_code) as company_code from billcdr_main   order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       
       return billNoRes.rows;
@@ -544,13 +544,13 @@ async function generateFooter(doc, y) {
  // console.log("in footer")
   doc
     .fontSize(8)
-    .text("※この書類は㈱IPSから御社にお支払いする手数料についての通知書です。",50)
+    .text("≪　ご連絡事項　≫",50)
     .moveDown()
-    .text("内容をご確認の上、請求書を上記住所までご送付くださいますようお願いいたします。")
+    .text("毎度格別のお引き立てをいただきまして、誠にありがとうございます。")
     .moveDown()
-    .text("This serves as the notice of commission details to be paid by IPS to your company.")
+    .text("ご請求書を送付させていただきますので、ご査収の上お支払期日までに上記の振込先にお振込いただきますようよろしくお願い申し上げます。")
     .moveDown()
-    .text("Kindly issue to IPS an invoice statement upon receipt of this notice by sending to address above.")
+    .text("なお、誠に勝手ながら銀行振込に係る手数料につきましては、貴社にてご負担いただきますようお願い申し上げます。")
     .moveDown()
     
 }

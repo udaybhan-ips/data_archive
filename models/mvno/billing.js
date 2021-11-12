@@ -15,13 +15,13 @@ module.exports = {
           return error;
       }
   },
-  getAllSonusOutboundCustomer: async function() {
+  getAllMVNOCustomer: async function() {
     try {
-          const query=`select  customer_name, customer_id   from sonus_outbound_customer  where deleted=false group by customer_name, customer_id order by customer_id`;
-          const ipsPortal=true;
-          const getAllSonusOutboundCustRes= await db.query(query,[],ipsPortal);
-          if(getAllSonusOutboundCustRes.rows){
-              return  getAllSonusOutboundCustRes.rows;
+          const query=`select * from mvno_customer  where deleted=false order by customer_id,did`;
+
+          const getAllMVNOCustRes= await db.queryIBS(query,[]);
+          if(getAllMVNOCustRes.rows){
+              return  getAllMVNOCustRes.rows;
             }
           return {err:'not found'};
       } catch (error) {
@@ -30,38 +30,30 @@ module.exports = {
       }
   },
   
-  deleteSummaryData: async function(customer_name,customer_id,billing_year, billing_month) {
+  deleteSummaryData: async function(customer_name,customer_id,billing_year, billing_month, did) {
     try {
-        const query=`delete FROM cdr_sonus_outbound_summary where customer_id='${customer_id}' and customer_name='${customer_name}' and billing_month='${billing_month}' and billing_year='${billing_year}' `;
-        const deleteTargetDateSummaryRes= await db.query(query,[]);
+        const query=`delete FROM cdr_mvno_summary where customer_id='${customer_id}' and dnis ='${did}' and customer_name='${customer_name}' and billing_month='${billing_month}' and billing_year='${billing_year}' `;
+        const deleteTargetDateSummaryRes= await db.queryIBS(query,[]);
         return deleteTargetDateSummaryRes;
     } catch (error) {
         console.log("Error in delete summary function"+error.message);
         return error;
     }
   },
-  createSummaryData: async function(customer_name, customer_id, year, month) {
+  createSummaryData: async function(customer_name, customer_id, year, month, did, invoice_no) {
     console.log("summary");
   
     try {
         
-        const getSummaryData=`select sum( case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then 1 else 0 end) as mobile_count,
-        sum( case when ( left(sonus_egcallednumber,2)='70' OR  left(sonus_egcallednumber,2)='80' OR left(sonus_egcallednumber,2)='90' ) then 0 else 1 end) as landline_count,
-        sum( case when ( left(sonus_egcallednumber,2)='70' OR  left(sonus_egcallednumber,2)='80' OR left(sonus_egcallednumber,2)='90' ) then duration else 0 end) as mobile_duration,
-        sum( case when ( left(sonus_egcallednumber,2)='70' OR  left(sonus_egcallednumber,2)='80' OR left(sonus_egcallednumber,2)='90' ) then 0 else duration end) as landline_duration,
-        sum( case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then duration*0.115 else 0 end) as mob_amount,
-        sum( case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then 0 else duration*0.06 end) as landline_amount,
-        billing_comp_code, billing_comp_name from cdr_sonus_outbound
-        where to_char(start_time, 'MM-YYYY') = '${month}-${year}' and billing_comp_code='${customer_id}' and billing_comp_name='${customer_name}'
-         group by billing_comp_code,billing_comp_name` ;
+        const getSummaryData=`select dnis,  sum(billableseconds)as duration, sum(billableseconds*0.23) as bill, count(*) total from
+         calltemp_excel2 where dnis='${did}'   group by dnis order by dnis` ;
 
-        const sonusDataRows= await db.query(getSummaryData,[]);
+        const sonusDataRows= await db.queryIBS(getSummaryData,[]);
         let sonusData = sonusDataRows.rows;
   
-        const query=`insert into cdr_sonus_outbound_summary (invoice_no, customer_name, customer_id, 
-          billing_month, billing_year,billing_date,update_date,mobile_count, landline_count, total_count,mobile_duration, landline_duration, 
-          duration,mobile_amt, landline_amt,total_amt) 
-        VALUES ($1, $2, $3, $4, $5,$6, $7, $8, $9, $10, $11,$12, $13, $14, $15, $16) returning id`;
+        const query=`insert into cdr_mvno_summary (invoice_no, customer_name, customer_id, 
+          billing_month, billing_year,billing_date,update_date,duration,amt, count, dnis) 
+        VALUES ($1, $2, $3, $4, $5,$6, $7, $8, $9, $10, $11) returning id`;
   
         let valueArray=[];
         valueArray.push(genrateInvoiceNo(customer_id,year,month));
@@ -71,22 +63,12 @@ module.exports = {
         valueArray.push((year));
         valueArray.push(year+'-'+month+'-01');
         valueArray.push(('now()'));
-
-        valueArray.push(parseInt(sonusData[0].mobile_count,10));
-        valueArray.push(parseInt(sonusData[0].landline_count,10));
-        valueArray.push(parseInt(sonusData[0].mobile_count,10)+parseInt(sonusData[0].landline_count,10) );
-        
-        valueArray.push(parseInt(sonusData[0].mobile_duration,10));
-        valueArray.push(parseInt(sonusData[0].landline_duration,10));
-        valueArray.push(parseInt(sonusData[0].mobile_duration,10)+parseInt(sonusData[0].landline_duration,10) );
-
-        valueArray.push(parseInt(sonusData[0].mob_amount,10));
-        valueArray.push(parseInt(sonusData[0].landline_amount,10));        
-        valueArray.push(parseInt(sonusData[0].mob_amount,10)+parseInt(sonusData[0].landline_amount,10) );
-        
-        
-  
-        const updateSummaryDataRes= await db.query(query,valueArray);
+        valueArray.push(parseInt(sonusData[0].duration,10));
+        valueArray.push(parseInt(sonusData[0].bill,10));        
+        valueArray.push(parseInt(sonusData[0].total,10));        
+        valueArray.push(sonusData[0].dnis);        
+    
+        const updateSummaryDataRes= await db.queryIBS(query,valueArray);
         return updateSummaryDataRes;
     } catch (error) {
         console.log("Error---"+error.message);
@@ -94,11 +76,11 @@ module.exports = {
     }
   },
   sendNotification: async function(billingYear, billingMonth){
-    let subject = `${billingYear}年${billingMonth}月度 SONUS OUTBOUND`;
+    let subject = `${billingYear}年${billingMonth}月度 MVNO`;
     let html = `<div>
         <div> Hi Team, </div>
-        <div> SONUS OUTBOUND billing has been finished, Please check at below link.</div>
-        <div>http://10.168.22.40/services/sonusoutbound/</div>
+        <div> MVNO billing has been finished, Please check at below link.</div>
+        <div>http://10.168.22.40/services/MVNO/</div>
         <div> Thank you </div>
     </div>`;
   

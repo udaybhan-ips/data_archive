@@ -2,31 +2,34 @@
 
 var EmailNotification = require('../../models/kickback/emailNotification');
 
-let internlReport = false;
-let externalReport = false;
-let internalSummaryReport = true;
+let internlReport = true;
+let externalReport = true;
+let internalSummaryReport = false;
 
 
 module.exports = {
 
   sendEmail: async function (req, res) {
-    const dateId = '3';
+    const dateId = '4';
     try {
       const [Dates, targetDateErr] = await handleError(EmailNotification.getTargetDate(dateId));
       if (targetDateErr) {
+        console.log("Could not fetch target date");
         throw new Error('Could not fetch target date');
       }
 
       const [allKickComp, allKickCompErr] = await handleError(EmailNotification.getAllKickComp(Dates.targetDateWithTimezone));
 
       if (allKickCompErr) {
-        throw new Error('Could not all kick company');
+        console.log("Could not get all kick company");
+        throw new Error('Could not get all kick company');
 
       }
 
       const [allKickCompEmail, allKickCompEmailErr] = await handleError(EmailNotification.getAllKickCompEmail(Dates.targetDateWithTimezone));
 
       if (allKickCompEmailErr) {
+        console.log("Could not get all email kick company");
         throw new Error('Could not all kick company');
 
       }
@@ -44,6 +47,9 @@ module.exports = {
           if (proDataErr) {
             throw new Error('error while fetching data processed data');
           }
+          // if(proDataRes){
+          //   throw new Error('there is no data, please check daily batch table configuration');
+          // }
           const [insertTrafficSummaryRes, insertTrafficSummaryErr] = await handleError(EmailNotification.insertTrafficSummary(proDataRes, allKickComp[i]['customer_cd'], Dates.targetDateWithTimezone));
           if (insertTrafficSummaryErr) {
             throw new Error('error while inserting data in traffic summary table');
@@ -215,7 +221,7 @@ module.exports = {
 
         }
 
-        let subject = '10月度 KICKBACK全体トラフィック速報';
+        let subject = '11月度 KICKBACK全体トラフィック速報';
         const [sendEmailAllDataRes, sendEmailAllDataErr] = await handleError(EmailNotification.sendEmailAllData(getAllTrafficSummaryHTML, subject));
         if (sendEmailAllDataErr) {
           throw new Error('error while sending email');

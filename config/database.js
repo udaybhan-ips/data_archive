@@ -31,7 +31,7 @@ const CDR_CS = new pgp.helpers.ColumnSet(['date_bill', 'orig_ani', 'term_ani', '
   'dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_company_code', 'trunk_port',
   'sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_anani',
   'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'registerdate', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus',
-  'sonus_callingnumber'], { table: 'cdr_202110' });
+  'sonus_callingnumber'], { table: 'cdr_202111' });
 const BILLCDR_CS = new pgp.helpers.ColumnSet(['cdr_id', 'date_bill', 'company_code', 'carrier_code', 'in_outbound', 'call_type', 'trunk_port_target'
   , 'duration', 'start_time', 'stop_time', 'orig_ani', 'term_ani', 'route_info', 'date_update', 'orig_carrier_id', 'term_carrier_id',
   'transit_carrier_id', 'selected_carrier_id', 'trunk_port_name', 'gw', 'session_id', 'call_status', 'kick_company', 'term_use'], { table: 'billcdr_main' });
@@ -43,10 +43,17 @@ const BILLCDR_CS = new pgp.helpers.ColumnSet(['cdr_id', 'date_bill', 'company_co
   'custcode', 'custid', 'custserviceid', 'discountamount', 'dnis', 'origani','termani','outportgroupnumber','termcountrydesc','stoptime',
   'starttime','inseizetime'], { table: 'calltemp_excel2' });
 
+  const CDR_MVNO_FPHONE_CS = new pgp.helpers.ColumnSet(['stop_time', 'start_time', 'orig_ani', 'term_ani', 'duration', 'orig_carrier_id', 
+   'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 
+  'sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time',  'sonus_call_duration_second', 'sonus_anani',
+  'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'sonus_ingrpstntrunkname', 'gw', 'callstatus',
+  'leg','setup_rate','call_rate','call_charge','term_use','carrier_name','bleg_term_id','company_code','freq_rate'], { table: 'cdr_fphone' });
+
+
 const CS = { 'cdr_sonus_cs': CDR_SONUS_CS, 'billcdr_cs': BILLCDR_CS, 
 'cdr_cs': CDR_CS, 'cdr_sonus_billing_cs': CDR_SONUS_BILLING_CS,
  'cdr_sonus_outbound_cs': CDR_SONUS_OUTBOUND_CS ,
-'cdr_mvno_cs':CDR_MVNO_CS};
+'cdr_mvno_cs':CDR_MVNO_CS,'cdr_mvno_fphone_cs':CDR_MVNO_FPHONE_CS};
 
 
 module.exports = {
@@ -57,7 +64,7 @@ module.exports = {
     let db_pgp, query, res;
     try {
 
-      if (cdr_cs == 'billcdr_cs' || cdr_cs == 'cdr_mvno_cs') {
+      if (cdr_cs == 'billcdr_cs' || cdr_cs == 'cdr_mvno_cs' || cdr_cs =='cdr_mvno_fphone_cs') {
         db_pgp = pgp(config.DATABASE_URL_IBS);
       } else {
         db_pgp = pgp(config.DATABASE_URL_SONUS_DB);
@@ -177,14 +184,11 @@ module.exports = {
       connectionString = config.MSSQLServer;
       const conn = await sql.connect(connectionString)
       const res = await sql.query(text, values);
-
       return (res);
     } catch (err) {
-
       console.error("Error while quering" + err)
       return handleErrorMessages(err);
     }
-
   },
 
   queryIBS: async function (text, values) {
@@ -194,13 +198,11 @@ module.exports = {
         return stringValue;
       })
       let connectionStringIBS = config.DATABASE_URL_IBS;
-
       const pool = await new Pool(connectionStringIBS)
       const res = await pool.query(text, values);
       // console.log("data==="+JSON.stringify(res));
       return (res);
     } catch (err) {
-
       console.log("Error while quering" + err.message)
       return handleErrorMessages(err);
     }

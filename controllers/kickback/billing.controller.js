@@ -62,22 +62,22 @@ module.exports = {
 
           console.log(" In rate base");
 
-          // const [ratesDetails, ratesErr] = await handleError(BillingKickback.getRates(getKickCompListRes[i]['customer_id']));
-          // if (ratesErr) {
-          //   throw new Error('Could not fetch Rates details');
-          // }
-          //  [getCDRRes, getCDRResErr] = await handleError(BillingKickback.getTargetCDR(getKickCompListRes[i]['customer_id'], getKickCompListRes[i]['service_type'], billingYear, billingMonth, get03NumbersRes));
-          // if (getCDRResErr) {
-          //   throw new Error('Could not fetch CDRes');
-          // }
-          // const [createDetailsRes, createDetailsErr] = await handleError(BillingKickback.createDetailData(bill_no, getKickCompListRes[i]['customer_id'], billingYear, billingMonth, get03NumbersRes, getCDRRes));
-          // if (createDetailsErr) {
-          //   throw new Error('Error while creating summary data ' + createDetailsErr);
-          // }
-          // const [createSummaryRes, createSummaryErr] = await handleError(BillingKickback.createSummaryData(bill_no, getKickCompListRes[i]['customer_id'], billingYear, billingMonth, ratesDetails, getCDRRes));
-          // if (createSummaryErr) {
-          //   throw new Error('Error while creating summary data ' + createSummaryErr);
-          // }
+          const [ratesDetails, ratesErr] = await handleError(BillingKickback.getRates(getKickCompListRes[i]['customer_id']));
+          if (ratesErr) {
+            throw new Error('Could not fetch Rates details');
+          }
+           [getCDRRes, getCDRResErr] = await handleError(BillingKickback.getTargetCDR(getKickCompListRes[i]['customer_id'], getKickCompListRes[i]['service_type'], billingYear, billingMonth, get03NumbersRes));
+          if (getCDRResErr) {
+            throw new Error('Could not fetch CDRes');
+          }
+          const [createDetailsRes, createDetailsErr] = await handleError(BillingKickback.createDetailData(bill_no, getKickCompListRes[i]['customer_id'], billingYear, billingMonth, get03NumbersRes, getCDRRes));
+          if (createDetailsErr) {
+            throw new Error('Error while creating summary data ' + createDetailsErr);
+          }
+          const [createSummaryRes, createSummaryErr] = await handleError(BillingKickback.createSummaryData(bill_no, getKickCompListRes[i]['customer_id'], billingYear, billingMonth, ratesDetails, getCDRRes));
+          if (createSummaryErr) {
+            throw new Error('Error while creating summary data ' + createSummaryErr);
+          }
 
           const [createInvoiceRes, createInvoiceErr] = await handleError(BillingKickback.genrateInvoice(getKickCompListRes[i]['customer_id'], getKickCompListRes[i]['service_type'], billingYear, billingMonth, Dates.current_montth));
 

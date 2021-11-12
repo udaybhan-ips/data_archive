@@ -1,9 +1,9 @@
-var ApprovalSonusOutbound = require('../../models/sonus_outbound/approval');
+var ApprovalMVNO = require('../../models/mvno/approval');
 
 module.exports = {
     getStatusByInvoiceNo: async function(req, res) {
     try {
-        const [getApprovalStatusRes,getApprovalStatusError] = await handleError(ApprovalSonusOutbound.getStatusByInvoiceNo(req.body));
+        const [getApprovalStatusRes,getApprovalStatusError] = await handleError(ApprovalMVNO.getStatusByInvoiceNo(req.body));
         if(getApprovalStatusError) {
             return res.status(400).json({
                 message: getApprovalStatusError
@@ -19,7 +19,7 @@ module.exports = {
   },
   addApprovalStatus: async function(req, res){
     try {
-      const [addApprovalRes,addApprovalErr] = await handleError(ApprovalSonusOutbound.addApprovalStatus(req.body));
+      const [addApprovalRes,addApprovalErr] = await handleError(ApprovalMVNO.addApprovalStatus(req.body));
       if(addApprovalErr) {
         return res.status(400).json({
             message: addApprovalErr
@@ -29,7 +29,7 @@ module.exports = {
       
       if(req && req.body && req.body.status){
         if(req.body.status==='Approve'){
-          ApprovalSonusOutbound.sendApprovalNotification(req.body);
+          ApprovalMVNO.sendApprovalNotification(req.body);
         }        
       }
       

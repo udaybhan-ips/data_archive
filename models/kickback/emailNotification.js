@@ -52,7 +52,7 @@ module.exports = {
     },
     getAllKickCompEmail: async function () {
         try {
-            console.log("in get all kick comp");
+            console.log("in get all kick comp email");
 
            // const query = ` select * from kickback_cdr_carrier where east_link_flag=1 and mail_address!='' order by customer_cd`;
             const query = ` select * from kickback_cdr_carrier where (east_link_flag=1 and mail_address!='') OR (email_type='multiple') order by customer_cd`;
@@ -479,8 +479,8 @@ module.exports = {
             let emailTO = `${customerInfo['mail_address']}`;
             let emailCC = `${customerInfo['east_link_address']}`;
 
-            // let emailTO = 'uday@ipsism.co.jp';
-            // let emailCC = 'uday@ipsism.co.jp';
+          //  emailTO = 'uday@ipsism.co.jp';
+          //  emailCC = 'uday@ipsism.co.jp';
             
             if (!emailTO) {
                 emailTO = "uday@ipsism.co.jp";
@@ -498,7 +498,7 @@ module.exports = {
                 cc: emailCC,
               //  cc: 'y_ito@ipsism.co.jp',
                 bcc: 'ips_tech@ipsism.co.jp,telecom@ipsism.co.jp',
-                //     cc:'gaurav@ipsism.co.jp,abhilash@ipsism.co.jp,vijay@ipsism.co.jp',
+               
                 subject,
                 html
             }
@@ -514,7 +514,7 @@ module.exports = {
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
             to: 'uday@ipsism.co.jp',
-            //cc: 'y_ito@ipsism.co.jp',
+            cc: 'y_ito@ipsism.co.jp',
             //     cc:'gaurav@ipsism.co.jp,abhilash@ipsism.co.jp,vijay@ipsism.co.jp',
             subject,
             html

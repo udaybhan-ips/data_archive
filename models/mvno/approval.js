@@ -4,8 +4,8 @@ var utility= require('./../../public/javascripts/utility');
 module.exports = {
     getStatusByInvoiceNo: async function(data) {
         try {
-            const query=`select * from sonus_outbound_approval_history where invoice_number='${data.invoice_no}' order by approved_date desc `;
-            const invoiceStatusRes= await db.query(query,[]);
+            const query=`select * from mvno_approval_history where invoice_number='${data.invoice_no}' order by approved_date desc `;
+            const invoiceStatusRes= await db.queryIBS(query,[]);
             console.log(query);
             if(invoiceStatusRes.rows){
                 return invoiceStatusRes.rows;              
@@ -17,7 +17,7 @@ module.exports = {
     },
     addApprovalStatus: async function(data) {
         try {
-            const query=`insert into sonus_outbound_approval_history (invoice_number , customer_code , customer_name , billing_month , billing_date , amount , status , approved_date , approved_by , revision , comment) 
+            const query=`insert into mvno_approval_history (invoice_number , customer_code , customer_name , billing_month , billing_date , amount , status , approved_date , approved_by , revision , comment) 
             VALUES ($1, $2, $3, $4, $5,$6, $7, $8, $9, $10,$11) returning id`;
     
             let valueArray=[];
@@ -26,14 +26,14 @@ module.exports = {
             valueArray.push(data.customer_name);
             valueArray.push(data.billing_month);
             valueArray.push(data.billing_date);
-            valueArray.push(data.total_amt);
+            valueArray.push(data.amt);
             valueArray.push((data.status));
             valueArray.push('now()');
             valueArray.push(data.approved_by);
             valueArray.push(data.revision);
             valueArray.push(data.comment);
     
-            const addApprovalRes= await db.query(query,valueArray);
+            const addApprovalRes= await db.queryIBS(query,valueArray);
             if(addApprovalRes.row){
                 return addApprovalRes.rows;
             }else{
@@ -48,8 +48,8 @@ module.exports = {
         let subject = `Approval Notification for ${reqData.customer_name} of ${utility.dateVsMonths[reqData.billing_month]}`;
         let html = `<div>
             <div> Hi Team, </div>
-            <div> Below is the billing status of ${reqData.customer_name} Sonus Outbound. This is approved by ${reqData.approved_by}.</div>
-            <div>http://10.168.22.40/services/sonusoutbound</div>
+            <div> Below is the billing status of ${reqData.customer_name} MVNO. This is approved by ${reqData.approved_by}.</div>
+            <div>http://10.168.22.40/services/mvno</div>
             <div> Thank you </div>
         </div>`;
 

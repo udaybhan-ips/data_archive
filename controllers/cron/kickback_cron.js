@@ -4,13 +4,13 @@ var billingController = require('../kickback/billing.controller');
 var CDRsController = require('../kickback/cdr.controller');
 var EmailController = require('../kickback/emailNotification.controller');
 
-// var archiverJob = new CronJob ('5 17 * * *',function(){
+// var archiverJob = new CronJob ('43 17 * * *',function(){
 //     console.log('This is kickback archiver start');
 //     archiveController.getData();
 //     console.log('This is kickback archiver End');  
 // },null, true, 'Asia/Tokyo');
  
-// var archiverProJob = new CronJob ('23 17 * * *',function(){
+// var archiverProJob = new CronJob ('56 17 * * *',function(){
 //     console.log('This is kickback Pro archiver start');
 //     archiveController.getProData();
 //     console.log('This is kickback Pro archiver End');
@@ -18,14 +18,14 @@ var EmailController = require('../kickback/emailNotification.controller');
 
 
 
-var emailNotificationJob = new CronJob ('53 9 * * *',function(){
-    console.log('This is kickback email notification start');
-    EmailController.sendEmail();
-    console.log('This is kickback email notification end');
+// var emailNotificationJob = new CronJob ('7 18 * * *',function(){
+//     console.log('This is kickback email notification start');
+//     EmailController.sendEmail();
+//     console.log('This is kickback email notification end');
 
-},null, true, 'Asia/Tokyo');
+// },null, true, 'Asia/Tokyo');
 
-// var CDRsControllerJob = new CronJob ('55 11 * * *',function(){
+// var CDRsControllerJob = new CronJob ('31 11 * * *',function(){
 //     console.log('This is kickback email notification start');
 //     CDRsController.createCDR();
 //     console.log('This is kickback email notification end');
@@ -33,7 +33,7 @@ var emailNotificationJob = new CronJob ('53 9 * * *',function(){
 // },null, true, 'Asia/Tokyo');
 
 
-// var billingControllerJob = new CronJob ('48 14 * * *',function(){
+// var billingControllerJob = new CronJob ('31 15 * * *',function(){
 //     console.log('This is kickback  billing start');
 //     billingController.getData();
 //     console.log('This is kickback email notification end');

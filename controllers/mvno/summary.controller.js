@@ -1,9 +1,9 @@
-var SummayLeafnet = require('../../models/sonus_outbound/summary');
+var SummaryMVNO = require('../../models/mvno/summary');
 
 module.exports = {
   getSummary: async function(req, res) {
     try {
-        const [summaryRes,summaryErr] = await handleError(SummayLeafnet.getSummary());
+        const [summaryRes,summaryErr] = await handleError(SummaryMVNO.getSummary());
         if(summaryErr) {
              throw new Error('Could not fetch the summary');  
         }

@@ -5,7 +5,7 @@ module.exports = {
   findAll: async function() {
       try {
         
-          const query="SELECT * FROM _03numbers order by _03_numbers asc";
+          const query="SELECT * FROM _03numbers order by _03_numbers asc limit 10";
           const rateListRes= await db.queryIBS(query,[]);
           return rateListRes.rows;
       } catch (error) {
