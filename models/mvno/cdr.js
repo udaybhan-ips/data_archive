@@ -9,13 +9,13 @@ module.exports = {
           return error;
       }
   },
-  getAllSonusOutboundCustomer: async function() {
+  getAllMVNOCustomer: async function() {
     try {
-          const query=`select  customer_name, customer_id   from sonus_outbound_customer where customer_name!='Wiz' and deleted=false group by customer_name, customer_id order by customer_id`;
-          const ipsPortal=true;
-          const getAllSonusOutboundCustRes= await db.query(query,[],ipsPortal);
-          if(getAllSonusOutboundCustRes.rows){
-              return  getAllSonusOutboundCustRes.rows;
+          const query=`select * from mvno_customer where deleted =false`;
+          const getAllMVNOCustRes= await db.queryIBS(query,[]);
+
+          if(getAllMVNOCustRes.rows){
+              return  getAllMVNOCustRes.rows;
           }
           return {err:'not found'};
       } catch (error) {
@@ -36,10 +36,14 @@ module.exports = {
           return error;
       }
   },
-  createCDR: async function(customer_name, customer_id, year , month){
-    let resChunkArr=[];
-   
-    let fileName = __dirname+`\\CDR\\${customer_name}CDR${year}${month}.csv`;
+  createCDR: async function(customer_name, customer_id, year , month, leg, did){
+    let resChunkArr=[], fileName ='';
+    if(leg){
+        fileName = __dirname+`\\CDR\\${customer_name}${leg}CDR${year}${month}.csv`;
+    }else{
+        fileName = __dirname+`\\CDR\\${customer_name}${did}CDR${year}${month}.csv`;
+    }
+    
 
     let header =  [
         {id: 'start_time', title: '通話開始時間'},{id: 'stop_time', title: '通話終了時間'}, {id: 'duration', title: '通話時間（秒）'}, 
@@ -53,13 +57,13 @@ module.exports = {
     // then '携帯' else '固定' end as c_type
 
     try{
-        let query=`select start_time, stop_time, duration , sonus_callstatus, sonus_callingnumber, sonus_egcallednumber, 
-        case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then 'mobile' else 'landline' end as c_type
-        from cdr_sonus_outbound where duration > 0 and to_char(start_time, 'MM-YYYY') = '${month}-${year}' and billing_comp_code='${customer_id}' and billing_comp_name='${customer_name}' order by start_time asc `;
+        let query=`select leg, start_time, stop_time, duration , orig_ani, term_ani, orig_carrier_id, setup_rate, call_rate, freq_rate, call_charge
+        from cdr_fphone where leg='${leg}' and to_char(start_time, 'MM-YYYY') = '${month}-${year}' and company_code='${customer_id}' 
+        order by start_time asc `;
          
-        resChunkArr = await db.parserQuery(query, fileName, header,customer_name);
+        resArr = await db.queryIBS(query,[]);
 
-        console.log("chunk array length=="+resChunkArr.length)
+        
     }catch(err){
         console.log("Error in creating CDR =="+err.message);
     }

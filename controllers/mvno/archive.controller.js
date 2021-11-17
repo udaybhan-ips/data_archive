@@ -31,6 +31,7 @@ module.exports = {
   },
   getDataFPhoneALeg: async function (req, res) {
     const dateId = '6';
+    const customer_id = '10000707';
     try {
 
       const [Dates, targetDateErr] = await handleError(ArchiveMVNO.getTargetDate(dateId));
@@ -39,11 +40,11 @@ module.exports = {
       }
        console.log(JSON.stringify(Dates));
 
-      const deleteTargetDateData = await ArchiveMVNO.deleteTargetDateCDRFPhone(Dates.targetDate, 'A');
-      let getTargetCDRRes = await ArchiveMVNO.getTargetCDRFPhone(Dates.targetDateWithTimezone, 'A');
+      const deleteTargetDateData = await ArchiveMVNO.deleteTargetDateCDRFPhone(Dates.targetDate, 'A',customer_id);
+      let getTargetCDRRes = await ArchiveMVNO.getTargetCDRFPhone(Dates.targetDateWithTimezone, 'A',customer_id);
       let getFPhoneRatesRes = await ArchiveMVNO.getFPhoneRates();
       
-      const getDataRes = await ArchiveMVNO.insertByBatchesFPhone(getTargetCDRRes, 'A',getFPhoneRatesRes);
+      const getDataRes = await ArchiveMVNO.insertByBatchesFPhone(getTargetCDRRes, 'A',getFPhoneRatesRes,'','','',customer_id);
 
 
       const [udpateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveMVNO.updateBatchControl(dateId, Dates.targetDate));
@@ -61,6 +62,7 @@ module.exports = {
   },
   getDataFPhoneBLeg: async function (req, res) {
     const dateId = '7';
+    const customer_id = '10000707';
     try {
 
       const [Dates, targetDateErr] = await handleError(ArchiveMVNO.getTargetDate(dateId));
@@ -69,14 +71,46 @@ module.exports = {
       }
        console.log(JSON.stringify(Dates));
 
-      const deleteTargetDateData = await ArchiveMVNO.deleteTargetDateCDRFPhone(Dates.targetDate, 'B');
-      let getTargetCDRRes = await ArchiveMVNO.getTargetCDRFPhone(Dates.targetDateWithTimezone, 'B');
+      const deleteTargetDateData = await ArchiveMVNO.deleteTargetDateCDRFPhone(Dates.targetDate, 'B',customer_id);
+      let getTargetCDRRes = await ArchiveMVNO.getTargetCDRFPhone(Dates.targetDateWithTimezone, 'B',customer_id);
       let getFPhoneRatesRes = await ArchiveMVNO.getFPhoneRates();
       let getFPhoneCarrierChageRes = await ArchiveMVNO.getFPhoneCarrierChage();
       let getFPhoneRelayCarrierRes = await ArchiveMVNO.getFPhoneRelayCarrier();
       let getFPhoneTermUse = await ArchiveMVNO.getFPhoneTermUse();
 
-      const getDataRes = await ArchiveMVNO.insertByBatchesFPhone(getTargetCDRRes, 'B', getFPhoneRatesRes, getFPhoneCarrierChageRes,getFPhoneRelayCarrierRes,getFPhoneTermUse);
+      const getDataRes = await ArchiveMVNO.insertByBatchesFPhone(getTargetCDRRes, 'B', getFPhoneRatesRes, getFPhoneCarrierChageRes,getFPhoneRelayCarrierRes,getFPhoneTermUse,customer_id);
+
+
+      const [udpateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveMVNO.updateBatchControl(dateId, Dates.targetDate));
+      if (updateBatchControlErr) {
+        throw new Error('Err: while updating target date');
+      }
+
+      return udpateBatchControlRes.status(200).json({
+        message: 'success! data inserted sucessfully',
+        id: addRatesRes
+      });
+    } catch (error) {
+      return error;
+    }
+  },
+
+  getDataFPhoneALegXMOBILE: async function (req, res) {
+    const dateId = '8';
+    const customer_id = '00000707';
+    try {
+
+      const [Dates, targetDateErr] = await handleError(ArchiveMVNO.getTargetDate(dateId));
+      if (targetDateErr) {
+        throw new Error('Could not fetch target date');
+      }
+       console.log(JSON.stringify(Dates));
+
+      const deleteTargetDateData = await ArchiveMVNO.deleteTargetDateCDRFPhoneXMOBILE(Dates.targetDate, 'A',customer_id);
+      let getTargetCDRRes = await ArchiveMVNO.getTargetCDRFPhoneXMOBILE(Dates.targetDateWithTimezone, 'A',customer_id);
+      let getFPhoneRatesRes = await ArchiveMVNO.getFPhoneRates();
+      
+      const getDataRes = await ArchiveMVNO.insertByBatchesFPhone(getTargetCDRRes, 'A',getFPhoneRatesRes,'','','',customer_id);
 
 
       const [udpateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveMVNO.updateBatchControl(dateId, Dates.targetDate));
@@ -140,10 +174,10 @@ module.exports = {
       });
     }
   },
-  async getSonusCustomerList(req, res) {
+  async getMVNOCustomerList(req, res) {
     try {
-      const getSonusCustListRes = await ArchiveMVNO.getSonusCustomerList();
-      return res.status(200).json(getSonusCustListRes);
+      const getMVNOCustListRes = await ArchiveMVNO.getMVNOCustomerList();
+      return res.status(200).json(getMVNOCustListRes);
 
     } catch (error) {
       return res.status(400).json({

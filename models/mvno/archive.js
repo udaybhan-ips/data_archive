@@ -20,11 +20,11 @@ module.exports = {
   },
   getMVNOCustomerList: async function () {
     try {
-      const query = `select id,customer_name, customer_id, trunk_port, incallednumber from mvno_customer where deleted = false order by customer_name`;
-      const sonusCustList = await db.query(query, [], true);
+      const query = `select id, customer_name, customer_id, did, service_type, leg  from mvno_customer where deleted = false order by customer_name,leg`;
+      const mvnoCustList = await db.queryIBS(query, []);
       //console.log(targetDateRes);
-      if (sonusCustList.rows) {
-        return sonusCustList.rows;
+      if (mvnoCustList.rows) {
+        return mvnoCustList.rows;
       }
       return { err: 'not found' };
     } catch (error) {
@@ -162,10 +162,10 @@ module.exports = {
 
   },
 
-  deleteTargetDateCDRFPhone: async function (targetDate, leg) {
+  deleteTargetDateCDRFPhone: async function (targetDate, leg, company_code) {
     try {
 
-      const query = `delete FROM cdr_fphone where start_time::date = '${targetDate}'::date + interval '1' day and leg='${leg}'`;
+      const query = `delete FROM cdr_fphone where start_time::date = '${targetDate}'::date + interval '1' day  and company_code='${company_code}' and leg='${leg}'`;
       const deleteTargetDateRes = await db.queryIBS(query, []);
       return deleteTargetDateRes;
     } catch (error) {
@@ -173,7 +173,7 @@ module.exports = {
       return error;
     }
   },
-  getTargetCDRFPhone: async function (targetDateWithTimezone, leg) {
+  getTargetCDRFPhone: async function (targetDateWithTimezone, leg, company_code) {
     try {
 
       let where = "";
@@ -185,7 +185,7 @@ module.exports = {
         AND ((INCALLEDNUMBER like '00322223%') OR (INCALLEDNUMBER like '00322224%') OR (INCALLEDNUMBER like '00322225%'))
         order by STARTTIME asc `;
       } else {
-        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
+        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 10 DAY)  
         AND (GW IN ('NFPGSX4','IPSGSX5')) 
         AND (CALLDURATION > 0)
         AND RECORDTYPEID = 3 
@@ -211,7 +211,56 @@ module.exports = {
 
   },
 
-  insertByBatchesFPhone: async function (records, leg, ratesInfo, getFPhoneCarrierChageRes, getFPhoneRelayCarrierRes, getFPhoneTermUse) {
+  deleteTargetDateCDRFPhoneXMOBILE: async function (targetDate, leg, company_code) {
+    try {
+
+      const query = `delete FROM cdr_fphone where start_time::date = '${targetDate}'::date + interval '1' day and company_code='${company_code}' and leg='${leg}'`;
+      const deleteTargetDateRes = await db.queryIBS(query, []);
+      return deleteTargetDateRes;
+    } catch (error) {
+      console.log("Err " + error.message);
+      return error;
+    }
+  },
+  getTargetCDRFPhoneXMOBILE: async function (targetDateWithTimezone, leg, company_code) {
+    try {
+
+      let where = "";
+      if (leg == 'A') {
+        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
+        AND (GW IN ('NFPGSX4','IPSGSX5')) 
+        AND (CALLDURATION > 0)
+        AND RECORDTYPEID = 3 
+        AND ((EGCALLEDNUMBER LIKE '%33328222%'))
+        order by STARTTIME asc `;
+      } else {
+        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
+        AND (GW IN ('NFPGSX4','IPSGSX5')) 
+        AND (CALLDURATION > 0)
+        AND RECORDTYPEID = 3 
+        AND (INGRPSTNTRUNKNAME='IPSXMO50EGPRII')
+        order by STARTTIME asc `;
+      }
+
+      const query = `SELECT GW, SESSIONID, CALLDURATION, STARTTIME, ADDTIME(STARTTIME,'09:00:00') AS BEGINTIME, DISCONNECTTIME, ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME,
+      TRUNCATE(CALLDURATION*0.01 +  0.9,  0) AS DURATION, INANI, INGRPSTNTRUNKNAME,
+      OUTGOING, INCALLEDNUMBER, CALLINGPARTYCATEGORY, EGCALLEDNUMBER, INGRESSPROTOCOLVARIANT,CALLSTATUS FROM COLLECTOR_73 ${where}`;
+
+
+      //console.log("query="+query);
+      const data = await db.mySQLQuery(query);
+
+      // console.log(JSON.stringify(data.recordset))
+
+      return data;
+    } catch (error) {
+      console.log("err=" + error.message);
+      return error;
+    }
+
+  },
+
+  insertByBatchesFPhone: async function (records, leg, ratesInfo, getFPhoneCarrierChageRes, getFPhoneRelayCarrierRes, getFPhoneTermUse,company_code) {
     //console.log("I am here")
     const JSON_data = Object.values(JSON.parse(JSON.stringify(records)));
     // let dataSize=JSON_data.length;
@@ -225,7 +274,7 @@ module.exports = {
     let res = [];
     let resArr = [];
     for (let i = 0; i < chunkArray.length; i++) {
-      const data = await getNextInsertBatchFphone(chunkArray[i], leg, ratesInfo, getFPhoneCarrierChageRes, getFPhoneRelayCarrierRes, getFPhoneTermUse);
+      const data = await getNextInsertBatchFphone(chunkArray[i], leg, ratesInfo, getFPhoneCarrierChageRes, getFPhoneRelayCarrierRes, getFPhoneTermUse,company_code);
       //console.log("data="+JSON.stringify(data));
       res = await db.queryBatchInsert(data, CDR_MVNO_FPHONE_CS);
       resArr.push(res);
@@ -401,7 +450,7 @@ async function getMVNORates(data, carrier_id, leg, carrierCode) {
   return res;
 }
 
-async function getNextInsertBatchFphone(data, leg, ratesInfo, getFPhoneCarrierChageRes, getFPhoneRelayCarrierRes, getFPhoneTermUse) {
+async function getNextInsertBatchFphone(data, leg, ratesInfo, getFPhoneCarrierChageRes, getFPhoneRelayCarrierRes, getFPhoneTermUse, company_code) {
 
   let valueArray = [];
   let freqRate = 0.05;
@@ -457,7 +506,7 @@ async function getNextInsertBatchFphone(data, leg, ratesInfo, getFPhoneCarrierCh
       }else{
         obj['bleg_term_id'] = XFB;
       }
-      obj['company_code'] = '10000707';
+      obj['company_code'] = company_code;
       obj['freq_rate'] = freqRate;
 
       valueArray.push(obj);

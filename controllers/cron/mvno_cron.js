@@ -20,12 +20,28 @@ var CDRController = require('../mvno/cdr.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var archiverJobSonusOut = new CronJob ('43 15 * * *',function(){
+// var archiverJobSonusOut = new CronJob ('9 14 * * *',function(){
 //     console.log('You will see this message every second');
 //     archiveController.getDataFPhoneBLeg();
 //     console.log('You will see this message every second');
 
 // },null, true, 'Asia/Tokyo');
+
+// var archiverJobSonusOut = new CronJob ('52 13 * * *',function(){
+//     console.log('You will see this message every second');
+//     archiveController.getDataFPhoneALegXMOBILE();
+//     console.log('You will see this message every second');
+
+// },null, true, 'Asia/Tokyo');
+
+
+// var archiverJobSonusOut = new CronJob ('9 14 * * *',function(){
+//     console.log('You will see this message every second');
+//     archiveController.getDataFPhoneBLegXMOBILE();
+//     console.log('You will see this message every second');
+
+// },null, true, 'Asia/Tokyo');
+
 
 
 
@@ -36,7 +52,7 @@ var CDRController = require('../mvno/cdr.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var BillingControllerJob = new CronJob ('26 11 * * *',function(){
+// var BillingControllerJob = new CronJob ('13 14 * * *',function(){
 //     console.log('You will see this message every second');
 //     BillingController.getData();
 //     console.log('You will see this message every second');

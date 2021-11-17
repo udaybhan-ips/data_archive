@@ -17,7 +17,7 @@ module.exports = {
   },
   getAllMVNOCustomer: async function() {
     try {
-          const query=`select * from mvno_customer  where deleted=false order by customer_id,did`;
+          const query=`select * from mvno_customer  where deleted=false and customer_name ='XMOBILE' order by customer_id,did`;
 
           const getAllMVNOCustRes= await db.queryIBS(query,[]);
           if(getAllMVNOCustRes.rows){
@@ -40,15 +40,44 @@ module.exports = {
         return error;
     }
   },
+  
+  deleteSummaryDataLeg: async function(customer_name,customer_id,billing_year, billing_month, did, leg) {
+    try {
+        const query=`delete FROM cdr_mvno_summary where  leg = '${leg}' and customer_name='${customer_name}' and billing_month='${billing_month}' and billing_year='${billing_year}' `;
+        const deleteTargetDateSummaryRes= await db.queryIBS(query,[]);
+        return deleteTargetDateSummaryRes;
+    } catch (error) {
+        console.log("Error in delete summary function"+error.message);
+        return error;
+    }
+  },
+
   createSummaryData: async function(customer_name, customer_id, year, month, did, invoice_no) {
     console.log("summary");
   
     try {
-        
-        const getSummaryData=`select dnis,  sum(billableseconds)as duration, sum(billableseconds*0.23) as bill, count(*) total from
-         calltemp_excel2 where dnis='${did}'   group by dnis order by dnis` ;
+      
+        let  getSummaryData = "";
 
-        const sonusDataRows= await db.queryIBS(getSummaryData,[]);
+        if(customer_name == 'MEISHIN'){
+
+          getSummaryData=` select sum(duration_use::numeric) as duration ,count(*) as total, sum (CEILING(duration_use::numeric)*.23)as bill,
+          '33328230' as dnis  from cdr_202110 where term_ani like  '00328230%' ` ;
+
+        }else{
+          getSummaryData=`select dnis,  sum(billableseconds)as duration, sum(billableseconds*0.23) as bill, count(*) total from
+          calltemp_excel2 where dnis='${did}'   group by dnis order by dnis` ;
+        }
+
+        
+
+        let sonusDataRows ;
+        if(customer_name == 'MEISHIN'){
+          sonusDataRows= await db.query(getSummaryData,[]);
+        }else{
+          sonusDataRows= await db.queryIBS(getSummaryData,[]);
+        }
+
         let sonusData = sonusDataRows.rows;
   
         const query=`insert into cdr_mvno_summary (invoice_no, customer_name, customer_id, 
@@ -68,6 +97,44 @@ module.exports = {
         valueArray.push(parseInt(sonusData[0].total,10));        
         valueArray.push(sonusData[0].dnis);        
     
+        const updateSummaryDataRes= await db.queryIBS(query,valueArray);
+        return updateSummaryDataRes;
+    } catch (error) {
+        console.log("Error---"+error.message);
+        return error;
+    }
+  },
+
+  createSummaryDataLeg: async function(customer_name, customer_id, year, month, did, invoice_no, leg) {
+    console.log("summary=="+leg);
+  
+    try {
+        
+        const getSummaryData=`select count(*) as total, sum(Duration::int) as duration, sum(Call_Charge) as bill from
+          CDR_FPHONE where LEG='${leg}'and start_time between '2021/10/01 00:00:00' and '2021/10/31 23:59:59' and 
+          Company_Code='${customer_id}' and call_charge !='NaN'` ;
+
+        const sonusDataRows= await db.queryIBS(getSummaryData,[]);
+        let sonusData = sonusDataRows.rows;
+  
+        const query=`insert into cdr_mvno_summary (invoice_no, customer_name, customer_id, 
+          billing_month, billing_year,billing_date,update_date,duration,amt, count, dnis, leg) 
+        VALUES ($1, $2, $3, $4, $5,$6, $7, $8, $9, $10, $11,$12) returning id`;
+  
+        let valueArray=[];
+        valueArray.push(genrateInvoiceNo(customer_id,year,month));
+        valueArray.push((customer_name));
+        valueArray.push((customer_id));
+        valueArray.push(month);
+        valueArray.push((year));
+        valueArray.push(year+'-'+month+'-01');
+        valueArray.push(('now()'));
+        valueArray.push(parseInt(sonusData[0].duration,10));
+        valueArray.push(parseInt(sonusData[0].bill,10));        
+        valueArray.push(parseInt(sonusData[0].total,10));        
+        valueArray.push(sonusData[0].dnis);        
+        valueArray.push(leg);
+
         const updateSummaryDataRes= await db.queryIBS(query,valueArray);
         return updateSummaryDataRes;
     } catch (error) {
