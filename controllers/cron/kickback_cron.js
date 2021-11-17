@@ -10,7 +10,7 @@ var archiverJob = new CronJob ('6 16 * * *',function(){
     console.log('This is kickback archiver End');  
 },null, true, 'Asia/Tokyo');
  
-var archiverProJob = new CronJob ('1 17 * * *',function(){
+var archiverProJob = new CronJob ('5 17 * * *',function(){
     console.log('This is kickback Pro archiver start');
     archiveController.getProData();
     console.log('This is kickback Pro archiver End');
