@@ -55,7 +55,7 @@ module.exports = {
           if(customerId && customerName){
               where = `WHERE customer_id= '${customerId}' AND customer_name = '${customerName}' and deleted= false ` ;
           }else{
-            where ='WHERE deleted = false';
+            where =`WHERE deleted = false ' `;
           }
 
           const query=`select trunk_port, customer_name, customer_id,incallednumber from sonus_outbound_customer ${where}`;
@@ -117,7 +117,7 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo, trunkPortsVal
       //return null;
       const query=`SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
       CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW, CALLSTATUS,
-      CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  ${where} ` ;
+      CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT, BILLNUM FROM COLLECTOR_73  ${where} ` ;
       //console.log("query="+query);
       const data= await db.mySQLQuery(query);
       return data;
@@ -149,7 +149,7 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
       
       const query=`SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
       CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW, CALLSTATUS,
-      CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  ${where}  ` ;
+      CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT, BILLNUM FROM COLLECTOR_73  ${where}  ` ;
       //console.log("query="+query);
       const data= await db.mySQLQuery(query);
       return data;
@@ -421,6 +421,7 @@ function utcToDate(utcDate){
        obj['sonus_egrprotovariant']=data[i]['EGRPROTOVARIANT'];  
        obj['landline_amount']=amountDet.landline_amount;
        obj['mob_amount']=amountDet.mob_amount;
+       obj['bill_num'] = data[i]['BILLNUM'];
 
        valueArray.push(obj);
        

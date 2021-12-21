@@ -221,7 +221,7 @@ module.exports = {
 
         }
 
-        let subject = '12月度 KICKBACK全体トラフィック速報';
+        let subject = '11月度 KICKBACK全体トラフィック速報';
         const [sendEmailAllDataRes, sendEmailAllDataErr] = await handleError(EmailNotification.sendEmailAllData(getAllTrafficSummaryHTML, subject));
         if (sendEmailAllDataErr) {
           throw new Error('error while sending email');

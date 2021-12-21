@@ -11,7 +11,7 @@ module.exports = {
       }
        console.log(JSON.stringify(Dates));
 
-      const deleteTargetDateData = await ArchiveMVNO.deleteTargetDateCDR(Dates.targetDateWithTimezone);
+      //const deleteTargetDateData = await ArchiveMVNO.deleteTargetDateCDR(Dates.targetDateWithTimezone);
       let getTargetCDRRes = await ArchiveMVNO.getTargetCDR(Dates.targetDateWithTimezone);
       const getDataRes = await ArchiveMVNO.insertByBatches(getTargetCDRRes);
 

@@ -27,6 +27,11 @@ router.use('/v1', require('./apiv1/sonus_outbound/archive.data.routes'));
 
 router.use('/v1', require('./apiv1/customer/customers.routes'));
 
+
+/**** Byokakin KDDI   ******/
+
+router.use('/v1', require('./apiv1/byokakin/kddi/kotehi.routes'));
+
 /** 03 numbers  details **/
 
 router.use('/v1', require('./apiv1/_03numbers/_03numbers.routes'));

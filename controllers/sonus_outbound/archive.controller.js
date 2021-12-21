@@ -13,7 +13,7 @@ module.exports = {
         }
        // console.log(JSON.stringify(Dates));
 
-        const deleteTargetDateData = await  ArchiveSonusOutbound.deleteTargetDateCDR(Dates.targetDate);
+       const deleteTargetDateData = await  ArchiveSonusOutbound.deleteTargetDateCDR(Dates.targetDate);
 
         const getAllTrunkgroupRes = await ArchiveSonusOutbound.getAllTrunkgroup();
         const getRatesRes = await ArchiveSonusOutbound.getRates();

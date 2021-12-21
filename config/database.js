@@ -25,16 +25,17 @@ const CDR_SONUS_CS = new pgp.helpers.ColumnSet(['date_bill', 'orig_ani', 'term_a
 
 const CDR_SONUS_BILLING_CS = new pgp.helpers.ColumnSet(['cdr_id', 'rate_id', 'bill_number', 'bill_date', 'bleg_call_amount', 'ips_call_amount', 'total_amount', 'remarks'], { table: 'cdr_sonus_billing' });
 
-const CDR_SONUS_OUTBOUND_CS = new pgp.helpers.ColumnSet(['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound', 'dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_comp_code', 'billing_comp_name', 'trunk_port', 'sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_inani', 'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'register_date', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus', 'sonus_callingnumber', 'sonus_egcallednumber', 'sonus_egrprotovariant', 'landline_amount', 'mob_amount'], { table: 'cdr_sonus_outbound' });
+const CDR_SONUS_OUTBOUND_CS = new pgp.helpers.ColumnSet(['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound', 'dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_comp_code', 'billing_comp_name', 'trunk_port', 'sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_inani', 'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'register_date', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus', 'sonus_callingnumber', 'sonus_egcallednumber', 'sonus_egrprotovariant', 'landline_amount', 'mob_amount','bill_num'], { table: 'cdr_sonus_outbound' });
 
 const CDR_CS = new pgp.helpers.ColumnSet(['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound',
   'dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_company_code', 'trunk_port',
   'sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_anani',
   'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'registerdate', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus',
-  'sonus_callingnumber'], { table: 'cdr_202111' });
+  'sonus_callingnumber'], { table: 'cdr_202112' });
 const BILLCDR_CS = new pgp.helpers.ColumnSet(['cdr_id', 'date_bill', 'company_code', 'carrier_code', 'in_outbound', 'call_type', 'trunk_port_target'
   , 'duration', 'start_time', 'stop_time', 'orig_ani', 'term_ani', 'route_info', 'date_update', 'orig_carrier_id', 'term_carrier_id',
-  'transit_carrier_id', 'selected_carrier_id', 'trunk_port_name', 'gw', 'session_id', 'call_status', 'kick_company', 'term_use'], { table: 'billcdr_main' });
+  'transit_carrier_id', 'selected_carrier_id', 'trunk_port_name', 'gw', 'session_id', 'call_status', 'kick_company', 'term_use'], 
+  { table: 'billcdr_main' });
 
   const CDR_MVNO_CS = new pgp.helpers.ColumnSet(['callid', 'addchargecode', 'altbillingcallcharge', 'altbillingrateplanid', 
   'altbillingratingerrorcode',
@@ -49,31 +50,41 @@ const BILLCDR_CS = new pgp.helpers.ColumnSet(['cdr_id', 'date_bill', 'company_co
   'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'sonus_ingrpstntrunkname', 'gw', 'callstatus',
   'leg','setup_rate','call_rate','call_charge','term_use','carrier_name','bleg_term_id','company_code','freq_rate'], { table: 'cdr_fphone' });
 
+  
+
 
 const CS = { 'cdr_sonus_cs': CDR_SONUS_CS, 'billcdr_cs': BILLCDR_CS, 
 'cdr_cs': CDR_CS, 'cdr_sonus_billing_cs': CDR_SONUS_BILLING_CS,
  'cdr_sonus_outbound_cs': CDR_SONUS_OUTBOUND_CS ,
-'cdr_mvno_cs':CDR_MVNO_CS,'cdr_mvno_fphone_cs':CDR_MVNO_FPHONE_CS};
+'cdr_mvno_cs':CDR_MVNO_CS,'cdr_mvno_fphone_cs':CDR_MVNO_FPHONE_CS}; 
 
 
 module.exports = {
-  queryBatchInsert: async function (data, cdr_cs) {
+  queryBatchInsert: async function (data, cdr_cs, ColumnSet, tableName) {
 
     console.log("data length=" + data.length);
     console.log("cs=" + cdr_cs);
+
     let db_pgp, query, res;
     try {
 
       if (cdr_cs == 'billcdr_cs' || cdr_cs == 'cdr_mvno_cs' || cdr_cs =='cdr_mvno_fphone_cs') {
         db_pgp = pgp(config.DATABASE_URL_IBS);
-      } else {
+      }else if(ColumnSet){
+        db_pgp = pgp(config.DATABASE_URL_BYOKAKIN);
+      }else{
         db_pgp = pgp(config.DATABASE_URL_SONUS_DB);
       }
 
+      if(ColumnSet){
+        const ColumnSetValue= new pgp.helpers.ColumnSet(ColumnSet, tableName)
+        query = pgp.helpers.insert(data, ColumnSetValue);
+        res = await db_pgp.none(query)
 
-      query = pgp.helpers.insert(data, CS[cdr_cs]);
-
-      res = await db_pgp.none(query)
+      }else{
+        query = pgp.helpers.insert(data, CS[cdr_cs]);
+        res = await db_pgp.none(query)
+      }
     } catch (e) {
       console.log("error while bulk data inserting:" + e.message)
     }
@@ -199,6 +210,23 @@ module.exports = {
       })
       let connectionStringIBS = config.DATABASE_URL_IBS;
       const pool = await new Pool(connectionStringIBS)
+      const res = await pool.query(text, values);
+      // console.log("data==="+JSON.stringify(res));
+      return (res);
+    } catch (err) {
+      console.log("Error while quering" + err.message)
+      return handleErrorMessages(err);
+    }
+
+  },
+  queryByokakin: async function (text, values) {
+    console.log("query=" + text + "----" + values);
+    try {
+      types.setTypeParser(1114, function (stringValue) {
+        return stringValue;
+      })
+      let connectionStringByokakin = config.DATABASE_URL_BYOKAKIN;
+      const pool = await new Pool(connectionStringByokakin)
       const res = await pool.query(text, values);
       // console.log("data==="+JSON.stringify(res));
       return (res);

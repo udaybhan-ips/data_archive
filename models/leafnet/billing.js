@@ -40,7 +40,8 @@ module.exports = {
 getTargetCDR: async function(year, month) {
 
     try {
-        const query=`SELECT billing_comp_code, term_carrier_id, duration_use, cdr_id  from CDR_SONUS where to_char(start_time, 'MM-YYYY') = '${month}-${year}'` ;
+        const query=`SELECT billing_comp_code, term_carrier_id, duration_use, cdr_id  from 
+        CDR_SONUS where to_char(start_time, 'MM-YYYY') = '${month}-${year}'` ;
         const data= await db.query(query);
         return data.rows;
     } catch (error) {

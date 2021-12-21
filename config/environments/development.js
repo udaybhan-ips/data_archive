@@ -48,6 +48,13 @@ const IBS={
   password : (process.env.POSTGRESL_PASSWORD || 'ips12345'),
   timezone: 'Z'
 }
+const Byokakin={
+  host     : (process.env.POSTGRES_PORT || '10.168.22.40'),
+  database : (process.env.POSTGRES_DATABASE || 'byokakin'),
+  user     : (process.env.POSTGRES_USER ||'ips'),
+  password : (process.env.POSTGRESL_PASSWORD || 'ips12345'),
+  timezone: 'Z'
+}
 
 const SONUSDB={
   host     : (process.env.POSTGRES_PORT || '10.168.22.40'),
@@ -69,6 +76,7 @@ module.exports = {
   DATABASE_URL_IPS_PORTAL: (process.env.IPSPortal || IPSPortal),
   DATABASE_URL_SONUS_DB: (process.env.SONUSDB || SONUSDB),
   DATABASE_URL_IBS: (process.env.IBS || IBS),
+  DATABASE_URL_BYOKAKIN: (process.env.Byokakin || Byokakin),
   SECRET: (process.env.SECRET || 'h3sqq%pb#dHh^XcU8&Uj8brVS_*$LGHW'),
   JWT_EXPIRATION: (process.env.JWT_EXPIRATION || 86400),
   MYSQL_DATABASE_URL:MYSQL,

@@ -67,6 +67,7 @@ module.exports = {
     const month = startDate.getMonth() + 1;
     const date = startDate.getDate();
     const actualStartDate = year+"-"+month+"-"+date+" 15:00:00";
+
     let incallednumber='';
     let trunkPortsVal = '';
 
@@ -91,7 +92,9 @@ module.exports = {
     //console.log("customer info="+JSON.stringify(customerInfo));
 
     try {
-        const query=`select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as day from COLLECTOR_73 where INGRPSTNTRUNKNAME in (${trunkPortsVal}) ${incallednumber} AND RECORDTYPEID = 3 AND starttime>='${actualStartDate}' and starttime <='${targetDateWithTimezone}' group by cast(addtime(starttime,'09:00:00') as Date) order by cast(addtime(starttime,'09:00:00') as Date) asc`;
+        const query=`select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as day from COLLECTOR_73 
+        where INGRPSTNTRUNKNAME in (${trunkPortsVal}) ${incallednumber} AND RECORDTYPEID = 3 AND 
+        starttime>='${actualStartDate}' and starttime <='${targetDateWithTimezone}' group by cast(addtime(starttime,'09:00:00') as Date) order by cast(addtime(starttime,'09:00:00') as Date) asc`;
         //console.log(query);
         const rawData= await db.mySQLQuery(query,[]);
 

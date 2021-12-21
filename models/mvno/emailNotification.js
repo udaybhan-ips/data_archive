@@ -18,14 +18,13 @@ module.exports = {
           }
       },
     
-  getAllTrunkgroup: async function() {
+  getAllCustomer: async function() {
     try {
-          const query=`select trunk_port, customer_name, customer_id, incallednumber from sonus_outbound_customer order by customer_id`;
+          const query=`select * from mvno_customer where customer_name='JCI' order by Id`;
           
-          const getTrunkportRes= await db.query(query,[],ipsPortal);
-        //  console.log(getTrunkportRes);
-          if(getTrunkportRes.rows){
-              return  getTrunkportRes.rows;
+          const getAllCustomerRes= await db.queryIBS(query,[]);
+          if(getAllCustomerRes.rows){
+              return  getAllCustomerRes.rows;
             }
           return {err:'not found'};
       } catch (error) {
@@ -33,7 +32,7 @@ module.exports = {
           return error;
       }
   },    
-  getSummaryData: async function(targetMonth) {
+  getSummaryData: async function(targetMonth, customerInfo) {
       //console.log("target month="+targetMonth);
       const year = new Date(targetMonth).getFullYear();
       let month = new Date(targetMonth).getMonth() + 1;
@@ -43,11 +42,12 @@ module.exports = {
       }
 
       try {
-          const query=`select count(*) as total, sum(duration_use) as duration, start_time::date as day, billing_comp_name,billing_comp_code from cdr_sonus_outbound where to_char(start_time, 'MM-YYYY') = '${month}-${year}' group by start_time::date, billing_comp_name,billing_comp_code order by start_time::date asc `;
-          const ratesRes= await db.query(query,[]);
+          const query=`select dnis,  sum(billableseconds)as duration, sum(billableseconds*0.23) as bill, count(*) total from
+          calltemp_excel2 where dnis='${customerInfo['dnis']}'   group by dnis order by dnis`;
+          const summaryDetilsRes= await db.queryIBS(query,[]);
           
-          if(ratesRes.rows){
-              return (ratesRes.rows);              
+          if(summaryDetilsRes.rows){
+              return (summaryDetilsRes.rows);              
           }
           return {err:'not found'};
       } catch (error) {
@@ -67,31 +67,13 @@ module.exports = {
     const month = startDate.getMonth() + 1;
     const date = startDate.getDate();
     const actualStartDate = year+"-"+month+"-"+date+" 15:00:00";
-    let incallednumber='';
-    let trunkPortsVal = '';
 
-    if(customerInfo.incallednumber){
-        incallednumber=` AND incallednumber LIKE '${customerInfo.incallednumber}'`
-
-    }
-    let trunkPorts = customerInfo.trunk_port;
-    let trunkPortsArr = trunkPorts.split(",");
-
-    for(let i=0; i<trunkPortsArr.length;i++){
-       trunkPortsVal = trunkPortsVal + `'${trunkPortsArr[i]}',`;
-    }
-    //remove last value (,)
-    if(trunkPortsVal.substr(trunkPortsVal.length - 1)==','){
-       trunkPortsVal = trunkPortsVal.substring(0, trunkPortsVal.length - 1);
-    }
-
-    
-
-    
     //console.log("customer info="+JSON.stringify(customerInfo));
 
     try {
-        const query=`select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as day from COLLECTOR_73 where INGRPSTNTRUNKNAME in (${trunkPortsVal}) ${incallednumber} AND RECORDTYPEID = 3 AND starttime>='${actualStartDate}' and starttime <='${targetDateWithTimezone}' group by cast(addtime(starttime,'09:00:00') as Date) order by cast(addtime(starttime,'09:00:00') as Date) asc`;
+        const query=`select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as day FROM CALL WITH(NOLOCK) 
+        WHERE starttime BETWEEN '${targetDateWithTimezone}' and  DATEADD(day, 1, '${targetDateWithTimezone}') AND 
+        (calldirection = 'O') AND (connectseconds > 0)`;
         //console.log(query);
         const rawData= await db.mySQLQuery(query,[]);
 
