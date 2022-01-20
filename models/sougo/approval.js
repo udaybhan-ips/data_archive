@@ -54,14 +54,14 @@ module.exports = {
 
         let mailOption={
             from: 'ips_tech@sysmail.ipsism.co.jp',
-            to: 'uday@ipsism.co.jp',
-            //cc:'r_chong@ipsism.co.jp,y_ito@ipsism.co.jp',
+            to: 'telecom@ipsism.co.jp,jinzai_assistance@ipsism.co.jp',
+            cc:'uday@ipsism.co.jp,y_ito@ipsism.co.jp',
             subject,
             html
         }
-    
-       utility.sendEmail(mailOption);   
-    }  
+
+       utility.sendEmail(mailOption);
+    }
   
 }
 

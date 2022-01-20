@@ -4,7 +4,7 @@ var billingController = require('../kickback/billing.controller');
 var CDRsController = require('../kickback/cdr.controller');
 var EmailController = require('../kickback/emailNotification.controller');
 
-var archiverJob = new CronJob ('1 16 * * *',function(){
+var archiverJob = new CronJob ('23 16 * * *',function(){
     console.log('This is kickback archiver start');
     archiveController.getData();
     console.log('This is kickback archiver End');  

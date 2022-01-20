@@ -1,19 +1,15 @@
 var db = require('../../config/database');
 var utility= require('../../public/javascripts/utility');
-const { PostgreSql } = require('@shagital/db-dumper');
+const {execute} = require('@getvim/execute');
 
 module.exports = {
     startDBbackupDaily: async function() {
         try {
-            PostgreSql.create()
-            .setDbName('byokakin_backup')
-            .setUserName('ips')
-            .setPassword('ips12345')
-            .setCallback(()=>{
-                console.log("Done!")
+            execute(`pg_dump -U postgres -d byokakin_backup -f byokakin_backup.tar -F t`,).then(async () => {
+                console.log("Finito");
+            }).catch(err => {
+                console.log("error in dumping..."+err);
             })
-            .dumpToFile('./dump.sql');
-            
         } catch (error) {
             console.log("error in db backup..."+error.message)
             return error;

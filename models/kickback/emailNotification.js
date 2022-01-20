@@ -205,7 +205,8 @@ module.exports = {
     getSonusSummaryByTermaniTotalData: async function (year, month, tableName) {
         try {
 
-            const query = `select count(*) as total, start_time::date as day
+            const query = `select count(*) as total, start_time::date as day,
+            sum(case when (sonus_callstatus::int =16 OR sonus_callstatus::int =31) then 1 else 0 end)  as total_16_31
             from ${tableName} where to_char(start_time, 'MM-YYYY') = '${month}-${year}' 
             AND ((TERM_ANI ILIKE '35050%') OR (TERM_ANI ILIKE '36110%') OR (TERM_ANI ILIKE '50505%'))
             group by start_time::date order by start_time::Date `;

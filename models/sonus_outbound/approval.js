@@ -45,7 +45,7 @@ module.exports = {
         }
     }, 
     sendApprovalNotification: async function(reqData){
-        let subject = `Approval Notification for ${reqData.customer_name} of ${utility.dateVsMonths[reqData.billing_month]}`;
+        let subject = `Approval Notification for ${reqData.customer_name} of ${utility.getMonthName(reqData.billing_month)}`;
         let html = `<div>
             <div> Hi Team, </div>
             <div> Below is the billing status of ${reqData.customer_name} Sonus Outbound. This is approved by ${reqData.approved_by}.</div>
@@ -55,13 +55,14 @@ module.exports = {
 
         let mailOption={
             from: 'ips_tech@sysmail.ipsism.co.jp',
-            to: 'uday@ipsism.co.jp',
-            //cc:'r_chong@ipsism.co.jp,y_ito@ipsism.co.jp',
+            to: 'telecom@ipsism.co.jp,jinzai_assistance@ipsism.co.jp',
+            cc:'uday@ipsism.co.jp,y_ito@ipsism.co.jp',
             subject,
             html
         }
-       utility.sendEmail(mailOption);   
-    }  
+       utility.sendEmail(mailOption);
+    }
+
   
 }
 

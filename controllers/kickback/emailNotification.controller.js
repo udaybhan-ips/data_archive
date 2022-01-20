@@ -268,7 +268,7 @@ module.exports = {
           throw new Error('error while fetching data processed data');
         }
 
-        const [createHTMLForAllDataRes, createHTMLForAllDataErr] = await handleError(EmailNotification.createHTMLForAllData(getSummaryDataMysqlTotalRes, getSonusSummaryTotalDataRes, getSummaryDataMysqlRes, getSonusSummaryByTermaniTotalDataRes, proDataAllRes, proDataAllRes , year, month));
+        const [createHTMLForAllDataRes, createHTMLForAllDataErr] = await handleError(EmailNotification.createHTMLForAllData(getSummaryDataMysqlTotalRes, getSonusSummaryTotalDataRes, getSummaryDataMysqlRes, getSonusSummaryByTermaniTotalDataRes, getSonusSummaryByTermaniTotalDataRes, proDataAllRes , year, month));
         if (createHTMLForAllDataErr) {
           throw new Error('error while creating table');
         }
