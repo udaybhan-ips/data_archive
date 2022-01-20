@@ -5,7 +5,7 @@ var BillingController = require('../sonus_outbound/billing.controller');
 var CDRController = require('../sonus_outbound/cdr.controller');
 
 
-// var archiverJobSonusOut = new CronJob ('26 12 * * *',function(){
+// var archiverJobSonusOut = new CronJob ('32 23 * * *',function(){
 //     console.log('You will see this message every second');
 //     archiveController.getData();
 //     console.log('You will see this message every second');
@@ -20,7 +20,7 @@ var CDRController = require('../sonus_outbound/cdr.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var BillingControllerJob = new CronJob ('49 12 * * *',function(){
+// var BillingControllerJob = new CronJob ('1 0 * * *',function(){
 //     console.log('You will see this message every second');
 //     BillingController.getData();
 //     console.log('You will see this message every second');

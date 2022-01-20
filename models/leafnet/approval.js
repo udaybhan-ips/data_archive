@@ -34,7 +34,7 @@ module.exports = {
             valueArray.push(data.comment);
     
             const addApprovalRes= await db.query(query,valueArray);
-            if(addApprovalRes.row){
+            if(addApprovalRes.rows){
                 return addApprovalRes.rows;
             }else{
                 return  addApprovalRes.message;
@@ -45,7 +45,8 @@ module.exports = {
         }
     }, 
     sendApprovalNotification: async function(reqData){
-        let subject = `Approval Notification for ${reqData.customer_name} of ${utility.dateVsMonths[reqData.billing_month]}`;
+
+        let subject = `Approval Notification for ${reqData.customer_name} of ${utility.getMonthName(reqData.billing_month)}`;
         let html = `<div>
             <div> Hi Team, </div>
             <div> Below is the billing status of ${reqData.customer_name} . This is approved by ${reqData.approved_by}.</div>
@@ -56,7 +57,7 @@ module.exports = {
         let mailOption={
             from: 'ips_tech@sysmail.ipsism.co.jp',
             to: 'uday@ipsism.co.jp',
-            cc:'y_ito@ipsism.co.jp',
+            cc:'y_ito@ipsism.co.jp,takuya_yamada@ipsism.co.jp,m_ishikawa@ipsism.co.jp',
             subject,
             html
         }

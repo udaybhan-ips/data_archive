@@ -21,7 +21,6 @@ var emailNotificationJob = new CronJob ('30 17 * * *',function(){
     console.log('This is kickback email notification start');
     EmailController.sendEmail();
     console.log('This is kickback email notification end');
-
 },null, true, 'Asia/Tokyo');
 
 // var CDRsControllerJob = new CronJob ('31 11 * * *',function(){
@@ -32,7 +31,7 @@ var emailNotificationJob = new CronJob ('30 17 * * *',function(){
 // },null, true, 'Asia/Tokyo');
 
 
-// var billingControllerJob = new CronJob ('11 13 * * *',function(){
+// var billingControllerJob = new CronJob ('46 17 * * *',function(){
 //     console.log('This is kickback  billing start');
 //     billingController.getData();
 //     console.log('This is kickback email notification end');

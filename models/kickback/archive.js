@@ -91,12 +91,10 @@ module.exports = {
 
 
   insertByBatches: async function (records, getCompanyCodeInfoRes, getRemoteControlNumberDataRes, carrierInfo, companyInfo, __type) {
-    //  console.log("total records="+records.length);
 
     const chunkArray = chunk(records, BATCH_SIZE);
     let res = [];
     let resArr = [];
-
     for (let i = 0; i < chunkArray.length; i++) {
       if (__type == 'raw_cdr') {
         const data = await getNextInsertBatch(chunkArray[i], getCompanyCodeInfoRes, getRemoteControlNumberDataRes);
@@ -105,7 +103,6 @@ module.exports = {
         const data = await getNextInsertBatchBillCDR(chunkArray[i], carrierInfo, companyInfo);
         res = await db.queryBatchInsert(data, BILLCDR_CS);
       }
-
       resArr.push(res);
     }
     console.log("done" + new Date());

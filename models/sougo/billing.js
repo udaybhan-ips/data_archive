@@ -51,11 +51,9 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main   order by company_code `;
+      const query = `select distinct(company_code) as company_code from billcdr_main where company_code='1011000001' order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
-
       return billNoRes.rows;
-
     } catch (error) {
       console.log("err in getting company code =" + error.message);
       return error;
@@ -84,8 +82,8 @@ module.exports = {
 
     try {
       query = `select count(*) as total_calls, sum(duration) as total_duration , carrier_code, term_carrier_id 
-          from billcdr_main where duration>1 and company_code='${company_code}' group by    carrier_code, term_carrier_id 
-          order by   carrier_code, term_carrier_id `;
+          from billcdr_main where duration>1 and company_code='${company_code}' group by carrier_code, term_carrier_id 
+          order by carrier_code, term_carrier_id `;
 
       console.log("query==" + query);
       const data = await db.queryIBS(query);
@@ -110,18 +108,14 @@ module.exports = {
 
 
       for (let i = 0; i < data.length; i++) {
-
         let info = await getResInfo(data[i], company_code, ratesDetails, carrierInfo, month, i);
 
         for (let ii = 0; ii < info.length; ii++) {
-
           call_count = call_count + parseInt(info[ii]['call_count'], 10);
           duration = duration + parseInt(info[ii]['call_sec'], 10);
           if (parseInt(info[ii]['amount'], 10) > 1) {
             amount = amount + parseInt(info[ii]['amount'], 10);
           }
-
-
           let query = `insert into bill_detail (bill_no,line_no, item_type , item_name, call_count, call_sec,rate,
                 amount, remarks, date_update, name_update, date_insert, name_insert) VALUES('${bill_no}', '${info[ii]['line_no']}', 
                 '${info[ii]['item_type']}', '${info[ii]['item_name']}',${info[ii]['call_count']}, ${info[ii]['call_sec']}, ${info[ii]['rate']} 
@@ -143,12 +137,6 @@ module.exports = {
       console.log("query==" + query);
 
       let insertHisDataFC = await db.queryIBS(query, []);
-
-
-
-
-
-
     } catch (error) {
       console.log("Error in result ---" + error.message);
       return error;
@@ -195,10 +183,6 @@ module.exports = {
     utility.sendEmail(mailOption);
   },
 }
-
-
-
-
 
 async function getResInfo(data, company_code, ratesInfo, carrierInfo, billingMonth, lineCounter) {
 
@@ -418,20 +402,20 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
     currentMonthValue = '0' + currentMonthValue;
   }
 
-  if (currentMonthValue)
-
+  let lastMonthDay  = new Date(currentYear, currentMonthValue, 0).getDate();
+  
     if (tmpPaymentDate == 'yearly') {
-      if (currentMonthValue > 4)
-        paymentDueDate = `${currentYear + 1}/04/30`;
+      if (parseInt(billingMonth) > 4)
+        paymentDueDate = `${billingYear + 1}/04/30`;
       else
         paymentDueDate = `${currentYear}/04/30`;
     } else if (tmpPaymentDate == 'half_yearly') {
-      if (currentMonthValue > 10)
-        paymentDueDate = `${currentYear + 1}/04/30`;
+      if (parseInt(billingMonth) > 10)
+        paymentDueDate = `${billingYear + 1}/04/30`;
       else
         paymentDueDate = `${currentYear}/10/31`;
     } else {
-      paymentDueDate = `${currentYear}/${currentMonthValue}/30`;
+      paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
     }
 
   await generateHeader(address, doc, totalCallAmount);

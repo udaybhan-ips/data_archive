@@ -10,7 +10,12 @@ var path = require('path');
  module.exports={dateVsMonthsWithoutZero};
 
 
-
+module.exports.getMonthName = function(monthNo){
+  if(monthNo){
+    return dateVsMonths[monthNo];
+  }
+  return null;
+}
 
 
 

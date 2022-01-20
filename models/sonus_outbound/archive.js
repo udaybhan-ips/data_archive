@@ -55,7 +55,7 @@ module.exports = {
           if(customerId && customerName){
               where = `WHERE customer_id= '${customerId}' AND customer_name = '${customerName}' and deleted= false ` ;
           }else{
-            where =`WHERE deleted = false ' `;
+            where =`WHERE deleted = false `;
           }
 
           const query=`select trunk_port, customer_name, customer_id,incallednumber from sonus_outbound_customer ${where}`;

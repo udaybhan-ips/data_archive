@@ -1,6 +1,7 @@
 var utility = require('./../../public/javascripts/utility');
 var db = require('./../../config/database');
 
+
 module.exports = {
 
     getTargetDate: async function (date_id) {
@@ -56,9 +57,7 @@ module.exports = {
 
            // const query = ` select * from kickback_cdr_carrier where east_link_flag=1 and mail_address!='' order by customer_cd`;
             const query = ` select * from kickback_cdr_carrier where (east_link_flag=1 and mail_address!='') OR (email_type='multiple') order by customer_cd`;
-
             const kickCompRes = await db.queryIBS(query, []);
-
             return kickCompRes.rows;
 
         } catch (error) {
@@ -188,6 +187,38 @@ module.exports = {
             return error;
         }
     },
+    getSonusSummaryTotalData: async function (year, month, tableName) {
+        try {
+
+            const query = `select count(*) as total, start_time::date as day
+            from ${tableName} where to_char(start_time, 'MM-YYYY') = '${month}-${year}'
+            group by start_time::date order by start_time::Date `;
+
+            const getSonusSummaryRes = await db.query(query, []);
+            return getSonusSummaryRes.rows;
+        } catch (error) {
+            return error;
+        }
+    },
+
+   
+    getSonusSummaryByTermaniTotalData: async function (year, month, tableName) {
+        try {
+
+            const query = `select count(*) as total, start_time::date as day
+            from ${tableName} where to_char(start_time, 'MM-YYYY') = '${month}-${year}' 
+            AND ((TERM_ANI ILIKE '35050%') OR (TERM_ANI ILIKE '36110%') OR (TERM_ANI ILIKE '50505%'))
+            group by start_time::date order by start_time::Date `;
+
+            const getSonusSummaryRes = await db.query(query, []);
+            return getSonusSummaryRes.rows;
+        } catch (error) {
+            console.log("error in sonus sougu data"+error.message);
+            return error;
+        }
+    },
+
+
     getEmailDetails: async function (targetDate, kickCompany) {
         try {
             const query = `select * from kickback_cdr_carrier_multiple where customer_cd='${kickCompany}' `;
@@ -197,6 +228,24 @@ module.exports = {
             return error;
         }
     },
+
+    getCDRDailyTransitionSummary: async function (year, month) {
+        try {
+            const query = ` select start_time::date as day, gw as GATEWAY, trunk_port_name, count(*) as CDRCOUNT, sum(call_type) as KOKUSAI, 
+            count(*) - sum(call_type) as KOKUNAI, sum(in_outbound) as INBOUND, count(*) - sum(in_outbound) as OUTBOUND, 
+            sum(DURATION) as DURATIONS,sum(case when company_code='9999999999' then 1 else 0 end) as fumeichk
+            from billcdr_main where to_char(start_time,'MM-YYYY') = '${month}-${year}' 
+            group by start_time::date , GATEWAY, trunk_port_name 
+            order by start_time::date , GATEWAY,trunk_port_name `;
+
+            const cdrDailyTransitionSummaryData = await db.queryIBS(query, []);
+            return cdrDailyTransitionSummaryData.rows;
+        } catch (error) {
+            console.log("error in ")
+            return error;
+        }
+    },
+
     insertTrafficSummary: async function (data, kick_company, targetDate) {
         console.log("insert traffic summary ");
         try {
@@ -207,8 +256,6 @@ module.exports = {
             let mob_duration = 0;
             let land_count = 0;
             let land_duration = 0;
-
-
             for (let i = 0; i < data.length; i++) {
                 if (data[i]['term_use'] == 2) {
                     mob_count = data[i]['total_calls'];
@@ -341,6 +388,21 @@ module.exports = {
         }
     },
 
+    getTableName: async function (targetDate) {
+        try {
+          const year = new Date(targetDate).getFullYear();
+          let month = new Date(targetDate).getMonth() + 1;
+    
+          if (parseInt(month, 10) < 10) {
+            month = '0' + month;
+          }
+          return `cdr_${year}${month}`;
+    
+        } catch (e) {
+          console.log("err in get table=" + e.message);
+          return console.error(e);
+        }
+      },
 
     getSummaryData: async function (targetMonth, kick_company) {
         console.log("target month=" + targetMonth);
@@ -393,17 +455,11 @@ module.exports = {
     },
 
 
-    getSummaryDataMysql: async function (targetDateWithTimezone) {
+    getSummaryDataByDayMysql: async function (targetDateWithTimezone) {
 
         const day = new Date(targetDateWithTimezone).getDate();
-
-        const startDate = new Date(targetDateWithTimezone);
-
-        startDate.setDate(startDate.getDate() - day);
-        const year = startDate.getFullYear();
-        const month = startDate.getMonth() + 1;
-        const date = startDate.getDate();
-        const actualStartDate = year + "-" + month + "-" + date + " 15:00:00";
+        let resData = [];
+        
 
         // console.log("year==" + year + "\n month==" + month + "\n day=" + day);
         // console.log("start Date=" + startDate);
@@ -411,22 +467,87 @@ module.exports = {
 
 
         try {
-            const query = `select count(*) as total, sum(CALLDURATION*0.01/60) as duration  ,cast(addtime(starttime,'09:00:00') as Date) as day from COLLECTOR_73 
-            where  ((INCALLEDNUMBER LIKE '35050%') OR (INCALLEDNUMBER LIKE '36110%') OR (INCALLEDNUMBER LIKE '50505%')) 
-            AND RECORDTYPEID = 3 
-            AND (CALLDURATION > 0)
-            AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
-            AND starttime>='${actualStartDate}' and starttime <'${targetDateWithTimezone}' 
-            group by cast(addtime(starttime,'09:00:00') as Date) 
-            order by cast(addtime(starttime,'09:00:00') as Date) asc`;
-            //console.log(query);
-            const rawData = await db.mySQLQuery(query, []);
-            //console.log(JSON.stringify(rawData));
-            return (rawData);
+
+            for(let i=0; i< day; i++){
+                
+                let startDate = new Date(targetDateWithTimezone);
+                startDate.setDate(startDate.getDate() - (day - i) );
+                let year = startDate.getFullYear();
+                let month = startDate.getMonth() + 1;
+                let date = startDate.getDate();
+                let actualStartDate = year + "-" + month + "-" + date + " 15:00:00";
+
+                //  console.log("year==" + year + "\n month==" + month + "\n day=" + day);
+                //  console.log("start Date=" + startDate);
+                //  console.log("actual start date" + actualStartDate)
+                
+                let query = `select count(*) as total, sum(CALLDURATION*0.01/60) as duration  ,cast(addtime(starttime,'09:00:00') as Date) as day from COLLECTOR_73 
+                where  ((INCALLEDNUMBER LIKE '35050%') OR (INCALLEDNUMBER LIKE '36110%') OR (INCALLEDNUMBER LIKE '50505%')) 
+                AND RECORDTYPEID = 3 
+                AND (CALLDURATION > 0)
+                AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
+                AND starttime>='${actualStartDate}' and startTime < DATE_ADD("${actualStartDate}", INTERVAL 1 DAY) 
+                group by cast(addtime(starttime,'09:00:00') as Date) 
+                order by cast(addtime(starttime,'09:00:00') as Date) asc`;
+                let rawData = await db.mySQLQuery(query, []);
+                //let rawData=[];
+                if(rawData.length){
+                    resData = [...resData, rawData[0]];
+                }                
+               //console.log(query);
+            }
+
+            //resData = [{"total":1374132,"duration":1972270.896309,"day":"2022-01-01T00:00:00.000Z"},{"total":1344112,"duration":2158370.930815,"day":"2022-01-02T00:00:00.000Z"},{"total":1336945,"duration":2417055.553657,"day":"2022-01-03T00:00:00.000Z"},{"total":1126644,"duration":2338637.088063,"day":"2022-01-04T00:00:00.000Z"},{"total":1140253,"duration":2382613.26394,"day":"2022-01-05T00:00:00.000Z"},{"total":1142858,"duration":2403703.565325,"day":"2022-01-06T00:00:00.000Z"},{"total":1139253,"duration":2379654.680957,"day":"2022-01-07T00:00:00.000Z"},{"total":1350310,"duration":2339725.713362,"day":"2022-01-08T00:00:00.000Z"},{"total":1352532,"duration":2367783.447158,"day":"2022-01-09T00:00:00.000Z"},{"total":1350580,"duration":2362425.632064,"day":"2022-01-10T00:00:00.000Z"},{"total":1142536,"duration":2415127.561747,"day":"2022-01-11T00:00:00.000Z"},{"total":1136206,"duration":2445915.004746,"day":"2022-01-12T00:00:00.000Z"},{"total":1122329,"duration":2457239.441399,"day":"2022-01-13T00:00:00.000Z"},{"total":1132660,"duration":2470412.022058,"day":"2022-01-14T00:00:00.000Z"},{"total":1340929,"duration":2469724.833589,"day":"2022-01-15T00:00:00.000Z"},{"total":1350807,"duration":2616313.452486,"day":"2022-01-16T00:00:00.000Z"},{"total":1350807,"duration":2616313.452486,"day":"2022-01-17T00:00:00.000Z"}]
+            
+            //console.log(JSON.stringify(resData));
+            return (resData);
+        } catch (error) {
+            console.log("test...")
+            return error;
+        }
+    },
+
+    getSummaryDataByDayTotalMysql: async function (targetDateWithTimezone) {
+
+        const day = new Date(targetDateWithTimezone).getDate();
+        let resData = [];
+
+        try {
+
+            for(let i=0; i< day; i++){
+                
+                let startDate = new Date(targetDateWithTimezone);
+                startDate.setDate(startDate.getDate() - (day - i) );
+                let year = startDate.getFullYear();
+                let month = startDate.getMonth() + 1;
+                let date = startDate.getDate();
+                let actualStartDate = year + "-" + month + "-" + date + " 15:00:00";
+              
+                let query = `select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as
+                 day from COLLECTOR_73 
+                where  RECORDTYPEID = 3 
+                AND (CALLDURATION > 0)
+                AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
+                AND starttime>='${actualStartDate}' and startTime < DATE_ADD("${actualStartDate}", INTERVAL 1 DAY) 
+                group by cast(addtime(starttime,'09:00:00') as Date) 
+                order by cast(addtime(starttime,'09:00:00') as Date) asc`;
+                let rawData = await db.mySQLQuery(query, []);
+                // let rawData = [];
+                if(rawData.length){
+                    resData = [...resData, rawData[0]];
+                }                
+               //console.log(query);
+            } 
+            
+            //resData = [{"total":1401476,"day":"2022-01-01T00:00:00.000Z"},{"total":1353409,"day":"2022-01-02T00:00:00.000Z"},{"total":1350141,"day":"2022-01-03T00:00:00.000Z"},{"total":1150761,"day":"2022-01-04T00:00:00.000Z"},{"total":1163660,"day":"2022-01-05T00:00:00.000Z"},{"total":1159705,"day":"2022-01-06T00:00:00.000Z"},{"total":1161780,"day":"2022-01-07T00:00:00.000Z"},{"total":1371514,"day":"2022-01-08T00:00:00.000Z"},{"total":1370409,"day":"2022-01-09T00:00:00.000Z"},{"total":1368769,"day":"2022-01-10T00:00:00.000Z"},{"total":1164462,"day":"2022-01-11T00:00:00.000Z"},{"total":1156887,"day":"2022-01-12T00:00:00.000Z"},{"total":1143597,"day":"2022-01-13T00:00:00.000Z"},{"total":1154065,"day":"2022-01-14T00:00:00.000Z"},{"total":1360452,"day":"2022-01-15T00:00:00.000Z"},{"total":1367919,"day":"2022-01-16T00:00:00.000Z"},{"total":1367919,"day":"2022-01-17T00:00:00.000Z"}]
+            
+            //console.log(JSON.stringify(resData));
+            return (resData);
         } catch (error) {
             return error;
         }
     },
+
     createTable: async function (processData, title, customerInfo) {
 
         let proDataLen = processData.length;
@@ -453,10 +574,10 @@ module.exports = {
 
         return html;
     },
-    createHTMLForAllData: async function (processData, rawData) {
+    createHTMLForAllData: async function (collect_73, sonusData, collect_73_sougo, sonusProData, sonusPro_16_31_Data, billCdrData, year, month) {
 
-        let proDataLen = processData.length;
-        let rawDataLen = rawData.length;
+        let proDataLen = collect_73.length;
+        let rawDataLen = sonusData.length;
 
         if (proDataLen != rawDataLen) {
             return null;
@@ -466,10 +587,21 @@ module.exports = {
         let table = '';
 
         console.log("proData=" + proDataLen);
-        html = tableCreateAllData(processData, rawData);
+        html = tableCreateAllData(collect_73, sonusData, collect_73_sougo, sonusProData, sonusPro_16_31_Data, billCdrData, year, month);
         console.log("html");
         //console.log(html);
 
+        return html;
+    },
+
+    createHTMLCDRDailyTransistion: async function(data, year, month){
+        if(!data.length){
+            return null
+        }
+
+        let html = '';
+
+        html = tableCDRDailyTransistion(data, year, month);
         return html;
     },
     sendEmail: async function (html, customerInfo) {
@@ -490,8 +622,6 @@ module.exports = {
             if (!emailCC) {
                 emailCC = "";
             }
-
-
             let mailOption = {
                 from: 'relay@sysmail.elijp.tokyo',
                 to: emailTO,
@@ -502,30 +632,19 @@ module.exports = {
                 subject,
                 html
             }
-
            utility.sendEmail(mailOption);
         }
-
-
     },
     sendEmailAllData: async function (html, subject) {
-
-       // let subject = `BATCH: 03/050 CDR BALANCE CHECK MONITORING New`;
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
             to: 'uday@ipsism.co.jp',
             cc: 'y_ito@ipsism.co.jp',
-            //     cc:'gaurav@ipsism.co.jp,abhilash@ipsism.co.jp,vijay@ipsism.co.jp',
             subject,
             html
         }
-
         utility.sendEmail(mailOption);
-
-
-
     },
-
 }
 
 
@@ -690,60 +809,103 @@ function tableCreateMultiple(processData, title_name) {
 }
 
 
-function tableCreateAllData(processData, rawData) {
+function tableCreateAllData(collect_73, sonusData, collect_73_sougo, sonusProData, sonusPro_16_31_Data, billCdrData, year, month) {
     console.log("create table all data---");
     let tableRows = '';
 
-    let length = rawData.length, locS, locSA, locE, locEA;
+    let length = collect_73.length, locS, locSA, locE, locEA;
 
-    locS = new Date(rawData[0]['day']);
+    locS = new Date(collect_73[0]['day']);
     locSA = locS.toLocaleString().split(",");
-    locE = new Date(rawData[length - 1]['day']);
+    locE = new Date(collect_73[length - 1]['day']);
     locEA = locE.toLocaleString().split(",");
 
     //    console.log("1="+locEA[0]);
 
-    for (let i = 0; i < rawData.length; i++) {
-        let diff = rawData[i]['total'] - processData[i]['total'];
-        let total_not_16_31 = processData[i]['total'] - processData[i]['total_16_31'];
+    for (let i = 0; i < collect_73.length; i++) {
 
-        let rawValue = utility.numberWithCommas(rawData[i]['total']);
-        let processValue = utility.numberWithCommas(processData[i]['total']);
-        let total_16_31 = utility.numberWithCommas(processData[i]['total_16_31']);
+        let rawDiffDataCount = collect_73[i]['total'] - sonusData[i]['total'];
+        let rawDataTotalCount = utility.numberWithCommas(collect_73[i]['total']);
+        let proDataTotalCount = utility.numberWithCommas(sonusData[i]['total']);
 
+
+        let sougoDataDiffCount = collect_73_sougo[i]['total'] - sonusProData[i]['total'];
+        let sougoRawDataCount = utility.numberWithCommas(collect_73_sougo[i]['total']);
+        let sougoProDataCount = utility.numberWithCommas(sonusProData[i]['total']);
+
+
+        let total_16_31 = utility.numberWithCommas(sonusPro_16_31_Data[i]['total_16_31']);
+        let total_not_16_31 = utility.numberWithCommas(parseInt(sonusPro_16_31_Data[i]['total'],10) - parseInt(sonusPro_16_31_Data[i]['total_16_31'],10));
+
+        let sonusCDRProDataCount = utility.numberWithCommas(sonusProData[i]['total']);
+        let billCDRProDataCount = utility.numberWithCommas(billCdrData[i]['total']);
+        let billCDRCountDiff = sonusProData[i]['total'] - billCdrData[i]['total'];
 
         tableRows += '<tr>';
-        tableRows += `<td class="day">${utility.formatDate(rawData[i]['day'])}</td>`;
-        tableRows += `<td style="text-align:right" class="Raw Data">${rawValue}</td>`;
-        tableRows += `<td style="text-align:right" class="Processed Data">${processValue}</td>`;
-        tableRows += `<td style="text-align:right" class="Difference">${diff}</td>`;
+        tableRows += `<td class="day">${utility.formatDate(collect_73[i]['day'])}</td>`;
+        
+        tableRows += `<td style="text-align:right" class="Raw Data">${rawDataTotalCount}</td>`;
+        tableRows += `<td style="text-align:right" class="Processed Data">${proDataTotalCount}</td>`;
+        tableRows += `<td style="text-align:right" class="Difference">${rawDiffDataCount}</td>`;
+        
+        tableRows += `<td style="text-align:right" class="Raw Data">${sougoRawDataCount}</td>`;
+        tableRows += `<td style="text-align:right" class="Processed Data">${sougoProDataCount}</td>`;
+        tableRows += `<td style="text-align:right" class="Difference">${sougoDataDiffCount}</td>`;
+
         tableRows += `<td style="text-align:right" class="Processed Data">${total_16_31}</td>`;
         tableRows += `<td style="text-align:right" class="Difference">${total_not_16_31}</td>`;
 
+
+        tableRows += `<td style="text-align:right" class="Raw Data">${sonusCDRProDataCount}</td>`;
+        tableRows += `<td style="text-align:right" class="Processed Data">${billCDRProDataCount}</td>`;
+
+        tableRows += `<td style="text-align:right" class="Difference">${billCDRCountDiff}</td>`;
+        
         tableRows = tableRows + '</tr>'
     }
     let html = '';
     let h4 = `Hi, <br /> This is the daily  CDR Report!! <br /><br />`;
-    let h3 = `${locSA[0]} ~ ${locEA[0]} !! `;
-    let h2 = `<h2 align="center"> 03/050 CDRの  </h2>`;
+    let h3 = `${utility.formatDate(locSA[0])} ~ ${utility.formatDate(locEA[0])} !! `;
+    let h2 = `<h2 align="center"> ${year} 年${month}月度のCOLLECTOR TABLE CDR件数  </h2>`;
     html += h4;
     html += h3;
     html += h2;
     let table = '';
     const style = `thead { text-align: left;background-color: #4CAF50; color: white; }`
 
+    
+
     try {
         table += `<table class='some-table' border="2" style='${style}'>
-             <thead> <tr> 
+             <thead>
+              <tr> 
                 <th>DATE</th>
-                <th>COLLECTOR(10.168.11.252)</th> 
-                <th>SONUSCDR(PRO)(10.168.22.40)</th> 
-                <th> DIFFERENCE </th>
+                <th colspan="2">RAW CDR BACKUP</th>
+                <th> 差異 </th>
                 
-                <th>[192.168.11.78]SONUSCDR(16, 31)</th> 
-                <th>[192.168.11.78]SONUSCDR(NOT 16, 31)</th> 
-                    
-             </tr> </thead>
+                <th colspan="2">035050/036110/050505 CDR</th>
+                <th> 差異 </th>
+
+                <th colspan="4">035050/036110/050505 請求処理</th>
+                <th> 差異 </th>
+
+             </tr> 
+             <tr>
+             <th></th>
+             <th>COLLECTOR (10.168.11.252)</th>
+             <th>SONUSCDR (10.168.22.40)</th>
+             <th></th>
+             <th>COLLECTOR (10.168.11.252)</th>
+             <th>SONUSCDR (10.168.22.40)</th>
+             <th></th>
+             <th>SONUSCDR(16,31) (10.168.22.40)</th>
+             <th>SONUSCDR(NOT 16,31) (10.168.22.40)</th>
+             <th>SONUSCDR (10.168.22.40)</th>
+             <th>BILLCDR MAIN (10.168.22.40)</th>
+             <th></th>
+             </tr>
+             
+             </thead>
         <tbody>
         ${tableRows}    
         </tbody>
@@ -753,10 +915,157 @@ function tableCreateAllData(processData, rawData) {
     } catch (err) {
         throw Error("Error !" + err);
     }
-    let div = `<div style="margin: auto;width: 100%;padding: 0px;">${table}</div>`;
+    let div = `<div style="margin: auto;width: 100%;">${table}</div>`;
+    
+
     html += div;
     html += "Thank you";
     // console.log("sdfsdf"+html);
 
     return html;
+}
+
+function tableCDRDailyTransistion(data, year, month) {
+    console.log("create table all data---");
+    let tableRows = '';
+
+    let length = data.length, locS, locSA, locE, locEA;
+
+    locS = new Date(data[0]['day']);
+    locSA = locS.toLocaleString().split(",");
+    locE = new Date(data[length - 1]['day']);
+    locEA = locE.toLocaleString().split(",");
+
+    //    console.log("1="+locEA[0]);
+
+    
+    let tmpObj ={}
+
+    data.forEach((obj)=>{
+        let startDay = new Date(obj['day']).getDate();
+        tmpObj[startDay] = 1;
+    })
+
+    Object.keys(tmpObj).forEach(ele=> {
+        let filteredData = data.filter(obj=>(
+            new Date(obj['day']).getDate() == ele ? true: false
+        ))
+        tableRows += rowData(filteredData);
+    })
+
+    let html = '';
+    let h4 = `お疲れ様です。 <br /> <br />`;
+    let h3 = `035050の [${utility.formatDate(locSA[0])} ~ ${utility.formatDate(locEA[0])}] CDR統計DATAです。よろしくお願いします。 <br /> <br /> `;
+    let h5 = `※本メールはシステムより自動的に送信されています。<br /> <br />`;
+    
+    html += h4;
+    html += h3;
+    html += h5;
+    
+    let table = '';
+    const style = `thead { text-align: left;background-color: #4CAF50; color: white; }`
+
+    
+
+    try {
+        table += `<table class='some-table' border="2" style='${style}'>
+             <thead>
+              <tr> 
+                <th>DATE</th>
+                <th>GATEWAY</th>
+                <th>TRUNKPORTNAME</th>
+                <th>CALLCOUNT</th>
+                <th>国際CALL</th>
+                <th>国内CALL</th>
+                <th>INBOUND</th>
+                <th>OUTBOUND</th>
+                <th>DURATION</th>
+                <th>請求先不明</th>
+             </tr> 
+             </thead>
+        <tbody>
+        ${tableRows}    
+        </tbody>
+        </table>`;
+
+
+    } catch (err) {
+        throw Error("Error !" + err);
+    }
+    let div = `<div style="margin: auto;width: 100%;">${table}</div>`;
+    
+
+    html += div;
+    html += "Thank you";
+    // console.log("sdfsdf"+html);
+
+    return html;
+}
+
+
+function rowData(data){
+
+ let tableRows='';
+ 
+    let cdrcountSum=0, kokusaiSum=0, kokunaiSum=0, inboundSum=0, outboundSum=0, durationsSum=0, fumeichkSum=0;
+
+  for(let i=0; i<data.length; i++){
+    let gateway = (data[i]['gateway']);
+    let trunk_port_name = (data[i]['trunk_port_name']);
+    let cdrcount = utility.numberWithCommas(data[i]['cdrcount']);
+    let kokusai = utility.numberWithCommas(data[i]['kokusai']);
+    let kokunai = utility.numberWithCommas(data[i]['kokunai']);
+    let inbound = utility.numberWithCommas(data[i]['inbound']);
+    let outbound = utility.numberWithCommas(data[i]['outbound']);
+    let durations = utility.numberWithCommas(data[i]['durations']);
+    let fumeichk = utility.numberWithCommas(data[i]['fumeichk'])
+    
+    cdrcountSum += parseInt(data[i]['cdrcount'],10);
+    kokusaiSum += parseInt(data[i]['kokusai'],10);
+    kokunaiSum += parseInt(data[i]['kokunai'],10);
+    inboundSum += parseInt(data[i]['inbound'],10);
+    outboundSum += parseInt(data[i]['outbound'],10);
+    durationsSum += parseFloat(data[i]['durations']);
+    fumeichkSum += parseInt(data[i]['fumeichk'],10);
+    
+    tableRows += '<tr>';
+
+    if(i==0)
+        tableRows += `<td class="day">${utility.formatDate(data[i]['day'])}</td>`;
+    else
+        tableRows += `<td class="day"></td>`;
+
+    tableRows += `<td style="text-align:right" class="gateway">${gateway}</td>`;
+    tableRows += `<td style="text-align:right" class="trunk_port_name">${trunk_port_name}</td>`;
+    tableRows += `<td style="text-align:right" class="cdrcount">${cdrcount}</td>`;
+    
+    tableRows += `<td style="text-align:right" class="kokusai">${kokusai}</td>`;
+    tableRows += `<td style="text-align:right" class="kokunai">${kokunai}</td>`;
+    tableRows += `<td style="text-align:right" class="inbound">${inbound}</td>`;
+
+    tableRows += `<td style="text-align:right" class="outbound">${outbound}</td>`;
+    tableRows += `<td style="text-align:right" class="durations">${durations}</td>`;
+    tableRows += `<td style="text-align:right" class="durations">${fumeichk}</td>`;
+    tableRows = tableRows + '</tr>'
+
+  }
+    tableRows += `<tr style="font-weight:bold"> `
+
+    tableRows += `<td class="day"></td>`;
+    tableRows += `<td class="day"></td>`;
+    tableRows += `<td class="day">小合計</td>`;
+    tableRows += `<td style="text-align:right" class="cdrcount">${utility.numberWithCommas(cdrcountSum)}</td>`;
+    
+    tableRows += `<td style="text-align:right" class="kokusai">${utility.numberWithCommas(kokusaiSum)}</td>`;
+    tableRows += `<td style="text-align:right" class="kokunai">${utility.numberWithCommas(kokunaiSum)}</td>`;
+    tableRows += `<td style="text-align:right" class="inbound">${utility.numberWithCommas(inboundSum)}</td>`;
+
+    tableRows += `<td style="text-align:right" class="outbound">${utility.numberWithCommas(outboundSum)}</td>`;
+    tableRows += `<td style="text-align:right" class="durations">${utility.numberWithCommas(durationsSum.toFixed(1))}</td>`;
+    tableRows += `<td style="text-align:right" class="durations">${utility.numberWithCommas(fumeichkSum)}</td>`;
+
+    tableRows += '</tr>'
+
+  return tableRows;
+
 }

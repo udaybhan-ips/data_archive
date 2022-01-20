@@ -5,7 +5,7 @@ var ArchiveKDDI = require('../../../models/byokakin/kddi/archive');
 module.exports = {
   uploadKotehiKDDI: async function (req, res) {
     try {
-      const billingMonth = "2021-10-01";
+      const billingMonth = "2021-12-01";
       const serviceType = "Kotehi";
       const callType = ['free_number','d_number'];
       const filePath = "C:"
@@ -60,7 +60,7 @@ module.exports = {
       if (kotehiDataErr) {
         //throw new Error('Could not fetch the summary');
         return res.status(500).json({
-          message: archiveErr.message
+          message: kotehiDataErr.message
         });
       }
       return res.status(200).json(kotehiDataRes);
@@ -71,6 +71,25 @@ module.exports = {
       });
     }
   },
+
+  async getLastMonthKDDIKotehiData(req, res) {
+    try {
+      const [kotehiLastMonthDataRes, kotehiLastMonthDataErr] = await handleError(ArchiveKDDI.getLastMonthKDDIKotehiData(req.body));
+      if (kotehiLastMonthDataErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: kotehiLastMonthDataErr.message
+        });
+      }
+      return res.status(200).json(kotehiLastMonthDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
   async getKDDIKotehiLastMonthData(req, res) {
     try {
       const [kotehiDataRes, kotehiDataErr] = await handleError(ArchiveKDDI.getKDDIKotehiLastMonthData(req.body));

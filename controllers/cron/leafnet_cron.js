@@ -13,9 +13,6 @@ var EmailController = require('../leafnet/emailNotification.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-
-
-
 // var emailNotificationJob = new CronJob ('47 18 * * *',function(){
 //     console.log('This is leafnet email notification start');
 //     EmailController.sendEmail();
@@ -23,7 +20,7 @@ var EmailController = require('../leafnet/emailNotification.controller');
 
 // },null, true, 'Asia/Tokyo')
 
-// var CDRsControllerJob = new CronJob ('45 11 * * *',function(){
+// var CDRsControllerJob = new CronJob ('55 23 * * *',function(){
 //     console.log('This is leafnet email notification start');
 //     CDRsController.genrateCSV();
 //     console.log('This is leafnet email notification end');
@@ -31,7 +28,7 @@ var EmailController = require('../leafnet/emailNotification.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var billingControllerJob = new CronJob ('42 11 * * *',function(){
+// var billingControllerJob = new CronJob ('52 23 * * *',function(){
 //     console.log('This is leafnet  billing start');
 //     billingController.getData();
 //     console.log('This is leafnet email notification end');

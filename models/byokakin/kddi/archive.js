@@ -74,7 +74,7 @@ module.exports = {
          '' as billaccount,freedialnumber, amount, (select data_name from kddi_kotehi_a_basic_construct where data_code=basicchargedesc)as 
          product_name,'' as gendetaildesc, basicchargedesc, datebill    from kddi_kotei_cdr_basic 
          UNION ALL select cdrid ,comp_acco__c, companyname, recordtype, account, billaccount, freedialnumber, amount, 
-         (select data_name from kddi_kotehi_a_basic_construct where data_code=kddi_kotei_cdr_contents.gendetaildesc) as product_name, 
+         (select data_name from kddi_kotehi_a_service_details where data_code=kddi_kotei_cdr_contents.gendetaildesc) as product_name, 
          gendetaildesc, basicchargedesc, datebill from kddi_kotei_cdr_contents ) as foo
          where  to_char(foo.datebill::date, 'MM-YYYY')='${month}-${year}'  `;
       const getKDDIKotehiDataRes = await db.queryByokakin(query, []);
@@ -85,7 +85,7 @@ module.exports = {
     }
   },
 
-  getKDDIKotehiLastMonthData: async function (reqData) {
+  getLastMonthKDDIKotehiData: async function (reqData) {
     try {
       let billingData = reqData.billingData;
       billingData = '2021-10-1'
@@ -96,6 +96,31 @@ module.exports = {
         month='0'+month;
       }
 
+      const query = `select *, ROW_NUMBER() OVER(ORDER BY cdrid) id from ( select cdrid , comp_acco__c, companyname, recordtype, account,
+         '' as billaccount,freedialnumber, amount, (select data_name from kddi_kotehi_a_basic_construct where data_code=basicchargedesc)as 
+         product_name,'' as gendetaildesc, basicchargedesc, datebill    from kddi_kotei_cdr_basic 
+         UNION ALL select cdrid ,comp_acco__c, companyname, recordtype, account, billaccount, freedialnumber, amount, 
+         (select data_name from kddi_kotehi_a_service_details where data_code=kddi_kotei_cdr_contents.gendetaildesc) as product_name, 
+         gendetaildesc, basicchargedesc, datebill from kddi_kotei_cdr_contents ) as foo
+         where  to_char(foo.datebill::date, 'MM-YYYY')='${month}-${year}'  `;
+      const getLastMonthKDDIKotehiDataRes = await db.queryByokakin(query, []);
+      return getLastMonthKDDIKotehiDataRes.rows;
+    } catch (e) {
+      console.log("err in last month kddi kotehi data=" + e.message);
+      return e;
+    }
+  },
+
+
+  getKDDIKotehiLastMonthData: async function (reqData) {
+    try {
+      let billingData = reqData.billingData;
+      billingData = '2021-10-1'
+      const year = new Date(billingData).getFullYear();
+      let month = new Date(billingData).getMonth() + 1;
+      if(parseInt(month,10)<10){
+        month='0'+month;
+      }
       const query = ` select *,substring(split_part(bill_numb__c, '-',2),4) as comp_code from kddi_kotei_bill_details where   
       to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}'  `;
       const getKDDIKotehiLastMonthDataRes = await db.queryByokakin(query, []);
@@ -136,19 +161,18 @@ module.exports = {
 
       let csvData = [];
       let csvDataContents = [];
-      let csvstream = fs.createReadStream('NTCD202112ATU09118002_00.CSV')
+      let csvstream = fs.createReadStream('NTCD202201BTU09118002_00.CSV')
         .pipe(csv.parse())
         .on('data', async function (row) {
           
           let obj = {};
           let obj1 = {};
-          if (parseInt(row[0]) === 22) {
+          if (parseInt(row[0]) == 22) {
             csvstream.pause();
             let callToNum = row[4];
             callToNum = callToNum.replace("-", "");
             callToNum = callToNum.replace("_", "");
             callToNum = callToNum.replace(" ", "");
-
             const comCode = await getCompanyCode(resKDDIFreeDialNumList, callToNum);
             const companyName = await getCompanyName(resKDDICustomerList, comCode);
             obj['comp_acco__c'] = comCode;
@@ -162,9 +186,10 @@ module.exports = {
             obj['amount'] = parseInt(row[6],10);
             obj['taxinclude'] = row[7];
             obj['telcotype'] = row[8];
-            obj['datebill'] = '2021-11-01';
+            obj['datebill'] = '2021-12-01';
             csvData.push(obj);
             csvstream.resume();
+            
           }else if(parseInt(row[0]) === 24 || parseInt(row[0]) === 25){
               csvstream.pause();
               let callToNum = row[5];
@@ -191,13 +216,14 @@ module.exports = {
               obj1['contentsprovider'] = row[12];
               obj1['amount'] = parseInt(row[13]);
               obj1['taxinclude'] = row[14];
-              obj1['datebill'] = '2021-11-01';
+              obj1['datebill'] = '2021-12-01';
 
               csvDataContents.push(obj1);
               csvstream.resume();
-            }
+          }
         })
         .on('end', function () {
+            insertByBatches(csvData);
             insertByBatches(csvDataContents, 'contents');
         })
         .on('error', function (error) {
