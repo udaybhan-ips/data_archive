@@ -5,10 +5,10 @@ const {execute} = require('@getvim/execute');
 module.exports = {
     startDBbackupDaily: async function() {
         try {
-            execute(`pg_dump -U postgres -d byokakin_backup -f byokakin_backup.tar -F t`,).then(async () => {
+            execute(`pg_dump -U postgres -d byokakin_backup -f /tmp/byokakin_backup.tar -F t`,).then(async () => {
                 console.log("Finito");
             }).catch(err => {
-                console.log("error in dumping..."+err);
+                console.log("error in dumping..."+JSON.stringify(err));
             })
         } catch (error) {
             console.log("error in db backup..."+error.message)

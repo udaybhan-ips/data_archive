@@ -122,9 +122,6 @@ module.exports = {
         if (parseInt(month, 10) < 10) {
             month = '0' + month;
         }
-
-
-
         try {
             let query = "";
             if (kick_company) {
@@ -135,8 +132,6 @@ module.exports = {
                 group by traffic_date::Date, customer_cd  order by traffic_date::Date `;
 
             } else {
-
-
                 query = ` select sum(kotei_cnt) kotei_cnt , sum(kotei_min)::int kotei_min, sum(keitai_cnt) keitai_cnt,
              sum(keitai_min)::int keitai_min, sum(all_cnt)all_cnt , sum(all_min)::int all_min, 
             traffic_date::date as traffic_date  from kickback_traffic_summary where main_id=0 and customer_cd not in
@@ -328,15 +323,9 @@ module.exports = {
                     if (data[i]['term_use'] == 1) {
                         tmp['land_count'] = data[i]['total_calls'];
                         tmp['land_duration'] = data[i]['total_duration'];
-
                     }
-
                     obj[data[i]['daily_batch']] = tmp;
-
                 }
-
-
-
                 total_count = total_count + parseInt(data[i]['total_calls'], 10);
                 total_duration = total_duration + parseFloat(data[i]['total_duration']);
 
@@ -374,15 +363,6 @@ module.exports = {
                     '${totalCalls}','${totalDuration}')`;
                 await db.queryIBS(query, []);
             }
-
-            // let query = `insert into kickback_traffic_summary (customer_cd ,main_id, traffic_date,kotei_cnt, kotei_min
-            // ,keitai_cnt,keitai_min,all_cnt,all_min) VALUES('${kick_company}', '0', '${targetDate}', 
-            // '${land_count}','${land_duration}','${mob_count}','${mob_duration}','${total_count}','${total_duration}')`;
-
-            // //console.log("query==" + query);
-
-            // let insertTrafficSummaryRes = await db.queryIBS(query, []);
-
         } catch (error) {
             console.log("Error in result ---" + error.message);
             return error;
@@ -440,10 +420,10 @@ module.exports = {
 
         try {
             const query = ` select customer_cd, main_id, traffic_date::date, sum(kotei_cnt) as kotei_cnt, sum(kotei_min::int)as kotei_min  , 
-            sum(keitai_cnt) as keitai_cnt,
-            sum(keitai_min::int) as keitai_min, sum(all_cnt) as all_cnt, sum(all_min::int) as all_min from  kickback_traffic_summary 
-            where to_char(traffic_date, 'MM-YYYY') = '${month}-${year}' 
-            and customer_cd ='${kick_company}' and main_id='${mainId}' group by customer_cd, main_id, traffic_date::date order by traffic_date::date asc `;
+            sum(keitai_cnt) as keitai_cnt,sum(keitai_min::int) as keitai_min, sum(all_cnt) as all_cnt, sum(all_min::int) as all_min from 
+            kickback_traffic_summary where to_char(traffic_date, 'MM-YYYY') = '${month}-${year}' 
+            and customer_cd ='${kick_company}' and main_id='${mainId}' group by customer_cd, main_id, traffic_date::date 
+            order by traffic_date::date asc `;
             const ratesRes = await db.queryIBS(query, []);
 
             if (ratesRes.rows) {
@@ -461,12 +441,6 @@ module.exports = {
         const day = new Date(targetDateWithTimezone).getDate();
         let resData = [];
         
-
-        // console.log("year==" + year + "\n month==" + month + "\n day=" + day);
-        // console.log("start Date=" + startDate);
-        // console.log("actual start date" + actualStartDate)
-
-
         try {
 
             for(let i=0; i< day; i++){
