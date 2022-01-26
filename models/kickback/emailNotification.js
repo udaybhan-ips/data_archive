@@ -38,14 +38,9 @@ module.exports = {
     getAllKickComp: async function () {
         try {
             console.log("in get all kick comp");
-
             const query = ` select distinct(kick_company) as customer_cd from billcdr_main order by kick_company`;
-            //const query = ` select * from kickback_cdr_carrier where email_type='multiple' order by customer_cd`;
-
             const kickCompRes = await db.queryIBS(query, []);
-
             return kickCompRes.rows;
-
         } catch (error) {
             console.log("err in getting kick company  =" + error.message);
             return error;
@@ -54,8 +49,6 @@ module.exports = {
     getAllKickCompEmail: async function () {
         try {
             console.log("in get all kick comp email");
-
-           // const query = ` select * from kickback_cdr_carrier where east_link_flag=1 and mail_address!='' order by customer_cd`;
             const query = ` select * from kickback_cdr_carrier where (east_link_flag=1 and mail_address!='') OR (email_type='multiple') order by customer_cd`;
             const kickCompRes = await db.queryIBS(query, []);
             return kickCompRes.rows;

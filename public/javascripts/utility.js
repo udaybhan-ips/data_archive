@@ -272,6 +272,23 @@ module.exports.createFolder=function createFolder(folderName){
 
 }
 
+module.exports.getCurrentDayMonthYear = function (date){
+  var d;
+  
+  if(date){
+    d = new Date(date);
+  }else{
+    d = new Date();
+  }
+  
+  let month = d.getMonth() + 1;
+  let day =  d.getDate();
+  let year = d.getFullYear();
+
+  return `${year}_${month}_${day}`;
+
+}
+
 module.exports.formatDate = function  (date) {
   var d = new Date(date),
       month = '' + (d.getMonth() + 1),
