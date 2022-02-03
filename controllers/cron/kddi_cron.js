@@ -10,10 +10,10 @@ var archiveController = require('../byokakin/kddi/archive.controller');
 //     console.log('This is byokakin archiver End');  
 // },null, true, 'Asia/Tokyo');
  
-// var archiverProJob = new CronJob ('1 17 * * *',function(){
-//     console.log('This is byokakin Pro archiver start');
-//     archiveController.getProData();
-//     console.log('This is byokakin Pro archiver End');
+// var archiverJob = new CronJob ('30 18 * * *',function(){
+//     console.log('This is byokakin archiver start');
+//     archiveController.uploadKDDIRAW();
+//     console.log('This is byokakin archiver End');  
 // },null, true, 'Asia/Tokyo');
 
 

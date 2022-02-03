@@ -60,7 +60,7 @@ module.exports = {
         
        
 
-        const [udpateBatchControlRes, updateBatchControlErr] = await handleError( ArchiveSonusOutbound.updateBatchControl(dateId,Dates.targetDate));
+        const [udpateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveSonusOutbound.updateBatchControl(dateId,Dates.targetDate));
         if(updateBatchControlErr) {
           throw new Error('Err: while updating target date');  
         }

@@ -261,21 +261,13 @@ module.exports = {
   },
 
   insertByBatchesFPhone: async function (records, leg, ratesInfo, getFPhoneCarrierChageRes, getFPhoneRelayCarrierRes, getFPhoneTermUse,company_code) {
-    //console.log("I am here")
+ 
     const JSON_data = Object.values(JSON.parse(JSON.stringify(records)));
-    // let dataSize=JSON_data.length;
-    //console.log("length=="+dataSize);
-
-    //console.log("data=="+JSON.stringify(JSON_data));
-
     const chunkArray = await chunk(JSON_data, BATCH_SIZE);
-    // console.log(JSON.stringify(chunkArray));
-    //console.log(JSON.stringify(customerInfo));
     let res = [];
     let resArr = [];
     for (let i = 0; i < chunkArray.length; i++) {
       const data = await getNextInsertBatchFphone(chunkArray[i], leg, ratesInfo, getFPhoneCarrierChageRes, getFPhoneRelayCarrierRes, getFPhoneTermUse,company_code);
-      //console.log("data="+JSON.stringify(data));
       res = await db.queryBatchInsert(data, CDR_MVNO_FPHONE_CS);
       resArr.push(res);
     }

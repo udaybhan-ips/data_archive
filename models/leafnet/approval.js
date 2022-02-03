@@ -50,7 +50,7 @@ module.exports = {
         let html = `<div>
             <div> Hi Team, </div>
             <div> Below is the billing status of ${reqData.customer_name} . This is approved by ${reqData.approved_by}.</div>
-            <div>http://10.168.22.40/services/leafnet</div>
+            <div>http://billing.toadm.com/services/leafnet</div>
             <div> Thank you </div>
         </div>`;
 

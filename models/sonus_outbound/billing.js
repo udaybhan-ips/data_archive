@@ -98,7 +98,7 @@ module.exports = {
     let html = `<div>
         <div> Hi Team, </div>
         <div> SONUS OUTBOUND billing has been finished, Please check at below link.</div>
-        <div>http://10.168.22.40/services/sonusoutbound/</div>
+        <div>http://billing.toadm.com/services/sonusoutbound/</div>
         <div> Thank you </div>
     </div>`;
   

@@ -18,7 +18,7 @@ module.exports = {
     try {
       //  if(validatecompanyData()){
             const query=`INSERT INTO company (company_code,company_name,payment_due_date,  company_name_abb, date_update, valid_flag, obic ) 
-            VALUES ($1, $2, $3, $4, $5, $6) returning company_code`;
+            VALUES ($1, $2, $3, $4, $5, $6, $7) returning company_code`;
             const value= [data.company_code, data.company_name,data.payment_due_date, data.company_name_abb,'now()', data.valid_flag, data.obic ];
             const res = await db.queryIBS(query,value);
             return res.rows[0];
@@ -35,7 +35,7 @@ module.exports = {
       //  if(validatecompanyData()){
           // create history   
             const query=`INSERT INTO company_history (company_code,company_name,payment_due_date,  company_name_abb, date_update, valid_flag, obic ) 
-            VALUES ($1, $2, $3, $4, $5, $6) returning id`;
+            VALUES ($1, $2, $3, $4, $5, $6,$7) returning id`;
             const value= [data.company_code, data.company_name,data.payment_due_date, data.company_name_abb,'now()', data.valid_flag, data.obic];
             const res = await db.queryIBS(query,value);
 

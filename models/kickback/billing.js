@@ -85,9 +85,18 @@ module.exports = {
       return error;
     }
   },
-  get03NumbersValid: async function (customer_id) {
+  get03NumbersValid: async function (customer_id, dailyBatch) {
     try {
-      const query = `select substring(_03_numbers, 2, 10) as _03_numbers, customer_cd from _03numbers where customer_cd='${customer_id}' and valid_flag=0 order by _03_numbers asc `;
+
+      let query ='';
+
+      if(dailyBatch){
+        query = `select substring(_03_numbers, 2, 10) as _03_numbers, customer_cd from _03numbers where customer_cd='${customer_id}' and daily_batch='${dailyBatch}' and valid_flag=0 order by _03_numbers asc `;
+      }else{
+        query = `select substring(_03_numbers, 2, 10) as _03_numbers, customer_cd from _03numbers where customer_cd='${customer_id}' and valid_flag=0 order by _03_numbers asc `;
+      }
+
+      
       const get03NumRes = await db.queryIBS(query, []);
       console.log("query==" + query);
       if (get03NumRes.rows) {
@@ -102,7 +111,7 @@ module.exports = {
   getKickCompList: async function () {
     
     try {
-      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable  `;
+      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable `;
       const getKickCompListRes = await db.queryIBS(query, []);
 
       if (getKickCompListRes.rows) {
@@ -450,7 +459,7 @@ module.exports = {
     try {
 
       let path ;
-      if(customerId=='00000697'){
+      if(customerId=='00000697' || customerId=='00000893' ){
         path = __dirname + `\\Invoice\\${customerId}${billingYear}${billingMonth}${bill_no}.pdf`;
       }else{
         path = __dirname + `\\Invoice\\${customerId}${billingYear}${billingMonth}.pdf`;
@@ -719,10 +728,19 @@ async function getInvoiceData(customerId, serviceType, year, month, term_use, bi
   try {
     let query="";
     if(serviceType=='rate_base'){
-      query = `select * from (select bill_no, item_name, call_minute from kickback_detail where call_minute>0)as lj join 
+
+      if(customerId=='00000893'){
+        query = `select * from (select bill_no, item_name, call_minute from kickback_detail where call_minute>0)as lj join 
     (select bill_no, customer_code, date_bill , amount as total_amount from kickback_history 
-      where customer_code='${customerId}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}') as rj
+      where customer_code='${customerId}' and bill_no='${bill_no}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}' ) as rj
        on (lj.bill_no=rj.bill_no) order by lj.item_name` ;
+      }else{
+        query = `select * from (select bill_no, item_name, call_minute from kickback_detail where call_minute>0)as lj join 
+        (select bill_no, customer_code, date_bill , amount as total_amount from kickback_history 
+          where customer_code='${customerId}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}' ) as rj
+           on (lj.bill_no=rj.bill_no) order by lj.item_name` ;
+      }
+      
 
     }else{
       if(customerId=='00000697'){

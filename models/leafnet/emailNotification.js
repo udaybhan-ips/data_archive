@@ -25,8 +25,6 @@ module.exports = {
       if(parseInt(month,10)<10){
           month='0'+month;
       }
-
-      
       try {
           const query=`select count(*) as total, sum(duration_use) as duration, start_time::date as day from cdr_sonus where 
           to_char(start_time, 'MM-YYYY') = '${month}-${year}' group by start_time::date order by start_time::date asc `;
@@ -53,9 +51,9 @@ module.exports = {
     const date = startDate.getDate();
     const actualStartDate = year+"-"+month+"-"+date+" 15:00:00";
 
-    console.log("year=="+year+"\n month=="+month+"\n day="+day);
-    console.log("start Date="+startDate);
-    console.log("actual start date"+actualStartDate)
+    // console.log("year=="+year+" \n month=="+month+" \n day="+day);
+    // console.log("start Date="+startDate);
+    // console.log("actual start date="+actualStartDate)
 
 
     try {
@@ -123,15 +121,7 @@ function tableCreate(rawData, processData) {
 
     for(let i=0;i<rawData.length;i++){
         let diff=rawData[i]['total']-processData[i]['total'];
-        
-        //console.log("rawData[i]['day']="+rawData[i]['day']);
-        //console.log("processData[i]['day']="+processData[i]['day']);
-
-
-        //let loc= new Date(rawData[i]['day']);
-       // console.log("loc="+loc);
-
-        //let locArr=loc.toLocaleString().split(",");
+  
         let rawValue = utility.numberWithCommas(rawData[i]['total']);
         let processValue = utility.numberWithCommas(processData[i]['total']);
 

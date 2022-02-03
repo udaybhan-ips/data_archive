@@ -30,6 +30,31 @@ module.exports = {
       return error;
     }
   },
+
+  uploadKDDIRAW: async function (req, res) {
+    try {
+      const billingMonth = "2021-12-01";
+      const serviceType = "RAW";
+      
+
+      //const deleteTargetDateData = await ArchiveKDDI.deleteTargetDateCDR(billingMonth, serviceType, callType);
+      //const resKDDIFreeDialNumList = await ArchiveKDDI.getKDDIFreeDialNumList();
+      //const resKDDIFreeAccountNumList = await ArchiveKDDI.getKDDIFreeAccountNumList();
+      //const resKDDICustomerList = await ArchiveKDDI.getKDDICustomerList();
+
+      const resKDDIRAWData = await ArchiveKDDI.insertKDDIRAWData();
+      //console.log("data");
+      //console.log(JSON.stringify(resKDDIKotehiData));
+
+      //const getDataRes = await ArchiveKDDI.insertByBatches(resKDDIKotehiData);
+ 
+      
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
+
   getProData: async function (req, res) {
     const dateId = 4;
     try {
@@ -100,6 +125,42 @@ module.exports = {
         });
       }
       return res.status(200).json(kotehiDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
+  async getKDDIKotehiABasciData(req, res) {
+    try {
+      const [getKDDIKotehiABasciDataRes, getKDDIKotehiABasciDataErr] = await handleError(ArchiveKDDI.getKDDIKotehiABasciData(req.body));
+      if (getKDDIKotehiABasciDataErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: getKDDIKotehiABasciDataErr.message
+        });
+      }
+      return res.status(200).json(getKDDIKotehiABasciDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
+  async getKDDIKotehiAServiceDataData(req, res) {
+    try {
+      const [getKDDIKotehiAServiceDataDataRes, getKDDIKotehiAServiceDataDataErr] = await handleError(ArchiveKDDI.getKDDIKotehiAServiceDataData(req.body));
+      if (getKDDIKotehiAServiceDataDataErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: getKDDIKotehiAServiceDataDataErr.message
+        });
+      }
+      return res.status(200).json(getKDDIKotehiAServiceDataDataRes);
 
     } catch (error) {
       return res.status(400).json({

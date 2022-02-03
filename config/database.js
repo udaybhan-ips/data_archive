@@ -84,6 +84,9 @@ module.exports = {
         query = pgp.helpers.insert(data, CS[cdr_cs]);
         res = await db_pgp.none(query)
       }
+
+
+
     } catch (e) {
       console.log("error while bulk data inserting:" + e.message)
     }
@@ -92,6 +95,34 @@ module.exports = {
     //console.log("3")
     return res;
   },
+
+  queryBatchInsertByokakin: async function (data, ColumnSet, tableName) {
+
+    console.log("data length=" + data.length);
+    
+    let db_pgp=null, query, res;
+    try {
+
+        let  ColumnSetValue;
+        
+        if(db_pgp==null){
+          db_pgp = pgp(config.DATABASE_URL_BYOKAKIN);
+          ColumnSetValue= new pgp.helpers.ColumnSet(ColumnSet, tableName)
+        }
+          
+        
+        query = pgp.helpers.insert(data, ColumnSetValue);
+        res = await db_pgp.none(query)
+    
+    } catch (e) {
+      console.log("error while bulk data inserting:" + e.message)
+    }
+
+
+    //console.log("3")
+    return res;
+  },
+
   parserQuery: async function (text, fileName, header, customerName, ipsPortal) {
 
     // console.log(text);

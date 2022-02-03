@@ -20,14 +20,14 @@ module.exports = {
     deleteTrafficSummary: async function (kick_company, targetDate, mulitple) {
         try {
             let query = "";
-            if(mulitple){
+            if (mulitple) {
                 query = `delete FROM kickback_traffic_summary where traffic_date::date = '${targetDate}'::date 
                 and customer_cd ='${kick_company}' and main_id!='0'`;
-    
-            }else{
+
+            } else {
                 query = `delete FROM kickback_traffic_summary where traffic_date::date = '${targetDate}'::date 
                 and customer_cd ='${kick_company}' and main_id='0'`;
-    
+
             }
             const deleteTrafficSummaryRes = await db.queryIBS(query, []);
             return deleteTrafficSummaryRes;
@@ -81,7 +81,7 @@ module.exports = {
     },
     getAllKickTrafficComp: async function (targetMonth) {
         try {
-         //   console.log("in get all kick  traffic comp");
+            //   console.log("in get all kick  traffic comp");
 
             const year = new Date(targetMonth).getFullYear();
             let month = new Date(targetMonth).getMonth() + 1;
@@ -138,7 +138,7 @@ module.exports = {
             const getAllTrafficSummaryRes = await db.queryIBS(query, []);
             return getAllTrafficSummaryRes.rows;
         } catch (error) {
-            console.log("error"+error.message)
+            console.log("error" + error.message)
             return error;
         }
     },
@@ -189,7 +189,7 @@ module.exports = {
         }
     },
 
-   
+
     getSonusSummaryByTermaniTotalData: async function (year, month, tableName) {
         try {
 
@@ -202,7 +202,7 @@ module.exports = {
             const getSonusSummaryRes = await db.query(query, []);
             return getSonusSummaryRes.rows;
         } catch (error) {
-            console.log("error in sonus sougu data"+error.message);
+            console.log("error in sonus sougu data" + error.message);
             return error;
         }
     },
@@ -364,19 +364,19 @@ module.exports = {
 
     getTableName: async function (targetDate) {
         try {
-          const year = new Date(targetDate).getFullYear();
-          let month = new Date(targetDate).getMonth() + 1;
-    
-          if (parseInt(month, 10) < 10) {
-            month = '0' + month;
-          }
-          return `cdr_${year}${month}`;
-    
+            const year = new Date(targetDate).getFullYear();
+            let month = new Date(targetDate).getMonth() + 1;
+
+            if (parseInt(month, 10) < 10) {
+                month = '0' + month;
+            }
+            return `cdr_${year}${month}`;
+
         } catch (e) {
-          console.log("err in get table=" + e.message);
-          return console.error(e);
+            console.log("err in get table=" + e.message);
+            return console.error(e);
         }
-      },
+    },
 
     getSummaryData: async function (targetMonth, kick_company) {
         console.log("target month=" + targetMonth);
@@ -433,13 +433,13 @@ module.exports = {
 
         const day = new Date(targetDateWithTimezone).getDate();
         let resData = [];
-        
+
         try {
 
-            for(let i=0; i< day; i++){
-                
+            for (let i = 0; i < day; i++) {
+
                 let startDate = new Date(targetDateWithTimezone);
-                startDate.setDate(startDate.getDate() - (day - i) );
+                startDate.setDate(startDate.getDate() - (day - i));
                 let year = startDate.getFullYear();
                 let month = startDate.getMonth() + 1;
                 let date = startDate.getDate();
@@ -448,7 +448,7 @@ module.exports = {
                 //  console.log("year==" + year + "\n month==" + month + "\n day=" + day);
                 //  console.log("start Date=" + startDate);
                 //  console.log("actual start date" + actualStartDate)
-                
+
                 let query = `select count(*) as total, sum(CALLDURATION*0.01/60) as duration  ,cast(addtime(starttime,'09:00:00') as Date) as day from COLLECTOR_73 
                 where  ((INCALLEDNUMBER LIKE '35050%') OR (INCALLEDNUMBER LIKE '36110%') OR (INCALLEDNUMBER LIKE '50505%')) 
                 AND RECORDTYPEID = 3 
@@ -459,14 +459,14 @@ module.exports = {
                 order by cast(addtime(starttime,'09:00:00') as Date) asc`;
                 let rawData = await db.mySQLQuery(query, []);
                 //let rawData=[];
-                if(rawData.length){
+                if (rawData.length) {
                     resData = [...resData, rawData[0]];
-                }                
-               //console.log(query);
+                }
+                //console.log(query);
             }
 
             //resData = [{"total":1374132,"duration":1972270.896309,"day":"2022-01-01T00:00:00.000Z"},{"total":1344112,"duration":2158370.930815,"day":"2022-01-02T00:00:00.000Z"},{"total":1336945,"duration":2417055.553657,"day":"2022-01-03T00:00:00.000Z"},{"total":1126644,"duration":2338637.088063,"day":"2022-01-04T00:00:00.000Z"},{"total":1140253,"duration":2382613.26394,"day":"2022-01-05T00:00:00.000Z"},{"total":1142858,"duration":2403703.565325,"day":"2022-01-06T00:00:00.000Z"},{"total":1139253,"duration":2379654.680957,"day":"2022-01-07T00:00:00.000Z"},{"total":1350310,"duration":2339725.713362,"day":"2022-01-08T00:00:00.000Z"},{"total":1352532,"duration":2367783.447158,"day":"2022-01-09T00:00:00.000Z"},{"total":1350580,"duration":2362425.632064,"day":"2022-01-10T00:00:00.000Z"},{"total":1142536,"duration":2415127.561747,"day":"2022-01-11T00:00:00.000Z"},{"total":1136206,"duration":2445915.004746,"day":"2022-01-12T00:00:00.000Z"},{"total":1122329,"duration":2457239.441399,"day":"2022-01-13T00:00:00.000Z"},{"total":1132660,"duration":2470412.022058,"day":"2022-01-14T00:00:00.000Z"},{"total":1340929,"duration":2469724.833589,"day":"2022-01-15T00:00:00.000Z"},{"total":1350807,"duration":2616313.452486,"day":"2022-01-16T00:00:00.000Z"},{"total":1350807,"duration":2616313.452486,"day":"2022-01-17T00:00:00.000Z"}]
-            
+
             //console.log(JSON.stringify(resData));
             return (resData);
         } catch (error) {
@@ -482,15 +482,15 @@ module.exports = {
 
         try {
 
-            for(let i=0; i< day; i++){
-                
+            for (let i = 0; i < day; i++) {
+
                 let startDate = new Date(targetDateWithTimezone);
-                startDate.setDate(startDate.getDate() - (day - i) );
+                startDate.setDate(startDate.getDate() - (day - i));
                 let year = startDate.getFullYear();
                 let month = startDate.getMonth() + 1;
                 let date = startDate.getDate();
                 let actualStartDate = year + "-" + month + "-" + date + " 15:00:00";
-              
+
                 let query = `select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as
                  day from COLLECTOR_73 
                 where  RECORDTYPEID = 3 
@@ -501,14 +501,14 @@ module.exports = {
                 order by cast(addtime(starttime,'09:00:00') as Date) asc`;
                 let rawData = await db.mySQLQuery(query, []);
                 // let rawData = [];
-                if(rawData.length){
+                if (rawData.length) {
                     resData = [...resData, rawData[0]];
-                }                
-               //console.log(query);
-            } 
-            
+                }
+                //console.log(query);
+            }
+
             //resData = [{"total":1401476,"day":"2022-01-01T00:00:00.000Z"},{"total":1353409,"day":"2022-01-02T00:00:00.000Z"},{"total":1350141,"day":"2022-01-03T00:00:00.000Z"},{"total":1150761,"day":"2022-01-04T00:00:00.000Z"},{"total":1163660,"day":"2022-01-05T00:00:00.000Z"},{"total":1159705,"day":"2022-01-06T00:00:00.000Z"},{"total":1161780,"day":"2022-01-07T00:00:00.000Z"},{"total":1371514,"day":"2022-01-08T00:00:00.000Z"},{"total":1370409,"day":"2022-01-09T00:00:00.000Z"},{"total":1368769,"day":"2022-01-10T00:00:00.000Z"},{"total":1164462,"day":"2022-01-11T00:00:00.000Z"},{"total":1156887,"day":"2022-01-12T00:00:00.000Z"},{"total":1143597,"day":"2022-01-13T00:00:00.000Z"},{"total":1154065,"day":"2022-01-14T00:00:00.000Z"},{"total":1360452,"day":"2022-01-15T00:00:00.000Z"},{"total":1367919,"day":"2022-01-16T00:00:00.000Z"},{"total":1367919,"day":"2022-01-17T00:00:00.000Z"}]
-            
+
             //console.log(JSON.stringify(resData));
             return (resData);
         } catch (error) {
@@ -562,8 +562,8 @@ module.exports = {
         return html;
     },
 
-    createHTMLCDRDailyTransistion: async function(data, year, month){
-        if(!data.length){
+    createHTMLCDRDailyTransistion: async function (data, year, month) {
+        if (!data.length) {
             return null
         }
 
@@ -579,9 +579,9 @@ module.exports = {
             let emailTO = `${customerInfo['mail_address']}`;
             let emailCC = `${customerInfo['east_link_address']}`;
 
-          //  emailTO = 'uday@ipsism.co.jp';
-          //  emailCC = 'uday@ipsism.co.jp';
-            
+            //  emailTO = 'uday@ipsism.co.jp';
+            //  emailCC = 'uday@ipsism.co.jp';
+
             if (!emailTO) {
                 emailTO = "uday@ipsism.co.jp";
                 console.log("i amin ")
@@ -594,13 +594,13 @@ module.exports = {
                 from: 'relay@sysmail.elijp.tokyo',
                 to: emailTO,
                 cc: emailCC,
-              //  cc: 'y_ito@ipsism.co.jp',
+                //  cc: 'y_ito@ipsism.co.jp',
                 bcc: 'ips_tech@ipsism.co.jp,telecom@ipsism.co.jp',
-               
+
                 subject,
                 html
             }
-           utility.sendEmail(mailOption);
+            utility.sendEmail(mailOption);
         }
     },
     sendEmailAllData: async function (html, subject) {
@@ -803,7 +803,7 @@ function tableCreateAllData(collect_73, sonusData, collect_73_sougo, sonusProDat
 
 
         let total_16_31 = utility.numberWithCommas(sonusPro_16_31_Data[i]['total_16_31']);
-        let total_not_16_31 = utility.numberWithCommas(parseInt(sonusPro_16_31_Data[i]['total'],10) - parseInt(sonusPro_16_31_Data[i]['total_16_31'],10));
+        let total_not_16_31 = utility.numberWithCommas(parseInt(sonusPro_16_31_Data[i]['total'], 10) - parseInt(sonusPro_16_31_Data[i]['total_16_31'], 10));
 
         let sonusCDRProDataCount = utility.numberWithCommas(sonusProData[i]['total']);
         let billCDRProDataCount = utility.numberWithCommas(billCdrData[i]['total']);
@@ -811,11 +811,11 @@ function tableCreateAllData(collect_73, sonusData, collect_73_sougo, sonusProDat
 
         tableRows += '<tr>';
         tableRows += `<td class="day">${utility.formatDate(collect_73[i]['day'])}</td>`;
-        
+
         tableRows += `<td style="text-align:right" class="Raw Data">${rawDataTotalCount}</td>`;
         tableRows += `<td style="text-align:right" class="Processed Data">${proDataTotalCount}</td>`;
         tableRows += `<td style="text-align:right" class="Difference">${rawDiffDataCount}</td>`;
-        
+
         tableRows += `<td style="text-align:right" class="Raw Data">${sougoRawDataCount}</td>`;
         tableRows += `<td style="text-align:right" class="Processed Data">${sougoProDataCount}</td>`;
         tableRows += `<td style="text-align:right" class="Difference">${sougoDataDiffCount}</td>`;
@@ -828,7 +828,7 @@ function tableCreateAllData(collect_73, sonusData, collect_73_sougo, sonusProDat
         tableRows += `<td style="text-align:right" class="Processed Data">${billCDRProDataCount}</td>`;
 
         tableRows += `<td style="text-align:right" class="Difference">${billCDRCountDiff}</td>`;
-        
+
         tableRows = tableRows + '</tr>'
     }
     let html = '';
@@ -841,7 +841,7 @@ function tableCreateAllData(collect_73, sonusData, collect_73_sougo, sonusProDat
     let table = '';
     const style = `thead { text-align: left;background-color: #4CAF50; color: white; }`
 
-    
+
 
     try {
         table += `<table class='some-table' border="2" style='${style}'>
@@ -861,15 +861,15 @@ function tableCreateAllData(collect_73, sonusData, collect_73_sougo, sonusProDat
              <tr>
              <th></th>
              <th>COLLECTOR (10.168.11.252)</th>
-             <th>SONUSCDR (10.168.22.40)</th>
+             <th>SONUSCDR (10.168.11.41)</th>
              <th></th>
              <th>COLLECTOR (10.168.11.252)</th>
-             <th>SONUSCDR (10.168.22.40)</th>
+             <th>SONUSCDR (10.168.11.41)</th>
              <th></th>
-             <th>SONUSCDR(16,31) (10.168.22.40)</th>
-             <th>SONUSCDR(NOT 16,31) (10.168.22.40)</th>
-             <th>SONUSCDR (10.168.22.40)</th>
-             <th>BILLCDR MAIN (10.168.22.40)</th>
+             <th>SONUSCDR(16,31) (10.168.11.41)</th>
+             <th>SONUSCDR(NOT 16,31) (10.168.11.41)</th>
+             <th>SONUSCDR (10.168.11.41)</th>
+             <th>BILLCDR MAIN (10.168.11.41)</th>
              <th></th>
              </tr>
              
@@ -884,7 +884,7 @@ function tableCreateAllData(collect_73, sonusData, collect_73_sougo, sonusProDat
         throw Error("Error !" + err);
     }
     let div = `<div style="margin: auto;width: 100%;">${table}</div>`;
-    
+
 
     html += div;
     html += "Thank you";
@@ -895,47 +895,75 @@ function tableCreateAllData(collect_73, sonusData, collect_73_sougo, sonusProDat
 
 function tableCDRDailyTransistion(data, year, month) {
     console.log("create table all data---");
-    let tableRows = '';
-
-    let length = data.length, locS, locSA, locE, locEA;
-
-    locS = new Date(data[0]['day']);
-    locSA = locS.toLocaleString().split(",");
-    locE = new Date(data[length - 1]['day']);
-    locEA = locE.toLocaleString().split(",");
-
-    //    console.log("1="+locEA[0]);
-
-    
-    let tmpObj ={}
-
-    data.forEach((obj)=>{
-        let startDay = new Date(obj['day']).getDate();
-        tmpObj[startDay] = 1;
-    })
-
-    Object.keys(tmpObj).forEach(ele=> {
-        let filteredData = data.filter(obj=>(
-            new Date(obj['day']).getDate() == ele ? true: false
-        ))
-        tableRows += rowData(filteredData);
-    })
-
-    let html = '';
-    let h4 = `お疲れ様です。 <br /> <br />`;
-    let h3 = `035050の [${utility.formatDate(locSA[0])} ~ ${utility.formatDate(locEA[0])}] CDR統計DATAです。よろしくお願いします。 <br /> <br /> `;
-    let h5 = `※本メールはシステムより自動的に送信されています。<br /> <br />`;
-    
-    html += h4;
-    html += h3;
-    html += h5;
-    
-    let table = '';
-    const style = `thead { text-align: left;background-color: #4CAF50; color: white; }`
-
-    
 
     try {
+
+        let tableRows = '', cdrcountSumAll = 0, kokusaiSumAll = 0, kokunaiSumAll = 0, inboundSumAll = 0, outboundSumAll = 0, durationsSumAll = 0, fumeichkSumAll = 0;
+
+        let length = data.length, locS, locSA, locE, locEA;
+
+        locS = new Date(data[0]['day']);
+        locSA = locS.toLocaleString().split(",");
+        locE = new Date(data[length - 1]['day']);
+        locEA = locE.toLocaleString().split(",");
+
+        //    console.log("1="+locEA[0]);
+
+
+        let tmpObj = {}
+
+        data.forEach((obj) => {
+            let startDay = new Date(obj['day']).getDate();
+            tmpObj[startDay] = 1;
+        })
+
+        Object.keys(tmpObj).forEach(ele => {
+
+            let filteredData = data.filter(obj => (
+                new Date(obj['day']).getDate() == ele ? true : false
+            ))
+            let { tableRow, cdrcountSum, kokusaiSum, kokunaiSum, inboundSum, outboundSum, durationsSum, fumeichkSum } = rowData(filteredData);
+            tableRows += tableRow;
+            cdrcountSumAll += cdrcountSum;
+            kokusaiSumAll += kokusaiSum;
+            kokunaiSumAll += kokunaiSum;
+            inboundSumAll += inboundSum;
+            outboundSumAll += outboundSum;
+            durationsSumAll += durationsSum;
+            fumeichkSumAll += fumeichkSum;
+
+        })
+
+        tableRows += `<tr style="font-weight:bold"> `;
+
+        tableRows += `<td class="day"></td>`;
+        tableRows += `<td class="day"></td>`;
+        tableRows += `<td class="day">合計</td>`;
+        tableRows += `<td style="text-align:right" class="cdrcount">${utility.numberWithCommas(cdrcountSumAll)}</td>`;
+
+        tableRows += `<td style="text-align:right" class="kokusai">${utility.numberWithCommas(kokusaiSumAll)}</td>`;
+        tableRows += `<td style="text-align:right" class="kokunai">${utility.numberWithCommas(kokunaiSumAll)}</td>`;
+        tableRows += `<td style="text-align:right" class="inbound">${utility.numberWithCommas(inboundSumAll)}</td>`;
+
+        tableRows += `<td style="text-align:right" class="outbound">${utility.numberWithCommas(outboundSumAll)}</td>`;
+        tableRows += `<td style="text-align:right" class="durations">${utility.numberWithCommas(durationsSumAll.toFixed(1))}</td>`;
+        tableRows += `<td style="text-align:right" class="durations">${utility.numberWithCommas(fumeichkSumAll)}</td>`;
+
+        tableRows += '</tr>'
+
+
+        let html = '';
+        let h4 = `お疲れ様です。 <br /> <br />`;
+        let h3 = `035050の [${utility.formatDate(locSA[0])} ~ ${utility.formatDate(locEA[0])}] CDR統計DATAです。よろしくお願いします。 <br /> <br /> `;
+        let h5 = `※本メールはシステムより自動的に送信されています。<br /> <br />`;
+
+        html += h4;
+        html += h3;
+        html += h5;
+
+        let table = '';
+        const style = `thead { text-align: left;background-color: #4CAF50; color: white; }`
+
         table += `<table class='some-table' border="2" style='${style}'>
              <thead>
               <tr> 
@@ -956,84 +984,95 @@ function tableCDRDailyTransistion(data, year, month) {
         </tbody>
         </table>`;
 
+        let div = `<div style="margin: auto;width: 100%;">${table}</div>`;
+
+
+        html += div;
+        html += "Thank you";
+        // console.log("sdfsdf"+html);
+    
+        return html;
 
     } catch (err) {
-        throw Error("Error !" + err);
+        console.log("error in daily transition email batch" + err.message);
     }
-    let div = `<div style="margin: auto;width: 100%;">${table}</div>`;
     
-
-    html += div;
-    html += "Thank you";
-    // console.log("sdfsdf"+html);
-
-    return html;
+    
 }
 
 
-function rowData(data){
+function rowData(data) {
 
- let tableRows='';
- 
-    let cdrcountSum=0, kokusaiSum=0, kokunaiSum=0, inboundSum=0, outboundSum=0, durationsSum=0, fumeichkSum=0;
-
-  for(let i=0; i<data.length; i++){
-    let gateway = (data[i]['gateway']);
-    let trunk_port_name = (data[i]['trunk_port_name']);
-    let cdrcount = utility.numberWithCommas(data[i]['cdrcount']);
-    let kokusai = utility.numberWithCommas(data[i]['kokusai']);
-    let kokunai = utility.numberWithCommas(data[i]['kokunai']);
-    let inbound = utility.numberWithCommas(data[i]['inbound']);
-    let outbound = utility.numberWithCommas(data[i]['outbound']);
-    let durations = utility.numberWithCommas(data[i]['durations']);
-    let fumeichk = utility.numberWithCommas(data[i]['fumeichk'])
     
-    cdrcountSum += parseInt(data[i]['cdrcount'],10);
-    kokusaiSum += parseInt(data[i]['kokusai'],10);
-    kokunaiSum += parseInt(data[i]['kokunai'],10);
-    inboundSum += parseInt(data[i]['inbound'],10);
-    outboundSum += parseInt(data[i]['outbound'],10);
-    durationsSum += parseFloat(data[i]['durations']);
-    fumeichkSum += parseInt(data[i]['fumeichk'],10);
-    
-    tableRows += '<tr>';
 
-    if(i==0)
-        tableRows += `<td class="day">${utility.formatDate(data[i]['day'])}</td>`;
-    else
-        tableRows += `<td class="day"></td>`;
+    try {
 
-    tableRows += `<td style="text-align:right" class="gateway">${gateway}</td>`;
-    tableRows += `<td style="text-align:right" class="trunk_port_name">${trunk_port_name}</td>`;
-    tableRows += `<td style="text-align:right" class="cdrcount">${cdrcount}</td>`;
-    
-    tableRows += `<td style="text-align:right" class="kokusai">${kokusai}</td>`;
-    tableRows += `<td style="text-align:right" class="kokunai">${kokunai}</td>`;
-    tableRows += `<td style="text-align:right" class="inbound">${inbound}</td>`;
+        let tableRow = '';
 
-    tableRows += `<td style="text-align:right" class="outbound">${outbound}</td>`;
-    tableRows += `<td style="text-align:right" class="durations">${durations}</td>`;
-    tableRows += `<td style="text-align:right" class="durations">${fumeichk}</td>`;
-    tableRows = tableRows + '</tr>'
+        let cdrcountSum = 0, kokusaiSum = 0, kokunaiSum = 0, inboundSum = 0, outboundSum = 0, durationsSum = 0, fumeichkSum = 0;
 
-  }
-    tableRows += `<tr style="font-weight:bold"> `
+        for (let i = 0; i < data.length; i++) {
+            let gateway = data[i]['gateway'];
+            let trunk_port_name = (data[i]['trunk_port_name']);
+            let cdrcount = utility.numberWithCommas(data[i]['cdrcount']);
+            let kokusai = utility.numberWithCommas(data[i]['kokusai']);
+            let kokunai = utility.numberWithCommas(data[i]['kokunai']);
+            let inbound = utility.numberWithCommas(data[i]['inbound']);
+            let outbound = utility.numberWithCommas(data[i]['outbound']);
+            let durations = utility.numberWithCommas(data[i]['durations']);
+            let fumeichk = utility.numberWithCommas(data[i]['fumeichk'])
 
-    tableRows += `<td class="day"></td>`;
-    tableRows += `<td class="day"></td>`;
-    tableRows += `<td class="day">小合計</td>`;
-    tableRows += `<td style="text-align:right" class="cdrcount">${utility.numberWithCommas(cdrcountSum)}</td>`;
-    
-    tableRows += `<td style="text-align:right" class="kokusai">${utility.numberWithCommas(kokusaiSum)}</td>`;
-    tableRows += `<td style="text-align:right" class="kokunai">${utility.numberWithCommas(kokunaiSum)}</td>`;
-    tableRows += `<td style="text-align:right" class="inbound">${utility.numberWithCommas(inboundSum)}</td>`;
+            cdrcountSum += parseInt(data[i]['cdrcount'], 10);
+            kokusaiSum += parseInt(data[i]['kokusai'], 10);
+            kokunaiSum += parseInt(data[i]['kokunai'], 10);
+            inboundSum += parseInt(data[i]['inbound'], 10);
+            outboundSum += parseInt(data[i]['outbound'], 10);
+            durationsSum += parseFloat(data[i]['durations']);
+            fumeichkSum += parseInt(data[i]['fumeichk'], 10);
 
-    tableRows += `<td style="text-align:right" class="outbound">${utility.numberWithCommas(outboundSum)}</td>`;
-    tableRows += `<td style="text-align:right" class="durations">${utility.numberWithCommas(durationsSum.toFixed(1))}</td>`;
-    tableRows += `<td style="text-align:right" class="durations">${utility.numberWithCommas(fumeichkSum)}</td>`;
+            tableRow += '<tr>';
 
-    tableRows += '</tr>'
+            if (i == 0)
+                tableRow += `<td class="day">${utility.formatDate(data[i]['day'])}</td>`;
+            else
+                tableRow += `<td class="day"></td>`;
 
-  return tableRows;
+            tableRow += `<td style="text-align:right" class="gateway">${gateway}</td>`;
+            tableRow += `<td style="text-align:right" class="trunk_port_name">${trunk_port_name}</td>`;
+            tableRow += `<td style="text-align:right" class="cdrcount">${cdrcount}</td>`;
+
+            tableRow += `<td style="text-align:right" class="kokusai">${kokusai}</td>`;
+            tableRow += `<td style="text-align:right" class="kokunai">${kokunai}</td>`;
+            tableRow += `<td style="text-align:right" class="inbound">${inbound}</td>`;
+
+            tableRow += `<td style="text-align:right" class="outbound">${outbound}</td>`;
+            tableRow += `<td style="text-align:right" class="durations">${durations}</td>`;
+            tableRow += `<td style="text-align:right" class="durations">${fumeichk}</td>`;
+            tableRow = tableRow + '</tr>'
+
+        }
+        tableRow += `<tr style="font-weight:bold"> `
+
+        tableRow += `<td class="day"></td>`;
+        tableRow += `<td class="day"></td>`;
+        tableRow += `<td class="day">小合計</td>`;
+        tableRow += `<td style="text-align:right" class="cdrcount">${utility.numberWithCommas(cdrcountSum)}</td>`;
+
+        tableRow += `<td style="text-align:right" class="kokusai">${utility.numberWithCommas(kokusaiSum)}</td>`;
+        tableRow += `<td style="text-align:right" class="kokunai">${utility.numberWithCommas(kokunaiSum)}</td>`;
+        tableRow += `<td style="text-align:right" class="inbound">${utility.numberWithCommas(inboundSum)}</td>`;
+
+        tableRow += `<td style="text-align:right" class="outbound">${utility.numberWithCommas(outboundSum)}</td>`;
+        tableRow += `<td style="text-align:right" class="durations">${utility.numberWithCommas(durationsSum.toFixed(1))}</td>`;
+        tableRow += `<td style="text-align:right" class="durations">${utility.numberWithCommas(fumeichkSum)}</td>`;
+
+        tableRow += '</tr>'
+        
+
+        return { tableRow, cdrcountSum, kokusaiSum, kokunaiSum, inboundSum, outboundSum, durationsSum, fumeichkSum };
+
+    } catch (error) {
+        console.log("Error in creating table row.." + error.message);
+    }
 
 }

@@ -54,7 +54,9 @@ module.exports = {
            
       }
       if(req && req.body && req.body.status){
-        if(req.body.status==='Approve'){
+        console.log("testing"+JSON.stringify(req.body));
+
+        if(req.body.status=='Approve'){
           ApprovalLeafnet.sendApprovalNotification(req.body);
         }        
       }

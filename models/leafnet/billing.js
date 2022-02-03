@@ -145,7 +145,7 @@ insertByBatches: async function(records, ratesData) {
   let html = `<div>
       <div> Hi Team, </div>
       <div> Leafnet billing has been finished, Please check at below link.</div>
-      <div>http://10.168.22.40/services/leafnet/</div>
+      <div>http://billing.toadm.com/services/leafnet/</div>
       <div> Thank you </div>
   </div>`;
 
