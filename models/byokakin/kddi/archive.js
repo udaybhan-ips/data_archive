@@ -91,7 +91,7 @@ module.exports = {
   getKDDIKotehiData: async function (reqData) {
     try {
       let billingData = reqData.billingData;
-      billingData = '2021-11-1'
+      billingData = '2021-12-1'
       const year = new Date(billingData).getFullYear();
       let month = new Date(billingData).getMonth() + 1;
 
@@ -100,10 +100,10 @@ module.exports = {
       }
 
       const query = `select *, ROW_NUMBER() OVER(ORDER BY cdrid) id from ( select cdrid , comp_acco__c, companyname, recordtype, account,
-         '' as billaccount,freedialnumber, amount, '' as gendetaildesc, basicchargedesc, datebill    from kddi_kotei_cdr_basic 
-         UNION ALL select cdrid ,comp_acco__c, companyname, recordtype, account, billaccount, freedialnumber, amount, 
+        freedialnumber as billaccount, amount, '' as gendetaildesc, basicchargedesc, datebill    from kddi_kotei_cdr_basic 
+         UNION ALL select cdrid ,comp_acco__c, companyname, recordtype, account, billaccount, amount, 
          gendetaildesc, basicchargedesc, datebill from kddi_kotei_cdr_contents ) as foo
-         where  to_char(foo.datebill::date, 'MM-YYYY')='${month}-${year}'  `;
+         where  to_char(foo.datebill::date, 'MM-YYYY')='${month}-${year}' `;
       const getKDDIKotehiDataRes = await db.queryByokakin(query, []);
       return getKDDIKotehiDataRes.rows;
     } catch (e) {
@@ -115,7 +115,7 @@ module.exports = {
   getLastMonthKDDIKotehiData: async function (reqData) {
     try {
       let billingData = reqData.billingData;
-      billingData = '2021-10-1'
+      billingData = '2021-11-1'
       const year = new Date(billingData).getFullYear();
       let month = new Date(billingData).getMonth() + 1;
 
@@ -124,8 +124,8 @@ module.exports = {
       }
 
       const query = `select *, ROW_NUMBER() OVER(ORDER BY cdrid) id from ( select cdrid , comp_acco__c, companyname, recordtype, account,
-         '' as billaccount,freedialnumber, amount, '' as gendetaildesc, basicchargedesc, datebill    from kddi_kotei_cdr_basic 
-         UNION ALL select cdrid ,comp_acco__c, companyname, recordtype, account, billaccount, freedialnumber, amount, 
+        freedialnumber as billaccount, amount, '' as gendetaildesc, basicchargedesc, datebill    from kddi_kotei_cdr_basic 
+         UNION ALL select cdrid ,comp_acco__c, companyname, recordtype, account, billaccount, amount, 
          gendetaildesc, basicchargedesc, datebill from kddi_kotei_cdr_contents ) as foo
          where  to_char(foo.datebill::date, 'MM-YYYY')='${month}-${year}'  `;
       const getLastMonthKDDIKotehiDataRes = await db.queryByokakin(query, []);
@@ -140,7 +140,7 @@ module.exports = {
   getKDDIKotehiLastMonthData: async function (reqData) {
     try {
       let billingData = reqData.billingData;
-      billingData = '2021-10-1'
+      billingData = '2021-11-1'
       const year = new Date(billingData).getFullYear();
       let month = new Date(billingData).getMonth() + 1;
       if (parseInt(month, 10) < 10) {
