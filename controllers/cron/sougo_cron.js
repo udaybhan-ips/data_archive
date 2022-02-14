@@ -11,10 +11,6 @@ var EmailController = require('../sougo/emailNotification.controller');
 //     console.log('This is sougo archiver End');
 // },null, true, 'Asia/Tokyo');
 
-
-
-
-
 // var emailNotificationJob = new CronJob ('29 10 * * *',function(){
 //     console.log('This is sougo email notification start');
 //     EmailController.sendEmail();

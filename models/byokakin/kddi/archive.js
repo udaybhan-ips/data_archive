@@ -1,5 +1,6 @@
 var db = require('./../../../config/database');
 const { BATCH_SIZE } = require('../../../config/config');
+const iconv = require('iconv-lite');
 
 let ColumnSet = ['comp_acco__c', 'companyname', 'recordtype', 'account', 'groupcode', 'basicservicetype', 'freedialnumber', 'basicchargedesc', 'amount', 'taxinclude', 'telcotype', 'datebill'];
 let tableName = { table: 'kddi_kotei_cdr_basic' };
@@ -287,59 +288,51 @@ module.exports = {
 
     console.log("actual path and name =" + filesPath);
 
+    
+
     try {
 
-      let csvData = [];
+  //    let csvData = [];
       let csvstream;
-      fs.readdir(filesPath, (err, files) => {
+      fs.readdir(filesPath,  (err, files) => {
         if (err) {
           console.log("error in reading files name.." + err);
           throw new Error(err);
         }
-        files.forEach(file => {
-          if (path.extname(file).toLowerCase() == ".csv")
-             csvData = [];
-             filePath = path.join(__dirname, `../RAWCDR/202112/${file}`)
-             
-             
-
-           csvstream = fs.createReadStream(filePath,{ encoding: 'utf16le' })
+        for(let i=0; i< files.length; i++){
+          let csvData = [];
+          if (path.extname(files[i]).toLowerCase() == ".csv"){ 
+            filePath = path.join(__dirname, `../RAWCDR/202112/${files[i]}`)
+            csvstream = fs.createReadStream(filePath )
+            .pipe(iconv.decodeStream("Shift_JIS"))
             .pipe(csv.parse())
-            .on('data', async function (row) {
+            .on('data',  function (row) {
               let obj = {};
               obj['did'] = row[0];
               obj['freedialnum'] = '';
-              obj['calldate'] = row[1];
-              
-              // console.log("length..."+row[1].length);
-              // console.log("this is file name"+filePath)
-
-              if(row[1].length != 10  ){
-                console.log("this is file name"+file+row[1]);
-                exit;
-                //throw new Error("there is issue with file");
-              }
-              obj['calltime'] = row[2];
+              obj['calldate'] = '2021-01-01';
+              obj['calltime'] = '';
               obj['cld'] = row[3];
               obj['source'] = '';
               obj['destination'] = row[4];
               obj['callduration'] = row[5];
               obj['callclassi'] = row[6];
               obj['calltype'] = row[7];
-              obj['callcharge'] = row[8];
+              obj['callcharge'] = 0;
               obj['customercode'] = '';
               csvData.push(obj);
               csvstream.resume();
             })
             .on('end', function () {
-              //console.log("filePath...."+filePath);
-             // insertByBatches(csvData,'RAWCDR');
+              csvData.shift();
+              insertByBatches(csvData,'RAWCDR');
+              
             })
             .on('error', function (error) {
               console.log("Error" + error.message);
             });
-
-        })
+          }
+          }
       })
 
      
@@ -368,7 +361,6 @@ async function insertByBatches(records, type) {
     else {
       res = await db.queryBatchInsert(chunkArray[i], null, ColumnSet, tableName);
     }
-
   }
   resArr.push(res);
   console.log("done" + new Date());

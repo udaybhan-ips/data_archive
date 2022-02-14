@@ -17,7 +17,7 @@ var EmailController = require('../kickback/emailNotification.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var emailNotificationJob = new CronJob ('15 19 * * *',function(){
+// var emailNotificationJob = new CronJob ('30 17 * * *',function(){
 //     console.log('This is kickback email notification start');
 //     EmailController.sendEmail();
 //     console.log('This is kickback email notification end');

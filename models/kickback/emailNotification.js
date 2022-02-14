@@ -38,7 +38,7 @@ module.exports = {
     getAllKickComp: async function () {
         try {
             console.log("in get all kick comp");
-            const query = ` select distinct(kick_company) as customer_cd from billcdr_main order by kick_company`;
+            const query = ` select distinct(kick_company) as customer_cd from billcdr_main  order by kick_company`;
             const kickCompRes = await db.queryIBS(query, []);
             return kickCompRes.rows;
         } catch (error) {
@@ -49,7 +49,7 @@ module.exports = {
     getAllKickCompEmail: async function () {
         try {
             console.log("in get all kick comp email");
-            const query = ` select * from kickback_cdr_carrier where (east_link_flag=1 and mail_address!='') OR (email_type='multiple') order by customer_cd`;
+            const query = ` select * from kickback_cdr_carrier where ( east_link_flag=1 and mail_address!='') OR (email_type='multiple') order by customer_cd`;
             const kickCompRes = await db.queryIBS(query, []);
             return kickCompRes.rows;
 
@@ -579,8 +579,8 @@ module.exports = {
             let emailTO = `${customerInfo['mail_address']}`;
             let emailCC = `${customerInfo['east_link_address']}`;
 
-            //  emailTO = 'uday@ipsism.co.jp';
-            //  emailCC = 'uday@ipsism.co.jp';
+  //            emailTO = 'uday@ipsism.co.jp';
+   //           emailCC = 'y_ito@ipsism.co.jp,y_watanabe@ipsism.co.jp';
 
             if (!emailTO) {
                 emailTO = "uday@ipsism.co.jp";
@@ -655,7 +655,7 @@ function tableCreate(processData, customerInfo) {
 
 
         tableRows += '<tr>';
-        tableRows += `<td class="day">合　計</td>`;
+        tableRows += `<td class="day">合計</td>`;
         tableRows += `<td style="text-align:right" class="koteiCount">${utility.numberWithCommas(koteiCount)}</td>`;
         tableRows += `<td style="text-align:right" class="koteiMin">${utility.numberWithCommas(koteiMin)}</td>`;
         tableRows += `<td style="text-align:right" class="keitaiCount">${utility.numberWithCommas(keitaiCount)}</td>`;
@@ -738,7 +738,7 @@ function tableCreateMultiple(processData, title_name) {
 
 
         tableRows += '<tr>';
-        tableRows += `<td class="day">合　計</td>`;
+        tableRows += `<td class="day">合計</td>`;
         tableRows += `<td style="text-align:right" class="koteiCount">${utility.numberWithCommas(koteiCount)}</td>`;
         tableRows += `<td style="text-align:right" class="koteiMin">${utility.numberWithCommas(koteiMin)}</td>`;
         tableRows += `<td style="text-align:right" class="keitaiCount">${utility.numberWithCommas(keitaiCount)}</td>`;

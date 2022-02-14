@@ -4,7 +4,7 @@ var EmailNotification = require('../../models/kickback/emailNotification');
 
 let internlReport = true;
 let externalReport = true;
-let internalSummaryReport = true;
+let internalSummaryReport = false;
 
 
 module.exports = {
@@ -98,7 +98,7 @@ module.exports = {
 
 
 
-              if (allKickCompEmail[i]['customer_cd'] == '00000720') {
+              if (allKickCompEmail[i]['customer_cd'] == '00000720' ) {
                 let procData = '';
                 let procData_2 = '';
                 let procData_3 = '';
