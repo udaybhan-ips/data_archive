@@ -109,7 +109,7 @@ module.exports = {
   },
 
   listUsers: function(req, res) {
-    console.log("list users")
+    console.log("list users!")
     User.findAll()
       .then(function(result) {
         return res.status(200).json(result);

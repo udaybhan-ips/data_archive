@@ -36,6 +36,10 @@ module.exports = {
             if(data.landline){
               updateData = 'landline='+data.landline+',';
             }
+
+            if(data.landline){
+              updateData = `landline= '${data.updated_by}' , `;
+            }
             
             if(data.mobile){
               updateData = updateData + 'mobile='+data.mobile;
@@ -45,8 +49,8 @@ module.exports = {
               updateData = updateData.substring(0, updateData.length - 1);
             }
 
-            const query=`INSERT INTO sonus_outbound_rates_history (customer_id, landline, mobile, date_added ) VALUES ($1, $2, $3, $4) returning customer_id`;
-            const value= [data.customer_id, data.landline, data.mobile, 'now()'];
+            const query=`INSERT INTO sonus_outbound_rates_history (customer_id, landline, mobile, date_added ,updated_by ) VALUES ($1, $2, $3, $4, $updated_by) returning customer_id`;
+            const value= [data.customer_id, data.landline, data.mobile, 'now()', data.updated_by];
             const res = await db.query(query,value, ipsPortal=true);
             
             //console.log("res==");

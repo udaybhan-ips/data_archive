@@ -7,7 +7,6 @@ module.exports = {
         if(startDBbackupDailyErr) {
             console.log("there is error in dumping")           
         }
-        
         console.log("dumping finished..")
         
     } catch (error) {
@@ -30,13 +29,42 @@ module.exports = {
       if (tableNameErr) {
         throw new Error('Could not fetch table name');
       }
-        const [startDBbackupDailyRes,startDBbackupDailyErr] = await handleError(DBBACKUP.cdrSonusDBbackupDaily(DBName, tableName));
-        if(startDBbackupDailyErr) {
-            console.log("there is error in dumping")           
-        }
-        
-        console.log("dumping finished..")
-        
+      const [startDBbackupDailyRes,startDBbackupDailyErr] = await handleError(DBBACKUP.cdrSonusDBbackupDaily(DBName, tableName));
+      if(startDBbackupDailyErr) {
+          console.log("there is error in dumping")           
+      }
+
+      const [startDBbackupDailyLeafnetRes,startDBbackupDailyLeafnetErr] = await handleError(DBBACKUP.cdrSonusDBbackupDaily(DBName, "cdr_sonus"));
+      if(startDBbackupDailyLeafnetErr) {
+          console.log("there is error in dumping")           
+      }
+
+    } catch (error) {
+      console.log('error while dumping..'+ error.message);
+    }    
+  },
+  cdrIBSBackup: async function(req, res) {
+    const dateId = 4;
+    const DBName = "ibs";
+    const tableName ="billcdr_main";
+    try {
+
+      // const [Dates, targetDateErr] = await handleError(DBBACKUP.getTargetDate(dateId));
+      // if (targetDateErr) {
+      //   throw new Error('Could not fetch target date');
+      // }
+      // // console.log(JSON.stringify(Dates));
+
+      // const [tableName, tableNameErr] = await handleError(DBBACKUP.getTableName(Dates.targetDate));
+      // if (tableNameErr) {
+      //   throw new Error('Could not fetch table name');
+      // }
+      const [startDBbackupDailyRes,startDBbackupDailyErr] = await handleError(DBBACKUP.cdrSonusDBbackupDaily(DBName, tableName));
+      if(startDBbackupDailyErr) {
+          console.log("there is error in dumping")           
+      }
+
+      
     } catch (error) {
       console.log('error while dumping..'+ error.message);
     }    

@@ -17,9 +17,9 @@ module.exports = {
     try {
       //  if(validateRateData()){
             const query=`INSERT INTO cdr_sonus_rate (company_code, carrier_code, carrier_name, call_sort, 
-                date_start, date_expired, rate_setup, rate_second, date_updated, currnet_flag  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning rate_id`;
+                date_start, date_expired, rate_setup, rate_second, date_updated, currnet_flag,updated_by  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning rate_id`;
             const value= [data.company_code, data.carrier_code, data.carrier_name, data.call_sort, 
-                data.date_start, data.date_expired, data.rate_setup, data.rate_second, 'now()', data.current_flag];
+                data.date_start, data.date_expired, data.rate_setup, data.rate_second, 'now()', data.current_flag, data.updated_by];
             const res = await db.query(query,value);
             return res.rows[0];
       //  }
@@ -34,9 +34,9 @@ module.exports = {
       //  if(validateRateData()){
           // create history   
             const query=`INSERT INTO cdr_sonus_rate_history (company_code, carrier_code, carrier_name, call_sort, 
-                date_start, date_expired, rate_setup, rate_second, date_updated, currnet_flag ,rate_id ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11) returning rate_id`;
+                date_start, date_expired, rate_setup, rate_second, date_updated, currnet_flag ,rate_id, updated_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11, $12) returning rate_id`;
             const value= [data.company_code, data.carrier_code, data.carrier_name, data.call_sort, 
-                data.date_start, data.date_expired, data.rate_setup, data.rate_second, 'now()', data.current_flag, data.rate_id];
+                data.date_start, data.date_expired, data.rate_setup, data.rate_second, 'now()', data.current_flag, data.rate_id, data.updated_by];
             const res = await db.query(query,value);
 
             // if(data.carrier_code){
@@ -60,14 +60,19 @@ module.exports = {
             if(data.rate_setup){
               updateData = updateData + 'rate_setup='+data.rate_setup+',';
             }
+
             if(data.rate_second){
-              updateData = updateData+ 'rate_second='+data.rate_second;
+              updateData = updateData+ 'rate_second='+data.rate_second+',';
+            }
+
+            if(data.updated_by){
+              updateData = updateData+ `updated_by = '${data.updated_by}'`;
             }
 
             // remove ',' from last character
-            if(updateData.substr(updateData.length - 1)==','){
-              updateData = updateData.substring(0, updateData.length - 1);
-            }
+            // if(updateData.substr(updateData.length - 1)==','){
+            //   updateData = updateData.substring(0, updateData.length - 1);
+            // }
 
             const queryUpdate= `update cdr_sonus_rate set ${updateData} where  rate_id='${data.rate_id}'`;
             const resUpdate = await db.query(queryUpdate,[]);

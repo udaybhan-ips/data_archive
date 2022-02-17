@@ -1,12 +1,12 @@
 var Promise = require('promise');
 var db = require('./../../config/database');
 var bcrypt = require('bcrypt');
-const { use } = require('../../routes/auth.routes');
+
 
 module.exports = {
   findAll: function() {
     return new Promise(function(resolve, reject) {
-      db.query('SELECT id, name, email_id FROM users', [],ipsPortal=true)
+      db.query('SELECT id, name, email_id, role FROM users', [],ipsPortal=true)
         .then(function(results) {
           resolve(results.rows);
         })
@@ -77,6 +77,7 @@ module.exports = {
           reject(err);
         });
     });
+    
   },
 
   updateName: function(data) {
