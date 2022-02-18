@@ -4,8 +4,8 @@ var db = require('./../../config/database');
 module.exports = {
   findAll: async function() {
       try {
-        console.log("in rate_kickback");
-          const query="SELECT * FROM rate_kickback where deleted =false order by company_code asc";
+        
+          const query=" SELECT company_code, date_start, date_expired, rate_setup, rate_trunk_port, date_update, case when updated_by='null' then '' else updated_by end as updated_by, rate_second, deleted, kickack_rate_id  FROM rate_kickback where deleted =false order by company_code asc";
           const rate_kickbackListRes= await db.queryIBS(query,[]);
           return rate_kickbackListRes.rows;
       } catch (error) {

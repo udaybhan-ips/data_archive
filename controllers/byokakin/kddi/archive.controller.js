@@ -54,6 +54,41 @@ module.exports = {
     }
   },
 
+  async getKDDIFreeAccountNumListDetails(req, res) {
+    try {
+      const [getKDDIFreeAccountNumListRes, getKDDIFreeAccountNumListErr] = await handleError(ArchiveKDDI.getKDDIFreeAccountNumList(req.body));
+      if (getKDDIFreeAccountNumListErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: getKDDIFreeAccountNumListErr.message
+        });
+      }
+      return res.status(200).json(getKDDIFreeAccountNumListRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
+  async getKDDIFreeDialNumListDetails(req, res) {
+    try {
+      const [getKDDIFreeDialNumListRes, getKDDIFreeDialNumListErr] = await handleError(ArchiveKDDI.getKDDIFreeDialNumList(req.body));
+      if (getKDDIFreeDialNumListErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: getKDDIFreeDialNumListErr.message
+        });
+      }
+      return res.status(200).json(getKDDIFreeDialNumListRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
 
   getProData: async function (req, res) {
     const dateId = 4;

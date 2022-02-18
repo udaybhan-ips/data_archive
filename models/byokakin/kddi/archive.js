@@ -49,7 +49,7 @@ module.exports = {
   },
   getKDDIKotehiABasciData: async function () {
     try {
-      const query = `select id, data_code, data_name from kddi_kotehi_a_basic_construct`
+      const query = `select id, data_code, data_name from kddi_kotehi_a_basic_construct order by data_name`
       const getKDDIKotehiABasciDataRes = await db.queryByokakin(query, []);
       return getKDDIKotehiABasciDataRes.rows;
     } catch (e) {
@@ -59,7 +59,7 @@ module.exports = {
   },
   getKDDIKotehiAServiceDataData: async function () {
     try {
-      const query = `select id, data_code, data_name from kddi_kotehi_a_service_details `
+      const query = `select id, data_code, data_name from kddi_kotehi_a_service_details order by data_name`
       const getKDDIKotehiAServiceDataDataRes = await db.queryByokakin(query, []);
       return getKDDIKotehiAServiceDataDataRes.rows;
     } catch (e) {

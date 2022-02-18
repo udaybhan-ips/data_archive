@@ -13,7 +13,7 @@ var EmailController = require('../kickback/emailNotification.controller');
 // var archiverProJob = new CronJob ('45 16 * * *',function(){
 //     console.log('This is kickback Pro archiver start');
 //     archiveController.getProData();
-//     console.log('This is kickback Pro archiver End');
+//     console.log('This is kickback Pro archiver End');  
 // },null, true, 'Asia/Tokyo');
 
 

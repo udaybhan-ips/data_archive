@@ -6,5 +6,7 @@ router.post('/byokakin/kddi/kotehiLastMonth',  KDDIKotehiController.getLastMonth
 router.post('/byokakin/kddi/kotehiPrevMonthData',  KDDIKotehiController.getKDDIKotehiLastMonthData);
 router.get('/byokakin/kddi/aServiceCodeData',  KDDIKotehiController.getKDDIKotehiAServiceDataData);
 router.get('/byokakin/kddi/aBasicCodeData',  KDDIKotehiController.getKDDIKotehiABasciData);
+router.get('/byokakin/kddi/freeAccountNumber',  KDDIKotehiController.getKDDIFreeAccountNumListDetails);
+router.get('/byokakin/kddi/freeDailNumber',  KDDIKotehiController.getKDDIFreeDialNumListDetails);
 
 module.exports = router;

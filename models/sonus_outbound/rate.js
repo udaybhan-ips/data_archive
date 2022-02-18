@@ -3,7 +3,7 @@ var db = require('./../../config/database');
 module.exports = {
   findAll: async function() {
       try {
-          const query="select sor.customer_id,sor.landline, sor.mobile, sor.date_added, sor.updated_by, soc.customer_name, row_number() over (order by sor.customer_id) as id from (select * from sonus_outbound_rates)as sor join (select customer_name, customer_id  from sonus_outbound_customer) as soc on (soc.customer_id=sor.customer_id)";
+          const query="select sor.customer_id,sor.landline, sor.mobile, sor.date_added, sor.updated_date, sor.updated_by, soc.customer_name, row_number() over (order by sor.customer_id) as id from (select * from sonus_outbound_rates)as sor join (select customer_name, customer_id  from sonus_outbound_customer) as soc on (soc.customer_id=sor.customer_id)";
           const rateListRes= await db.query(query,[], ipsPortal=true);
           return rateListRes.rows;
       } catch (error) {
@@ -34,12 +34,13 @@ module.exports = {
             }
 
             if(data.landline){
-              updateData = 'landline='+data.landline+',';
+              updateData = 'landline='+ data.landline+',';
             }
 
-            if(data.landline){
-              updateData = `landline= '${data.updated_by}' , `;
-            }
+            
+            updateData = updateData + `updated_by= '${data.updated_by}' , `;
+            updateData = updateData + `updated_date= 'now()' , `;
+            
             
             if(data.mobile){
               updateData = updateData + 'mobile='+data.mobile;
@@ -49,7 +50,7 @@ module.exports = {
               updateData = updateData.substring(0, updateData.length - 1);
             }
 
-            const query=`INSERT INTO sonus_outbound_rates_history (customer_id, landline, mobile, date_added ,updated_by ) VALUES ($1, $2, $3, $4, $updated_by) returning customer_id`;
+            const query=`INSERT INTO sonus_outbound_rates_history (customer_id, landline, mobile, date_added ,updated_by ) VALUES ($1, $2, $3, $4, $5) returning customer_id`;
             const value= [data.customer_id, data.landline, data.mobile, 'now()', data.updated_by];
             const res = await db.query(query,value, ipsPortal=true);
             
