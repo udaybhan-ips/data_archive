@@ -6,7 +6,7 @@ var bcrypt = require('bcrypt');
 module.exports = {
   findAll: function() {
     return new Promise(function(resolve, reject) {
-      db.query('SELECT id, name, email_id, role FROM users', [],ipsPortal=true)
+      db.query('SELECT  id, name, email_id, role, date_added, updated_by, updated_date, updated_password_date FROM users', [],ipsPortal=true)
         .then(function(results) {
           resolve(results.rows);
         })
@@ -55,8 +55,8 @@ module.exports = {
         })
         .then(function(hash) {
           return db.query(
-            'INSERT INTO users (name, email_id, password, role) VALUES ($1, $2, $3, $4) returning id',
-            [data.name, data.email, hash, data.role],ipsPortal=true);
+            'INSERT INTO users (name, email_id, password, role, updated_by, updated_date, updated_password_date) VALUES ($1, $2, $3, $4, $5, $6, $7) returning id',
+            [data.name, data.email, hash, data.role, data.updated_by, 'now()', 'now()'],ipsPortal=true);
         })
         .then(function(result) {
           resolve(result.rows[0]);
@@ -105,7 +105,7 @@ module.exports = {
       else {
         validateEmail(data.email)
           .then(function() {
-            return db.query('UPDATE users SET role = $2 WHERE email_id = $1 returning email_id', [data.email, data.role],ipsPortal=true);
+            return db.query('UPDATE users SET role = $2, updated_by= $3 WHERE email_id = $1 returning email_id', [data.email, data.role, data.updated_by],ipsPortal=true);
           })
           .then(function(result) {
             resolve(result.rows[0]);
@@ -128,7 +128,7 @@ module.exports = {
             return hashPassword(data.password);
           })
           .then(function(hash) {
-            return db.query('UPDATE users SET password = $2 WHERE email_id = $1 returning email_id', [data.email, hash],ipsPortal=true);
+            return db.query(`UPDATE users SET password = $2, updated_by = $3, updated_password_date = now()  WHERE email_id = $1 returning email_id`, [data.email, hash, data.updated_by],ipsPortal=true);
           })
           .then(function(result) {
             resolve(result.rows[0]);
@@ -140,7 +140,7 @@ module.exports = {
     });
   },
   updatePasswordByUser: function(data) {
-    console.log("data="+JSON.stringify(data));
+    //console.log("data="+JSON.stringify(data));
     return new Promise(function(resolve, reject) {
       if (!data.email || !data.password || !data.current_password) {
         reject('error: email and/or password and/or current password missing')
@@ -156,7 +156,7 @@ module.exports = {
               return hashPassword(data.password);
             })
             .then(function(hash) {
-              return db.query('UPDATE users SET password = $2 WHERE email_id = $1 returning email_id', [data.email, hash],ipsPortal=true);
+              return db.query(`UPDATE users SET password = $2, updated_by = $3, updated_password_date = now() WHERE email_id = $1 returning email_id`, [data.email, hash, data.updated_by],ipsPortal=true);
             })
             .then(function(result) {
               resolve(result.rows[0]);
@@ -183,13 +183,14 @@ module.exports = {
         findOneByEmail(data.email)
           .then(function(user) {
             // Reset login attempts if more than 15 minutes have passed
+           
             if (Date.now() - user.last_login_attempt >= 900000) {
               user.login_attempts = -1;
             }
             return db.query(
               'UPDATE users SET last_login_attempt = now(), login_attempts = $2 WHERE email_id = $1 returning *',
               [data.email, user.login_attempts + 1],ipsPortal=true
-            );
+            )
           })
           .then(function(result) {
            
@@ -201,11 +202,14 @@ module.exports = {
             }
           })
           .then(function(user) {
+           // console.log("user..."+JSON.stringify(user))
              return verifyPassword(data.password, user);
           })
           .then(function(result) {
+
             
-            resolve({ isAuthorized: result.isValid, email:result.email,name:result.name, id: result.id, role:result.role });
+            
+            resolve({ isAuthorized: result.isValid, email:result.email,name:result.name, id: result.id, role:result.role, updated_password_date:result.updated_password_date });
           })
           .catch(function(err) {
             reject(err);
@@ -234,12 +238,19 @@ function findOneById(id) {
 }
 
 function findOneByEmail(email) {
-  console.log("email="+email);
+  //console.log("email="+email);
   return new Promise(function(resolve, reject) {
-    db.query('SELECT * FROM users WHERE email_id = $1', [email],ipsPortal=true)
+    db.query('SELECT *, now()::date - updated_password_date::date as no_of_day FROM users WHERE email_id = $1', [email],ipsPortal=true)
       .then(function(result) {
-        if (result.rows[0]) {
+        
+        if (result.rows[0] && result.rows[0]['no_of_day'] > 30 ) {
+          let resD = result.rows[0];
+          resD = {...resD, renew_password : true}
           resolve(result.rows[0]);
+        }else if(result.rows[0]){
+          let resD = result.rows[0];
+          resD = {...resD, renew_password : false}
+          resolve(resD);
         }
         else {
           reject('no user found')
@@ -327,8 +338,9 @@ function validatePassword(password, minCharacters) {
 
 function verifyPassword(password, user) {
  // console.log("passwoed="+user.password);
- console.log("passwoed="+password);
-   console.log("passwoed="+user.password);
+ //console.log("passwoed="+password);
+   //console.log("passwoed="+user.password);
+   //console.log("result.."+JSON.stringify(user));
   return new Promise(function(resolve, reject) {
     bcrypt.compare(password, user.password, function(err, result) {
       if (err) {
@@ -338,7 +350,7 @@ function verifyPassword(password, user) {
       else {
         console.log("else")
         
-        resolve({ isValid: result,id:user.id,name:user.name, email: user.email_id, role:user.role });
+        resolve({ isValid: result,id:user.id,name:user.name, email: user.email_id, role:user.role, updated_password_date:user.updated_password_date });
       }
     });
   });

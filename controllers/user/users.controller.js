@@ -20,7 +20,7 @@ module.exports = {
   },
 
   changeName: function(req, res) {
-    User.updateName({ id: req.params.id, name: req.body.name })
+    User.updateName({ id: req.params.id, updated_by: req.body.updated_by, name: req.body.name })
       .then(function(result) {
         return res.status(200).json(result);
       })
@@ -32,7 +32,7 @@ module.exports = {
   },
 
   changeEmail: function(req, res) {
-    User.updateEmail({ id: req.params.id, email: req.body.email })
+    User.updateEmail({ id: req.params.id, updated_by: req.body.updated_by, email: req.body.email })
       .then(function(result) {
         return res.status(200).json(result);
       })
@@ -44,7 +44,7 @@ module.exports = {
   },
 
   changePassword: function(req, res) {
-    User.updatePassword({ email: req.params.email, password: req.body.password })
+    User.updatePassword({ email: req.params.email, updated_by: req.body.updated_by, password: req.body.password })
       .then(function(result) {
         return res.status(200).json(result);
       })
@@ -55,7 +55,7 @@ module.exports = {
       });
   },
   changePasswordByUser: function(req, res) {
-    User.updatePasswordByUser({ email: req.body.email, password: req.body.new_password, current_password:req.body.old_password })
+    User.updatePasswordByUser({ email: req.body.email, updated_by: req.body.updated_by, password: req.body.new_password, current_password:req.body.old_password })
       .then(function(result) {
         return res.status(200).json(result);
       })
