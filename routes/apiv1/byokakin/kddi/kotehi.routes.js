@@ -8,5 +8,7 @@ router.get('/byokakin/kddi/aServiceCodeData',  KDDIKotehiController.getKDDIKoteh
 router.get('/byokakin/kddi/aBasicCodeData',  KDDIKotehiController.getKDDIKotehiABasciData);
 router.get('/byokakin/kddi/freeAccountNumber',  KDDIKotehiController.getKDDIFreeAccountNumListDetails);
 router.get('/byokakin/kddi/freeDailNumber',  KDDIKotehiController.getKDDIFreeDialNumListDetails);
+router.get('/byokakin/kddi/aBasicServiceData',  KDDIKotehiController.getKDDIKotehiABasciServiceData);
+
 
 module.exports = router;

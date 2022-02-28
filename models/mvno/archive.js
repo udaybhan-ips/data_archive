@@ -227,14 +227,14 @@ module.exports = {
 
       let where = "";
       if (leg == 'A') {
-        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
+        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 25 DAY)  
         AND (GW IN ('NFPGSX4','IPSGSX5')) 
         AND (CALLDURATION > 0)
         AND RECORDTYPEID = 3 
         AND ((EGCALLEDNUMBER LIKE '%33328222%'))
         order by STARTTIME asc `;
       } else {
-        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
+        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 25 DAY)  
         AND (GW IN ('NFPGSX4','IPSGSX5')) 
         AND (CALLDURATION > 0)
         AND RECORDTYPEID = 3 

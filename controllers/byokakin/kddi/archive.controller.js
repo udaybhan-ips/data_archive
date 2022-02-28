@@ -5,7 +5,7 @@ var ArchiveKDDI = require('../../../models/byokakin/kddi/archive');
 module.exports = {
   uploadKotehiKDDI: async function (req, res) {
     try {
-      const billingMonth = "2021-12-01";
+      const billingMonth = "2022-01-01";
       const serviceType = "Kotehi";
       const callType = ['free_number','d_number'];
       const filePath = "C:"
@@ -178,6 +178,24 @@ module.exports = {
         });
       }
       return res.status(200).json(getKDDIKotehiABasciDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
+  async getKDDIKotehiABasciServiceData(req, res) {
+    try {
+      const [getKDDIKotehiABasciServiceDataRes, getKDDIKotehiABasciServiceDataErr] = await handleError(ArchiveKDDI.getKDDIKotehiABasicServiceData(req.body));
+      if (getKDDIKotehiABasciServiceDataErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: getKDDIKotehiABasciServiceDataErr.message
+        });
+      }
+      return res.status(200).json(getKDDIKotehiABasciServiceDataRes);
 
     } catch (error) {
       return res.status(400).json({

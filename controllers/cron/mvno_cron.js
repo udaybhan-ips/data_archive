@@ -12,7 +12,7 @@ var CDRController = require('../mvno/cdr.controller');
 
 // },null, true, 'Asia/Tokyo');
 
-// var archiverJobSonusOut = new CronJob ('34 11 * * *',function(){
+// var archiverJobSonusOut = new CronJob ('34 22 * * *',function(){
 //     console.log('You will see this message every second');
 //     archiveController.getDataFPhoneALeg();
 //     console.log('You will see this message every second');
@@ -20,7 +20,7 @@ var CDRController = require('../mvno/cdr.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var archiverJobSonusOut = new CronJob ('40 11 * * *',function(){
+// var archiverJobSonusOut = new CronJob ('40 1 * * *',function(){
 //     console.log('You will see this message every second');
 //     archiveController.getDataFPhoneBLeg();
 //     console.log('You will see this message every second');
