@@ -51,7 +51,7 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main where company_code ='1011000049' order by company_code `;
+      const query = `select distinct(company_code) as company_code from billcdr_main  order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
     } catch (error) {
@@ -98,6 +98,7 @@ module.exports = {
 
   createDetailData: async function (bill_no, company_code, year, month, ratesDetails, data, carrierInfo) {
     console.log("details ");
+    let numerOfDays = new Date(year, month , 0). getDate();
     try {
 
       let call_count = 0;
@@ -132,7 +133,7 @@ module.exports = {
       }
 
       let query = `insert into bill_history (bill_no , company_code , date_bill , date_payment , bill_term_start , bill_term_end , bill_period ,
-         amount , tax ,print_flag , date_insert , name_insert , date_update , name_update , bill_include ,call_count) VALUES('${bill_no}', '${company_code}', '${year}-${month}-01', '${year}-${month}-25','${year}-${month}-01', '${year}-${month}-30',
+         amount , tax ,print_flag , date_insert , name_insert , date_update , name_update , bill_include ,call_count) VALUES('${bill_no}', '${company_code}', '${year}-${month}-01', '${year}-${month}-25','${year}-${month}-01', '${year}-${month}-${numerOfDays}',
          '1' ,'${amount}','${tax}','0','now()','System','now()','System', '0','${call_count}')`;
       console.log("query==" + query);
 

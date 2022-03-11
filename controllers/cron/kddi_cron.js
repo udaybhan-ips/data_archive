@@ -4,7 +4,7 @@ var archiveController = require('../byokakin/kddi/archive.controller');
 // var CDRsController = require('../byokakin/kddi/cdr.controller');
 // var EmailController = require('../byokakin/emailNotification.controller');
 
-// var archiverJob = new CronJob ('59 10 * * *',function(){
+// var archiverJob = new CronJob ('7 10 * * *',function(){
 //     console.log('This is byokakin archiver start');
 //     archiveController.uploadKotehiKDDI();
 //     console.log('This is byokakin archiver End');  

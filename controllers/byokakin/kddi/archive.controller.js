@@ -3,20 +3,22 @@ var ArchiveKDDI = require('../../../models/byokakin/kddi/archive');
 
 
 module.exports = {
+
   uploadKotehiKDDI: async function (req, res) {
     try {
-      const billingMonth = "2022-01-01";
+      
+      const billingMonth = "2022-02-01";
       const serviceType = "Kotehi";
       const callType = ['free_number','d_number'];
       const filePath = "C:"
-      const fileName ="NTCD202112ATU09118002_00.CSV"
+      const fileName ="" ;
 
       const deleteTargetDateData = await ArchiveKDDI.deleteTargetDateCDR(billingMonth, serviceType, callType);
       const resKDDIFreeDialNumList = await ArchiveKDDI.getKDDIFreeDialNumList();
       const resKDDIFreeAccountNumList = await ArchiveKDDI.getKDDIFreeAccountNumList();
       const resKDDICustomerList = await ArchiveKDDI.getKDDICustomerList();
 
-      const resKDDIKotehiData = await ArchiveKDDI.insertKDDIKotehiData(filePath, fileName, resKDDICustomerList, resKDDIFreeDialNumList,resKDDIFreeAccountNumList);
+      const resKDDIKotehiData = await ArchiveKDDI.insertKDDIKotehiData(filePath, fileName, resKDDICustomerList, resKDDIFreeDialNumList,resKDDIFreeAccountNumList,billingMonth);
       console.log("data");
       console.log(JSON.stringify(resKDDIKotehiData));
 
@@ -168,6 +170,55 @@ module.exports = {
     }
   },
 
+  async addKotehiData(req, res) {
+
+    
+    if(!req.body){
+      return res.status(500).json({
+        message: 'req data is empty'
+      });
+    }
+
+    
+    try {
+      const [addKotehiDataRes, addKotehiDataErr] = await handleError(ArchiveKDDI.addKotehiData(req.body));
+
+      if (addKotehiDataErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: addKotehiDataErr.message
+        });
+      }
+      return res.status(200).json(addKotehiDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+  
+
+  
+
+  async getKDDIKotehiProcessedData(req, res) {
+    try {
+      const [getKDDIKotehiProcessedDataRes, getKDDIKotehiProcessedDataErr] = await handleError(ArchiveKDDI.getKDDIKotehiProcessedData(req.body));
+      if (getKDDIKotehiProcessedDataErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: getKDDIKotehiProcessedDataErr.message
+        });
+      }
+      return res.status(200).json(getKDDIKotehiProcessedDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
   async getKDDIKotehiABasciData(req, res) {
     try {
       const [getKDDIKotehiABasciDataRes, getKDDIKotehiABasciDataErr] = await handleError(ArchiveKDDI.getKDDIKotehiABasciData(req.body));
@@ -178,6 +229,24 @@ module.exports = {
         });
       }
       return res.status(200).json(getKDDIKotehiABasciDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
+  async getKDDICustomer(req, res) {
+    try {
+      const [getKDDICustomerRes, getKDDICustomerErr] = await handleError(ArchiveKDDI.getKDDICustomer(req.body));
+      if (getKDDICustomerErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: getKDDICustomerErr.message
+        });
+      }
+      return res.status(200).json(getKDDICustomerRes);
 
     } catch (error) {
       return res.status(400).json({

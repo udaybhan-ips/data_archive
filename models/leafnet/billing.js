@@ -152,7 +152,7 @@ insertByBatches: async function(records, ratesData) {
   let mailOption={
       from: 'ips_tech@sysmail.ipsism.co.jp',
       to: 'uday@ipsism.co.jp',
-      cc:'y_ito@ipsism.co.jp,takuya_yamada@ipsism.co.jp,m_ishikawa@ipsism.co.jp',
+      cc:'y_ito@ipsism.co.jp,takuya_yamada@ipsism.co.jp,jinzai_assistance@ipsism.co.jp',
       subject,
       html
   }

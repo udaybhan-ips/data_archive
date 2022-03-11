@@ -111,7 +111,7 @@ module.exports = {
   getKickCompList: async function () {
     
     try {
-      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable `;
+      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable where  customer_id  in ('00000893')`;
       const getKickCompListRes = await db.queryIBS(query, []);
 
       if (getKickCompListRes.rows) {
@@ -327,6 +327,9 @@ module.exports = {
   },
 
   createDetailDataFC: async function (bill_no, customer_id, year, month, ratesDetails, data, carrierInfo, service_type) {
+
+    let numerOfDays = new Date(year, month , 0). getDate();
+
     console.log("details FC");
     try {
 
@@ -365,7 +368,7 @@ module.exports = {
 
       let query = `insert into kickback_history (bill_no , customer_code , date_bill , date_payment , bill_term_start , bill_term_end , bill_period ,
         bill_minute , bill_rate , bill_amount , amount , tax , disc_amount , date_insert , name_insert , date_update , name_update , paid_flag ,
-         obic_flag, call_count) VALUES('${bill_no}', '${customer_id}', '${year}-${month}-01', '${year}-${month}-25','${year}-${month}-01', '${year}-${month}-30',
+         obic_flag, call_count) VALUES('${bill_no}', '${customer_id}', '${year}-${month}-01', '${year}-${month}-25','${year}-${month}-01', '${year}-${month}-${numerOfDays}',
          '1' ,'${duration}',0,'${billAmount}','${amount}','${tax}','0','now()','System','now()','System',
         '0','0','${call_count}')`;
       console.log("query==" + query);
@@ -387,6 +390,7 @@ module.exports = {
     console.log("summary" + JSON.stringify(ratesInfo));
 
     console.log(ratesInfo[0]['minute_rate']);
+    let numerOfDays = new Date(year, month , 0). getDate();
 
     try {
 
@@ -415,7 +419,7 @@ module.exports = {
 
       let query = `insert into kickback_history (bill_no , customer_code , date_bill , date_payment , bill_term_start , bill_term_end , bill_period ,
            bill_minute , bill_rate , bill_amount , amount , tax , disc_amount , date_insert , name_insert , date_update , name_update , paid_flag ,
-            obic_flag, call_count) VALUES('${bill_no}', '${ratesInfo[0]['customer_id']}', '${year}-${month}-01', '${year}-${month}-25','${year}-${month}-01', '${year}-${month}-30',
+            obic_flag, call_count) VALUES('${bill_no}', '${ratesInfo[0]['customer_id']}', '${year}-${month}-01', '${year}-${month}-25','${year}-${month}-01', '${year}-${month}-${numerOfDays}',
             '1' ,'${duration}','${ratesInfo[0]['minute_rate']}','${billAmount}','${amount}','${tax}','${discAmount}','now()','System','now()','System',
            '0','0','${call_count}')`;
       console.log("query==" + query);
