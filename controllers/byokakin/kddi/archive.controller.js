@@ -152,6 +152,26 @@ module.exports = {
     }
   },
 
+  
+
+  async deleteKotehiProcessedData(req, res) {
+    try {
+      const [deleteKotehiProcessedDataRes, deleteKotehiProcessedDataErr] = await handleError(ArchiveKDDI.deleteKotehiProcessedData(req.body));
+      if (deleteKotehiProcessedDataErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: deleteKotehiProcessedDataErr.message
+        });
+      }
+      return res.status(200).json({'deleted_rows':deleteKotehiProcessedDataRes.rowCount});
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
   async getKDDIKotehiLastMonthData(req, res) {
     try {
       const [kotehiDataRes, kotehiDataErr] = await handleError(ArchiveKDDI.getKDDIKotehiLastMonthData(req.body));

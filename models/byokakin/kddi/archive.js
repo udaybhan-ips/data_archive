@@ -210,6 +210,22 @@ module.exports = {
       return e;
     }
   },
+ 
+  deleteKotehiProcessedData: async function ({billing_month, customer_cd, deleted_by}) {
+    try {
+      console.log("year, month .."+ billing_month, customer_cd);
+
+      const query = `delete from kddi_kotei_bill_details where to_char(bill_start__c,'YYYY-MM') ='${billing_month}' and comp_acco__c='${customer_cd}' `;
+      const deleteKotehiProcessedDataRes = await db.queryByokakin(query, []);
+
+      console.log(JSON.stringify(deleteKotehiProcessedDataRes))
+      
+      return deleteKotehiProcessedDataRes;
+    } catch (e) {
+      console.log("err in get kddi last month list=" + e.message);
+      return e;
+    }
+  },
   
 
   addKotehiData: async function (reqData) {
@@ -220,7 +236,7 @@ module.exports = {
       const [{data} , {currentUser}] = reqData;
 
       let billingData = reqData.billingData;
-      billingData = '2022-01-01'
+      billingData = '2022-02-01'
       const year = new Date(billingData).getFullYear();
       let month = new Date(billingData).getMonth() + 1;
       if (parseInt(month, 10) < 10) {
