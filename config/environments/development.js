@@ -53,7 +53,15 @@ const Byokakin={
   database : (process.env.POSTGRES_DATABASE || 'byokakin'),
   user     : (process.env.POSTGRES_USER ||'ips'),
   password : (process.env.POSTGRESL_PASSWORD || 'ips12345'),
-  timezone: 'Z'
+  timezone: 'Z',
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  },
+  idleTimeoutMillis: 10000,
+  connectionTimeoutMillis: 10000,
 }
 
 const SONUSDB={

@@ -7,7 +7,7 @@ const sql = require('mssql')
 
 var util = require('../public/javascripts/utility');
 
-const { resolve, reject } = require('promise');
+
 
 let numOfRows = 100000;
 
@@ -15,6 +15,7 @@ const pgp = require('pg-promise')({
   capSQL: true
 });
 
+const db_pgp = pgp(config.DATABASE_URL_BYOKAKIN);
 
 
 var connectionStringPortal = config.DATABASE_URL_IPS_PORTAL;
@@ -31,7 +32,7 @@ const CDR_CS = new pgp.helpers.ColumnSet(['date_bill', 'orig_ani', 'term_ani', '
   'dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_company_code', 'trunk_port',
   'sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_anani',
   'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'registerdate', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus',
-  'sonus_callingnumber'], { table: 'cdr_202203' });
+  'sonus_callingnumber'], { table: 'cdr_202204' });
 const BILLCDR_CS = new pgp.helpers.ColumnSet(['cdr_id', 'date_bill', 'company_code', 'carrier_code', 'in_outbound', 'call_type', 'trunk_port_target'
   , 'duration', 'start_time', 'stop_time', 'orig_ani', 'term_ani', 'route_info', 'date_update', 'orig_carrier_id', 'term_carrier_id',
   'transit_carrier_id', 'selected_carrier_id', 'trunk_port_name', 'gw', 'session_id', 'call_status', 'kick_company', 'term_use'], 
@@ -100,22 +101,11 @@ module.exports = {
 
     console.log("data length=" + data.length);
     
-    let db_pgp=null, query, res;
+    let query ;
     try {
-
-        let  ColumnSetValue;
-        
-        if(db_pgp==null){
-          db_pgp = pgp(config.DATABASE_URL_BYOKAKIN);
-          ColumnSetValue= new pgp.helpers.ColumnSet(ColumnSet, tableName)
-        }
-          
-        
-        query = pgp.helpers.insert(data, ColumnSetValue);
+        const ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSet, tableName)
+        query = await pgp.helpers.insert(data, ColumnSetValue);
         res = await db_pgp.none(query)
-
-        console.log("res.."+res);
-
         return res;
     
     } catch (e) {

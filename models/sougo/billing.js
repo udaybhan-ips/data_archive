@@ -114,7 +114,7 @@ module.exports = {
         for (let ii = 0; ii < info.length; ii++) {
           call_count = call_count + parseInt(info[ii]['call_count'], 10);
           duration = duration + parseInt(info[ii]['call_sec'], 10);
-          if (parseInt(info[ii]['amount'], 10) > 1) {
+          if (parseInt(info[ii]['amount'], 10) >= 1) {
             amount = amount + parseInt(info[ii]['amount'], 10);
           }
           let query = `insert into bill_detail (bill_no,line_no, item_type , item_name, call_count, call_sec,rate,
@@ -363,7 +363,7 @@ async function getCustomerInfo(company_code) {
 
 async function getInvoiceData(company_code, year, month) {
   try {
-    const query = `select * from (select bill_no,line_no, item_name, rate, call_sec, amount , remarks from bill_detail where amount>1)as lj join 
+    const query = `select * from (select bill_no,line_no, item_name, rate, call_sec, amount , remarks from bill_detail where amount>1 )as lj join 
     (select bill_no, company_code, date_bill  from bill_history
       where company_code='${company_code}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}') as rj
        on (lj.bill_no=rj.bill_no) order by line_no` ;
@@ -407,16 +407,17 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
   
     if (tmpPaymentDate == 'yearly') {
       if (parseInt(billingMonth) > 4)
-        paymentDueDate = `${billingYear + 1}/04/30`;
+        paymentDueDate = `${billingYear + 1}/05/02`;
       else
         paymentDueDate = `${currentYear}/05/02`;
     } else if (tmpPaymentDate == 'half_yearly') {
       if (parseInt(billingMonth) > 10 && parseInt(billingMonth) <=3 )
-        paymentDueDate = `${billingYear }/05/2`;
+        paymentDueDate = `${billingYear }/05/02`;
       else
-        paymentDueDate = `${currentYear}/05/2`;
+        paymentDueDate = `${currentYear}/05/02`;
     } else {
-      paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
+      //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
+      paymentDueDate = `${currentYear}/05/02`;
     }
 
   await generateHeader(address, doc, totalCallAmount);

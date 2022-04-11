@@ -137,7 +137,7 @@ async function writeData(records, csvWriter){
   try{
     await csvWriter.writeRecords(records)
   }catch(erorr){
-    console.log("Error== "+error.message);
+    console.log("Error == "+error.message);
   }
 }
 
@@ -288,6 +288,33 @@ module.exports.getCurrentDayMonthYear = function (date){
   return `${year}_${month}_${day}`;
 
 }
+
+
+module.exports.getPreviousYearMonth = function (date){
+  var d;
+  
+  if(date){
+    d = new Date(date);
+  }else{
+    d = new Date();
+  }
+  
+  d.setDate(1);
+  d.setMonth(d.getMonth()-1);
+
+
+  let month = d.getMonth() + 1;
+  let day =  d.getDate();
+  let year = d.getFullYear();
+
+  if(month < 10 ){
+    month = '0'+month;
+  }
+
+  return {year:[year], month:[month]};
+
+}
+
 
 module.exports.formatDate = function  (date) {
   var d = new Date(date),

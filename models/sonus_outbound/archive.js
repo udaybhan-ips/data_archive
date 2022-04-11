@@ -55,7 +55,7 @@ module.exports = {
           if(customerId && customerName){
               where = `WHERE customer_id= '${customerId}' AND customer_name = '${customerName}' and deleted= false ` ;
           }else{
-            where =`WHERE deleted = false `;
+            where =`WHERE deleted = false  `;
           }
 
           const query=`select trunk_port, customer_name, customer_id,incallednumber from sonus_outbound_customer ${where}`;
@@ -111,8 +111,6 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo, trunkPortsVal
       
       }
 
-      
-      
       //console.log("where="+where);
       //return null;
       const query=`SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
@@ -163,6 +161,9 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
   
     const JSON_data = Object.values(JSON.parse(JSON.stringify(records)));
     const dataSize=JSON_data.length;
+    // if(dataSize == 0){
+    //   return 'No data'
+    // }
     const chunkArray= await chunk(JSON_data,BATCH_SIZE);
     //console.log(chunkArray);
     console.log(JSON.stringify(customerInfo));
@@ -298,6 +299,9 @@ function utcToDate(utcDate){
   async function getCompanyInfo(trunkPort, customerInfo = [],incallednumber){
     let res= {};
     let startDigitofInCallNum=incallednumber.substring(0,4)+'%';
+    
+    let startFiveDigitofInCallNum=incallednumber.substring(0,5)+'%';
+
     // let trunkPortsArr = customerInfo[j]['trunk_port'].split(",");
     // customerInfo.forEach(item => {
     //   let res = {}
@@ -306,13 +310,15 @@ function utcToDate(utcDate){
     //     res['comp_name']=item['customer_name'];
     //   }
     // })
+
+    console.log("customer info.."+JSON.stringify(customerInfo));
   
     try{
       
       for(j=0; j<customerInfo.length;j++){
         
         if(customerInfo[j]['incallednumber']){
-          if(customerInfo[j]['incallednumber']===startDigitofInCallNum) {
+          if(customerInfo[j]['incallednumber']===startDigitofInCallNum || customerInfo[j]['incallednumber']===startFiveDigitofInCallNum) {
             res['comp_code']=customerInfo[j]['customer_id'];
             res['comp_name']=customerInfo[j]['customer_name'];
             break;

@@ -76,13 +76,7 @@ module.exports = {
               updateData = updateData +'updated_by='+`'${data.updated_by}'`+',';
             }
 
-
-            // remove ',' from last character
-            if(updateData.substr(updateData.length - 1)==','){
-              updateData = updateData.substring(0, updateData.length - 1);
-            }
-
-            const queryUpdate= `update rate set ${updateData} where  company_code='${data.company_code}'`;
+            const queryUpdate= `update rate set ${updateData}  date_update = now()  where  company_code='${data.company_code}'`;
             const resUpdate = await db.queryIBS(queryUpdate,[]);
 
             return resUpdate.rows[0];

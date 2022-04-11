@@ -7,18 +7,22 @@ module.exports = {
   uploadKotehiKDDI: async function (req, res) {
     try {
       
-      const billingMonth = "2022-02-01";
+
+      //console.log("req.."+JSON.stringify(req));
+
+      const billingMonth = "03";
+      const billingYear ="2022";
       const serviceType = "Kotehi";
       const callType = ['free_number','d_number'];
       const filePath = "C:"
       const fileName ="" ;
 
-      const deleteTargetDateData = await ArchiveKDDI.deleteTargetDateCDR(billingMonth, serviceType, callType);
+      //const deleteTargetDateData = await ArchiveKDDI.deleteTargetDateCDR(billingYear, billingMonth, serviceType, callType);
       const resKDDIFreeDialNumList = await ArchiveKDDI.getKDDIFreeDialNumList();
       const resKDDIFreeAccountNumList = await ArchiveKDDI.getKDDIFreeAccountNumList();
       const resKDDICustomerList = await ArchiveKDDI.getKDDICustomerList();
 
-      const resKDDIKotehiData = await ArchiveKDDI.insertKDDIKotehiData(filePath, fileName, resKDDICustomerList, resKDDIFreeDialNumList,resKDDIFreeAccountNumList,billingMonth);
+      const resKDDIKotehiData = await ArchiveKDDI.insertKDDIKotehiData(filePath, fileName, resKDDICustomerList, resKDDIFreeDialNumList,resKDDIFreeAccountNumList,billingYear, billingMonth);
       console.log("data");
       console.log(JSON.stringify(resKDDIKotehiData));
 
@@ -35,7 +39,7 @@ module.exports = {
 
   uploadKDDIRAW: async function (req, res) {
     try {
-      const billingMonth = "2021-12-01";
+      const billingMonth = "2022-02-01";
       const serviceType = "RAW";
       
 

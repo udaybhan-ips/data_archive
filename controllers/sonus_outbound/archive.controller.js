@@ -49,8 +49,8 @@ module.exports = {
         }
         
         
-         let getTargetCDRTGRes = await  ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, getAllTrunkgroupRes,trunkPortsVal );
-         const getTGDataRes = await  ArchiveSonusOutbound.insertByBatches(getTargetCDRTGRes, getAllTrunkgroupRes, getRatesRes);
+        //  let getTargetCDRTGRes = await  ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, getAllTrunkgroupRes,trunkPortsVal );
+        //  const getTGDataRes = await  ArchiveSonusOutbound.insertByBatches(getTargetCDRTGRes, getAllTrunkgroupRes, getRatesRes);
       
         // For incallednumber 
 

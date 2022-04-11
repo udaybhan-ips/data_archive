@@ -1,6 +1,7 @@
 var db = require('./../../../config/database');
 const { BATCH_SIZE } = require('../../../config/config');
 const iconv = require('iconv-lite');
+const utility = require("../../../public/javascripts/utility")
 
 let ColumnSet = ['comp_acco__c', 'companyname', 'recordtype', 'account', 'groupcode', 'basicservicetype', 'freedialnumber', 'basicchargedesc', 'amount', 'taxinclude', 'telcotype', 'datebill'];
 let tableName = { table: 'kddi_kotei_cdr_basic' };
@@ -9,16 +10,17 @@ let ColumnSetContents = ['comp_acco__c', 'companyname', 'recordtype', 'account',
 let tableNameContents = { table: 'kddi_kotei_cdr_contents' };
 
 let ColumnSetInfini = ['servicecode', 'did', 'usednumber', 'cld', 'calldate', 'calltime', 'callduration', 'source', 'destination', 'terminaltype'];
-let tableNameInfini = { table: 'byokakin_kddi_infinidata_202112' };
+let tableNameInfini = { table: 'byokakin_kddi_infinidata_202202' };
 
 let ColumnSetKDDIRAW = ['did', 'freedialnum', 'cld', 'calldate', 'calltime', 'callduration', 'source', 'destination', 'callclassi', 'calltype', 'callcharge', 'customercode'];
-let tableNameKDDIRAW = { table: 'byokakin_kddi_raw_cdr_202112' };
+let tableNameKDDIRAW = { table: 'byokakin_kddi_raw_cdr_202202' };
 
 let ColumnSetKDDIBillDetail = ['bill_numb__c', 'bill_start__c', 'cdrtype', 'cdrid', 'cdrcnt', 'account', 'servicename', 'productname', 'taxinclude', 'amount', 'comp_acco__c'];
 let tableNameKDDIBillDetail = { table: 'kddi_kotei_bill_details' };
 
 
 var fs = require('fs');
+const fsPromises = fs.promises;
 const path = require('path');
 var csv = require('fast-csv');
 const { exit } = require('process');
@@ -46,15 +48,15 @@ module.exports = {
       const query = `select m_cus.* from (select id, customer_cd, customer_name, address, staff_name from  m_customer where is_deleted=false)as m_cus join (select * from kddi_customer where deleted=false) as kddi_cus on ( m_cus.customer_cd::int = kddi_cus.customer_code::int) order by m_cus.customer_cd desc`;
       const KDDICustomerListRes = await db.query(query, [], true);
       // console.log(targetDateRes);
-      if(KDDICustomerListRes.rows){
+      if (KDDICustomerListRes.rows) {
         return KDDICustomerListRes.rows
       }
 
-      throw new Error ('Error in fetching customer.'+KDDICustomerListRes)
-     
+      throw new Error('Error in fetching customer.' + KDDICustomerListRes)
+
     } catch (error) {
-      console.log("error...."+error.message)
-      throw new Error ('Error in fetching customer.'+error.message)
+      console.log("error...." + error.message)
+      throw new Error('Error in fetching customer.' + error.message)
     }
   },
 
@@ -113,7 +115,7 @@ module.exports = {
 
   getKDDIFreeAccountNumList: async function () {
     try {
-      const query = `select carriername, comp_code__c, accountid, usedflag from free_call_account where carriername='KDDI' and usedflag=1`
+      const query = `select carriername, comp_code__c, accountid, usedflag from free_call_account where carriername='KDDI' `
       const getKDDIFreeAccountNumListRes = await db.queryByokakin(query, []);
       return getKDDIFreeAccountNumListRes.rows;
     } catch (e) {
@@ -121,16 +123,12 @@ module.exports = {
       return e;
     }
   },
-  getKDDIKotehiData: async function (reqData) {
+  getKDDIKotehiData: async function ({ year, month, comCode }) {
     try {
-      let billingData = reqData.billingData;
-      billingData = '2022-02-1'
-      const year = new Date(billingData).getFullYear();
-      let month = new Date(billingData).getMonth() + 1;
+      let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
 
-      if (parseInt(month, 10) < 10) {
-        month = '0' + month;
-      }
+      const lastYear = lastMonthDate.year;
+      const lastMonth = lastMonthDate.month;
 
       const query = `select *, ROW_NUMBER() OVER(ORDER BY cdrid) id from ( select cdrid , comp_acco__c, companyname, recordtype, account,
         freedialnumber as billaccount, amount, '' as gendetaildesc, basicchargedesc, datebill    from kddi_kotei_cdr_basic 
@@ -145,17 +143,20 @@ module.exports = {
     }
   },
 
-  getLastMonthKDDIKotehiData: async function ({year1, month1, comCode}) {
+  getLastMonthKDDIKotehiData: async function ({ year, month, comCode }) {
     try {
-      let where = "" ;
+      let where = "";
 
-      let year = "2022", month = "01";
+      let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
 
-      if(comCode && year && month) {
-        where = ` where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' and substring(split_part(bill_numb__c, '-',2),4) as comp_code ='${comCode}'`; 
-      }else if(!comCode && year && month) {
-        where = `where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}'`; 
-      }else{
+      const lastYear = lastMonthDate.year;
+      const lastMonth = lastMonthDate.month;
+
+      if (comCode && year && month) {
+        where = ` where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}' and substring(split_part(bill_numb__c, '-',2),4) as comp_code ='${comCode}'`;
+      } else if (!comCode && lastMonth && lastYear) {
+        where = `where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}'`;
+      } else {
         throw new Error('please select billing year and month');
       }
 
@@ -163,7 +164,7 @@ module.exports = {
         freedialnumber as billaccount, amount, '' as gendetaildesc, basicchargedesc, datebill    from kddi_kotei_cdr_basic 
          UNION ALL select cdrid ,comp_acco__c, companyname, recordtype, account, billaccount, amount, 
          gendetaildesc, basicchargedesc, datebill from kddi_kotei_cdr_contents ) as foo
-         where  to_char(foo.datebill::date, 'MM-YYYY')='${month}-${year}'  `;
+         where  to_char(foo.datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}'  `;
       const getLastMonthKDDIKotehiDataRes = await db.queryByokakin(query, []);
       return getLastMonthKDDIKotehiDataRes.rows;
     } catch (e) {
@@ -173,24 +174,30 @@ module.exports = {
   },
 
 
-  getKDDIKotehiLastMonthData: async function ({year, month, comp_code}) {
+  getKDDIKotehiLastMonthData: async function ({ year, month, comp_code }) {
     try {
+
+      let where = "";
+
+      let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
+
+      const lastYear = lastMonthDate.year;
+      const lastMonth = lastMonthDate.month;
       
-      let where = "" ;
 
-      console.log("year, month, com code.."+ year, month, comp_code);
+      console.log("year, month, com code.." + year, month, comp_code);
 
-      if(comp_code && year && month) {
-        where = ` where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' and substring(split_part(bill_numb__c, '-',2),4) as comp_code ='${comCode}'`; 
-      }else if(!comp_code && year && month) {
-        where = `where to_char(bill_start__c::date, 'MM-YYYY')='01-2022'`; 
-      }else{
+      if (comp_code && year && month) {
+        where = ` where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' and substring(split_part(bill_numb__c, '-',2),4) as comp_code ='${comCode}'`;
+      } else if (!comp_code && year && month) {
+        where = `where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}'`;
+      } else {
         throw new Error('please select billing year and month');
       }
 
       const query = ` select *, substring(split_part(bill_numb__c, '-',2),4) as comp_code from kddi_kotei_bill_details ${where}`;
 
-      console.log("query...." +query)
+      console.log("query...." + query)
       const getKDDIKotehiLastMonthDataRes = await db.queryByokakin(query, []);
       return getKDDIKotehiLastMonthDataRes.rows;
     } catch (e) {
@@ -199,9 +206,9 @@ module.exports = {
     }
   },
 
-  getKDDIKotehiProcessedData: async function ({year, month}) {
+  getKDDIKotehiProcessedData: async function ({ year, month }) {
     try {
-      console.log("year, month .."+ year, month);
+      console.log("year, month .." + year, month);
       const query = ` select  substring(split_part(bill_numb__c, '-',2),4) as comp_code,  sum (amount) from kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_numb__c, '-',2),4) `;
       const getKDDIKotehiProcessedDataRes = await db.queryByokakin(query, []);
       return getKDDIKotehiProcessedDataRes.rows;
@@ -210,30 +217,30 @@ module.exports = {
       return e;
     }
   },
- 
-  deleteKotehiProcessedData: async function ({billing_month, customer_cd, deleted_by}) {
+
+  deleteKotehiProcessedData: async function ({ billing_month, customer_cd, deleted_by }) {
     try {
-      console.log("year, month .."+ billing_month, customer_cd);
+      console.log("year, month .." + billing_month, customer_cd);
 
       const query = `delete from kddi_kotei_bill_details where to_char(bill_start__c,'YYYY-MM') ='${billing_month}' and comp_acco__c='${customer_cd}' `;
       const deleteKotehiProcessedDataRes = await db.queryByokakin(query, []);
 
       console.log(JSON.stringify(deleteKotehiProcessedDataRes))
-      
+
       return deleteKotehiProcessedDataRes;
     } catch (e) {
       console.log("err in get kddi last month list=" + e.message);
       return e;
     }
   },
-  
+
 
   addKotehiData: async function (reqData) {
 
-//    console.log("data..."+ JSON.stringify(reqData));
-  try {
-      
-      const [{data} , {currentUser}] = reqData;
+    //    console.log("data..."+ JSON.stringify(reqData));
+    try {
+
+      const [{ data }, { currentUser }] = reqData;
 
       let billingData = reqData.billingData;
       billingData = '2022-02-01'
@@ -244,14 +251,14 @@ module.exports = {
       }
 
       let comCode = ''
-      let comCode4Dig= '';
-      if(data.length>0){
-        comCode =  data[0]['comp_acco__c']
+      let comCode4Dig = '';
+      if (data.length > 0) {
+        comCode = data[0]['comp_acco__c']
         comCode4Dig = comCode.slice(comCode.length - 4);
-      }else{
-         throw new Error('request data not available');
+      } else {
+        throw new Error('request data not available');
       }
-      
+
       const query = ` select *, substring(split_part(bill_numb__c, '-',2),4) as comp_code from kddi_kotei_bill_details where   
       to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' and  substring(split_part(bill_numb__c, '-',2),4) = '${comCode4Dig}' `;
 
@@ -259,13 +266,13 @@ module.exports = {
 
       if (getKDDIKotehiLastMonthDataRes.rows && getKDDIKotehiLastMonthDataRes.rows.length > 0) {
         return 'alredy processed';
-      }else{
+      } else {
 
         let tmpData = [];
 
         const bill_numb__c = `KDDI-FIX${comCode.slice(comCode.length - 4)}-${year}${month}-1`;
 
-        for(let i=0; i<data.length; i++){
+        for (let i = 0; i < data.length; i++) {
           let tmpObj = {};
 
           tmpObj['cdrid'] = data[i]['cdrid'];
@@ -283,26 +290,26 @@ module.exports = {
           tmpData.push(tmpObj);
         }
 
-          
-        const insertKotehiDataRes = await insertByBatches(tmpData, 'kddi_kotehi_bill_detail');
-  
-        console.log("insertKotehiDataRes.."+ JSON.stringify(insertKotehiDataRes));
 
-        if (insertKotehiDataRes.length>0 && insertKotehiDataRes[0]== null) {
+        const insertKotehiDataRes = await insertByBatches(tmpData, 'kddi_kotehi_bill_detail');
+
+        console.log("insertKotehiDataRes.." + JSON.stringify(insertKotehiDataRes));
+
+        if (insertKotehiDataRes.length > 0 && insertKotehiDataRes[0] == null) {
           return 'done';
-        }else{
+        } else {
           throw new Error(insertKotehiDataRes);
         }
       }
 
     } catch (e) {
       console.log("err in get kddi free account number list=" + e.message);
-      throw new Error(e.message);      
+      throw new Error(e.message);
     }
   },
 
 
-  deleteTargetDateCDR: async function (billingMonth, billingYear, serviceType, callType) {
+  deleteTargetDateCDR: async function (billingYear, billingMonth, serviceType, callType) {
 
     try {
       let query = "";
@@ -319,7 +326,7 @@ module.exports = {
       return error;
     }
   },
-  insertKDDIKotehiData: async function (filePath, fileName, resKDDICustomerList, resKDDIFreeDialNumList, resKDDIFreeAccountNumList,billingMonth) {
+  insertKDDIKotehiData: async function (filePath, fileName, resKDDICustomerList, resKDDIFreeDialNumList, resKDDIFreeAccountNumList, billingYear, billingMonth) {
 
     console.log("path and name =" + filePath + fileName);
 
@@ -332,7 +339,7 @@ module.exports = {
       let csvData = [];
       let csvDataContents = [];
       let csvInfiniData = [];
-      let csvstream = fs.createReadStream('NTCD202203BTU09118002_00.CSV')
+      let csvstream = fs.createReadStream('NTCD202204ATU09118002_00.CSV')
         .pipe(csv.parse())
         .on('data', async function (row) {
 
@@ -358,7 +365,7 @@ module.exports = {
             obj['amount'] = parseInt(row[6], 10);
             obj['taxinclude'] = row[7];
             obj['telcotype'] = row[8];
-            obj['datebill'] = billingMonth;
+            obj['datebill'] = `${billingYear}-${billingMonth}-01`;
             csvData.push(obj);
             csvstream.resume();
 
@@ -388,7 +395,7 @@ module.exports = {
             obj1['contentsprovider'] = row[12];
             obj1['amount'] = parseInt(row[13]);
             obj1['taxinclude'] = row[14];
-            obj1['datebill'] = billingMonth;
+            obj1['datebill'] = `${billingYear}-${billingMonth}-01`;;
 
             csvDataContents.push(obj1);
             csvstream.resume();
@@ -411,8 +418,8 @@ module.exports = {
         })
         .on('end', function () {
           insertByBatches(csvData);
-          insertByBatches(csvDataContents, 'contents');
-          insertByBatches(csvInfiniData, 'infini');
+          insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
+          insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
         })
         .on('error', function (error) {
           console.log("Error" + error.message);
@@ -425,61 +432,55 @@ module.exports = {
   },
 
   insertKDDIRAWData: async function (filesPathtest) {
-    console.log("path and name =" + __dirname);
 
-    let filesPath = path.join(__dirname, '../RAWCDR/202112')
-    let filePath = '';
+    let files = [];
+    let filesPath = path.join(__dirname, '../RAWCDR/202202');
+    files = await readFilesName(filesPath);
+    //console.log("actual path and name =" + (files));
 
-    console.log("actual path and name =" + filesPath);
-
-
+    let resData = [];
 
     try {
 
-      //    let csvData = [];
-      let csvstream;
-      fs.readdir(filesPath, (err, files) => {
-        if (err) {
-          console.log("error in reading files name.." + err);
-          throw new Error(err);
+      for (let i = 0; i < files.length; i++) {
+
+        let csvData = [], fileName = '';
+        console.log("file name ..." + files[i]);
+
+        if (path.extname(files[i]).toLowerCase() == ".csv") {
+          fileName = path.join(__dirname, `../RAWCDR/202202/${files[i]}`)
+
+
+          let csvstream = fs.createReadStream(fileName)
+            .pipe(iconv.decodeStream("Shift_JIS"))
+            .pipe(csv.parse())
+
+            .on('data', function (row) {
+              let obj = {};
+              obj['did'] = row[0];
+              obj['freedialnum'] = '';
+              obj['calldate'] = row[1];
+              obj['calltime'] = row[2];
+              obj['cld'] = row[3];
+              obj['source'] = '';
+              obj['destination'] = row[4];
+              obj['callduration'] = row[5];
+              obj['callclassi'] = row[6];
+              obj['calltype'] = row[7];
+              obj['callcharge'] = row[8];
+              obj['customercode'] = '';
+              csvData.push(obj);
+              csvstream.resume();
+            })
+            .on('end', function () {
+              csvData.shift();
+              const res = insertByBatches(csvData, 'RAWCDR');
+              resData.push(res);
+            })
+          console.log("res.." + resData.length);
         }
-        for (let i = 0; i < files.length; i++) {
-          let csvData = [];
-          if (path.extname(files[i]).toLowerCase() == ".csv") {
-            filePath = path.join(__dirname, `../RAWCDR/202112/${files[i]}`)
-            csvstream = fs.createReadStream(filePath)
-              .pipe(iconv.decodeStream("Shift_JIS"))
-              .pipe(csv.parse())
-              .on('data', function (row) {
-                let obj = {};
-                obj['did'] = row[0];
-                obj['freedialnum'] = '';
-                obj['calldate'] = '2021-01-01';
-                obj['calltime'] = '';
-                obj['cld'] = row[3];
-                obj['source'] = '';
-                obj['destination'] = row[4];
-                obj['callduration'] = row[5];
-                obj['callclassi'] = row[6];
-                obj['calltype'] = row[7];
-                obj['callcharge'] = 0;
-                obj['customercode'] = '';
-                csvData.push(obj);
-                csvstream.resume();
-              })
-              .on('end', function () {
-                csvData.shift();
-                insertByBatches(csvData, 'RAWCDR');
-
-              })
-              .on('error', function (error) {
-                console.log("Error" + error.message);
-              });
-          }
-        }
-      })
-
-
+      }
+      
     } catch (error) {
       console.log("Error" + error.message);
       return error;
@@ -489,19 +490,54 @@ module.exports = {
 
 }
 
-async function insertByBatches(records, type) {
+// async function readFilesName (filePath){
+
+//   const output = []
+//   console.log("filePath.."+filePath);
+
+//  await fs.readdir(filePath,  (err, files) => {
+
+//     if (err) {
+//       console.log("error in reading files name.." + err);
+//       throw new Error(err);
+//     }
+
+//     console.log("file..."+files.length);
+
+//     for (let i = 0; i < files.length; i++) {
+//       if (path.extname(files[i]).toLowerCase() == ".csv") {
+//         output.push(path.join(__dirname, `../RAWCDR/202202/${files[i]}`))
+//       }
+//     }    
+// })
+// return output;    
+// }
+
+
+async function readFilesName(filePath) {
+  try {
+    return fsPromises.readdir(filePath);
+  } catch (err) {
+    console.error('Error occured while reading directory!', err);
+  }
+}
+
+
+async function insertByBatches(records, type, billingYear, billingMonth) {
   const chunkArray = chunk(records, BATCH_SIZE);
   let res = [];
   let resArr = [];
 
   for (let i = 0; i < chunkArray.length; i++) {
     if (type === 'contents') {
-      res = await db.queryBatchInsert(chunkArray[i], null, ColumnSetContents, tableNameContents);
+      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetContents, tableNameContents);
     } else if (type === 'infini') {
-      res = await db.queryBatchInsert(chunkArray[i], null, ColumnSetInfini, tableNameInfini);
+      let tableNameInfini = { table: `byokakin_kddi_infinidata_${billingYear}${billingMonth}` };
+      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetInfini, tableNameInfini);
     } else if (type === 'RAWCDR') {
+      let tableNameKDDIRAW = { table: `byokakin_kddi_raw_cdr_${billingYear}${billingMonth}` };
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetKDDIRAW, tableNameKDDIRAW);
-    } else if(type == 'kddi_kotehi_bill_detail'){
+    } else if (type == 'kddi_kotehi_bill_detail') {
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetKDDIBillDetail, tableNameKDDIBillDetail);
     }
     else {
@@ -515,10 +551,24 @@ async function insertByBatches(records, type) {
 
 }
 
+async function inserBulkData(data) {
+  try {
+    const res = await db.queryBatchInsertByokakin(data, ColumnSetKDDIRAW, tableNameKDDIRAW);
+
+    console.log("rsult is .." + res)
+
+  } catch (error) {
+    console.log("error" + error.message);
+  }
+
+
+}
+
 
 
 async function getCompanyCodeByAccount(companyCodeList, callToNum) {
   let res = '99999999';
+
   try {
     for (let i = 0; i < companyCodeList.length; i++) {
       if (callToNum.toLowerCase() == companyCodeList[i]['accountid'].trim().toLowerCase()) {
@@ -526,6 +576,11 @@ async function getCompanyCodeByAccount(companyCodeList, callToNum) {
         break;
       }
     }
+
+    if(res =='99999999'){
+      console.log("callToNum.."+ callToNum.toLowerCase() , "and length.."+callToNum.length);
+    }
+
     return res;
   } catch (err) {
     console.log("Error in parsing company code..." + err.message)

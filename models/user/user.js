@@ -1,12 +1,13 @@
 var Promise = require('promise');
 var db = require('./../../config/database');
 var bcrypt = require('bcrypt');
+var utility = require('./../../public/javascripts/utility');
 
 
 module.exports = {
   findAll: function() {
     return new Promise(function(resolve, reject) {
-      db.query('SELECT  id, name, email_id, role, date_added, updated_by, updated_date, updated_password_date FROM users', [],ipsPortal=true)
+      db.query('SELECT  id, name, email_id, role, date_added, updated_by, updated_date, updated_password_date FROM users where deleted = false', [],ipsPortal=true)
         .then(function(results) {
           resolve(results.rows);
         })
@@ -54,14 +55,18 @@ module.exports = {
           return hashPassword(data.password);
         })
         .then(function(hash) {
+          const d = new Date();
+          const currentDateTime = utility.utcToDate(d);
+
           return db.query(
             'INSERT INTO users (name, email_id, password, role, updated_by, updated_date, updated_password_date) VALUES ($1, $2, $3, $4, $5, $6, $7) returning id',
-            [data.name, data.email, hash, data.role, data.updated_by, 'now()', 'now()'],ipsPortal=true);
+            [data.name, data.email, hash, data.role, data.updated_by, currentDateTime , currentDateTime ],ipsPortal=true);
         })
         .then(function(result) {
           resolve(result.rows[0]);
         })
         .catch(function(err) {
+          console.log("error.."+err.message)
           reject(err);
         });
     });
@@ -242,7 +247,7 @@ function findOneByEmail(email) {
   return new Promise(function(resolve, reject) {
     db.query('SELECT *, now()::date - updated_password_date::date as no_of_day FROM users WHERE email_id = $1', [email],ipsPortal=true)
       .then(function(result) {
-        
+    //    console.log(JSON.stringify(result))
         if (result.rows[0] && result.rows[0]['no_of_day'] > 30 ) {
           let resD = result.rows[0];
           resD = {...resD, renew_password : true}
@@ -253,6 +258,7 @@ function findOneByEmail(email) {
           resolve(resD);
         }
         else {
+      //    console.log("here..")
           reject('no user found')
         }
       })
