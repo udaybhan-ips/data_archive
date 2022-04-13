@@ -1,17 +1,20 @@
-var db = require('./../../config/database');
+var db = require('./../../../config/database');
 
 module.exports = {
-    getSummary: async function() {
-      try {
-          const query=`select * from kickback_traffic_summary `;
-          const ratesRes= await db.query(query,[]);
+    getSummaryByMonth: async function({year, month}) {
+
+        try {
+          const query=`select * from byokakin_billing_history where cdrmonth::date = '${year}-${month}-01' `;
+          const summaryRes= await db.queryByokakin(query,[]);
           
-          if(ratesRes.rows){
-              return (ratesRes.rows);              
+          if(summaryRes.rows){
+              return (summaryRes.rows);              
           }
-          return {err:'not found'};
+          throw new Error('not found')
+
       } catch (error) {
-          return error;
+            console.log("error in getting summary data")
+            throw new Error(error)
       }
   },
   

@@ -115,7 +115,7 @@ module.exports = {
 
   getKDDIFreeAccountNumList: async function () {
     try {
-      const query = `select carriername, comp_code__c, accountid, usedflag from free_call_account where carriername='KDDI' `
+      const query = `select carriername, comp_code__c, accountid, usedflag from free_call_account where carriername='KDDI' and usedflag = '1' `
       const getKDDIFreeAccountNumListRes = await db.queryByokakin(query, []);
       return getKDDIFreeAccountNumListRes.rows;
     } catch (e) {
@@ -188,7 +188,7 @@ module.exports = {
       console.log("year, month, com code.." + year, month, comp_code);
 
       if (comp_code && year && month) {
-        where = ` where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' and substring(split_part(bill_numb__c, '-',2),4) as comp_code ='${comCode}'`;
+        where = ` where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}' and substring(split_part(bill_numb__c, '-',2),4) as comp_code ='${comCode}'`;
       } else if (!comp_code && year && month) {
         where = `where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}'`;
       } else {
@@ -237,26 +237,23 @@ module.exports = {
 
   addKotehiData: async function (reqData) {
 
-    //    console.log("data..."+ JSON.stringify(reqData));
+        //console.log("data..."+ JSON.stringify(reqData));
     try {
-
       const [{ data }, { currentUser }] = reqData;
+      let billingData, comCode = '', comCode4Dig = '';
+      
+      if (data.length > 0) {
+        comCode = data[0]['comp_acco__c']
+        comCode4Dig = comCode.slice(comCode.length - 4);
+        billingData = data[0]['datebill'];
+      } else {
+        throw new Error('request data not available');
+      }
 
-      let billingData = reqData.billingData;
-      billingData = '2022-02-01'
       const year = new Date(billingData).getFullYear();
       let month = new Date(billingData).getMonth() + 1;
       if (parseInt(month, 10) < 10) {
         month = '0' + month;
-      }
-
-      let comCode = ''
-      let comCode4Dig = '';
-      if (data.length > 0) {
-        comCode = data[0]['comp_acco__c']
-        comCode4Dig = comCode.slice(comCode.length - 4);
-      } else {
-        throw new Error('request data not available');
       }
 
       const query = ` select *, substring(split_part(bill_numb__c, '-',2),4) as comp_code from kddi_kotei_bill_details where   
@@ -339,7 +336,7 @@ module.exports = {
       let csvData = [];
       let csvDataContents = [];
       let csvInfiniData = [];
-      let csvstream = fs.createReadStream('NTCD202204ATU09118002_00.CSV')
+      let csvstream = fs.createReadStream('NTCD202204BTU09118002_00.CSV')
         .pipe(csv.parse())
         .on('data', async function (row) {
 

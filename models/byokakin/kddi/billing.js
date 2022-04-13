@@ -53,48 +53,7 @@ module.exports = {
     }
   },
 
-  // getBillNoInfo: async function () {
-  //   try {
-  //     const query = `select max(bill_no) as max_bill_no from kickback_history `;
-  //     const billNoRes = await db.queryIBS(query, []);
-  //     if (billNoRes.rows) {
-  //       return { 'max_bill_no': (billNoRes.rows[0].max_bill_no) };
-  //     }
-  //     return { err: 'not found' };
-  //   } catch (error) {
-  //     console.log("err in bill no info =" + error.message);
-  //     return error;
-  //   }
-  // },
-
-  // get03Numbers: async function (customer_id) {
-  //   try {
-  //     const query = `select substring(_03_numbers, 2, 10) as _03_numbers, customer_cd from _03numbers where customer_cd='${customer_id}' order by _03_numbers asc `;
-  //     const get03NumRes = await db.queryIBS(query, []);
-  //     console.log("query==" + query);
-  //     if (get03NumRes.rows) {
-  //       return (get03NumRes.rows);
-  //     }
-  //     return { err: 'not found' };
-  //   } catch (error) {
-  //     console.log("err in get 03 numbers =" + error.message);
-  //     return error;
-  //   }
-  // },
-  // get03NumbersValid: async function (customer_id) {
-  //   try {
-  //     const query = `select substring(_03_numbers, 2, 10) as _03_numbers, customer_cd from _03numbers where customer_cd='${customer_id}' and valid_flag=0 order by _03_numbers asc `;
-  //     const get03NumRes = await db.queryIBS(query, []);
-  //     console.log("query==" + query);
-  //     if (get03NumRes.rows) {
-  //       return (get03NumRes.rows);
-  //     }
-  //     return { err: 'not found' };
-  //   } catch (error) {
-  //     console.log("err in get 03 numbers =" + error.message);
-  //     return error;
-  //   }
-  // },
+ 
   getKDDICompList: async function () {
 
     try {
@@ -110,22 +69,14 @@ module.exports = {
       return error;
     }
   },
-  getKDDIOutboundRAWData: async function (billingYear, billingMonth, didArrList) {
-
-    let didNumbers = "";
+  getKDDIOutboundRAWData: async function (billingYear, billingMonth, customer_code) {
 
     try {
 
-      for (let i = 0; i < didArrList.length; i++) {
-        didNumbers = didNumbers + `'${didArrList[i]['free_numb__c']}',`;
-      }
-      //remove last , from string
-      if (didNumbers.substr(didNumbers.length - 1) == ',') {
-        didNumbers = didNumbers.substring(0, didNumbers.length - 1);
-      }
+      const query =`select  raw_cdr.* from byokakin_kddi_raw_cdr_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
+      (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g')=free_dial.free_numb__c 
+      and free_dial.cust_code__c::int = '${customer_code}' and  free_dial.carr_comp__c='KDDI')`;
 
-      const query = `select * from byokakin_kddi_raw_cdr_${billingYear}${billingMonth} 
-      where regexp_replace(did, '[^0-9]', '', 'g') in ( ${didNumbers} )  `;
       const getKDDIRAWDataRes = await db.queryByokakin(query, []);
 
       if (getKDDIRAWDataRes.rows) {
@@ -138,19 +89,15 @@ module.exports = {
     }
   },
 
-  getKDDIRAWInboundData: async function (billingYear, billingMonth, didArrList) {
-    let didNumbers = "";
+  getKDDIRAWInboundData: async function (billingYear, billingMonth, customer_code) {
+    
     try {
 
-      for (let i = 0; i < didArrList.length; i++) {
-        didNumbers = didNumbers + `'${didArrList[i]['free_numb__c']}',`;
-      }
-      //remove last , from string
-      if (didNumbers.substr(didNumbers.length - 1) == ',') {
-        didNumbers = didNumbers.substring(0, didNumbers.length - 1);
-      }
+      const query = `select  raw_cdr.* from byokakin_kddi_infinidata_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
+      (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g')=free_dial.free_numb__c 
+      and free_dial.cust_code__c::int = '${customer_code}' and  free_dial.carr_comp__c='KDDI')`;
 
-      const query = `select * from byokakin_kddi_infinidata_${billingYear}${billingMonth} where regexp_replace(did, '[^0-9]', '', 'g') in ( ${didNumbers} )  `;
+
       const getKDDIRAWInboundDataRes = await db.queryByokakin(query, []);
 
       if (getKDDIRAWInboundDataRes.rows) {
@@ -163,27 +110,45 @@ module.exports = {
     }
   },
 
-  createSummaryData: async function (bill_no, customer_id, year, month, ratesInfo, data) {
+  getSummaryData: async function(customerId, year, month){
+    try{
+
+      const query =`select customercode, cdr_amount::int as cdr_amount, kotei_amount  from ( select customercode, sum (finalcallcharge) as cdr_amount  from  byokakin_kddi_processedcdr_${year}${month} 
+       where customercode='${customerId}' group by customercode) as bkpc join 
+       (select sum(amount) kotei_amount, substring(split_part(bill_numb__c, '-',2),4) as comp_code 
+       from kddi_kotei_bill_details where bill_start__c::date ='${year}-${month}-01' and bill_numb__c ilike '%${customerId}%' 
+       group by substring(split_part(bill_numb__c, '-',2),4)) as kkbd on (bkpc.customercode::int= kkbd.comp_code::int)`;
+
+       const summaryRes = await db.queryByokakin(query,[]);
+       if(!summaryRes){
+        throw new Error('not found')
+       }
+       return summaryRes.rows;
+
+    }catch(error){
+      console.log("error in geting summary data.."+error.message);
+      throw new Error("error in geting summary data.."+error.message);
+    }
+  },
+  createSummaryData: async function (bill_no, customer_id, year, month, data) {
 
     try {
 
-      let duration = 0;
-      let call_count = 0;
-
-      for (let j = 0; j < data.length; j++) {
-        let tmp = parseInt(data[j]['total_duration'], 10);
-        if (tmp > 0) {
-          duration = duration + parseInt(tmp / 60, 10)
-        }
-        call_count++;
+      let tax = 0, subtotal = 0, total = 0 ;
+      if(data && data.length === 0){
+         throw new Error ('there is no data');
       }
-      let query = `insert into kickback_history (bill_no , customer_code , date_bill , date_payment , bill_term_start , bill_term_end , bill_period ,
-           bill_minute , bill_rate , bill_amount , amount , tax , disc_amount , date_insert , name_insert , date_update , name_update , paid_flag ,
-            obic_flag, call_count) VALUES('${bill_no}', '${ratesInfo[0]['customer_id']}', '${year}-${month}-01', '${year}-${month}-25','${year}-${month}-01', '${year}-${month}-30',
-            '1' ,'${duration}','${ratesInfo[0]['minute_rate']}','${billAmount}','${amount}','${tax}','${discAmount}','now()','System','now()','System',
-           '0','0','${call_count}')`;
+      subtotal = parseInt(data[0]['cdr_amount'],10) + parseInt(data[0]['kotei_amount'],10) ;
+      tax = (subtotal*.1);
+      total = subtotal + tax;
+
+      let query = `insert into byokakin_billing_history (bill_no , customercode , carrier , cdrmonth , billtype , count , fixed_cost_subtotal ,
+        cdr_cost_subtotal , subtotal , tax , total , remarks , date_insert , name_insert , date_update , name_update )
+         VALUES('1', '${customer_id}', 'KDDI', '${year}-${month}-1', 'R' , 1, '${data[0]['kotei_amount']}', '${data[0]['cdr_amount']}',
+            '${subtotal}' , '${tax}','${total}','kddi billing by system','now()','System','now()','System' )`;
       console.log("query==" + query);
-      let insertBillingdetailsRes = await db.queryIBS(query, []);
+      await db.queryByokakin(query, []);
+
     } catch (error) {
       console.log("Error---" + error.message);
       return error;
@@ -285,7 +250,7 @@ async function getNextInsertBatch(cdrType, data, rates, customerId, billingYear,
 async function getTerminalTypeInbound(terminalType){
   let result = "";
 
-  console.log("terminal type..."+terminalType);
+  //console.log("terminal type..."+terminalType);
 
   if(terminalType.search(/L|I|S|N|U/) !== -1){
     result = '固定';

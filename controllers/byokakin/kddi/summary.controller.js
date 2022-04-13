@@ -1,11 +1,11 @@
-var SummayLeafnet = require('../../models/leafnet/summary');
+var SummayKDDI = require('../../../models/byokakin/kddi/summary');
 
 module.exports = {
   getSummary: async function(req, res) {
+    
     try {
-        const [summaryRes,summaryErr] = await handleError(SummayLeafnet.getSummary());
+        const [summaryRes,summaryErr] = await handleError(SummayKDDI.getSummaryByMonth(req.body));
         if(summaryErr) {
-             //throw new Error('Could not fetch the summary');
              return res.status(500).json({
               message: summaryErr.message
             });  

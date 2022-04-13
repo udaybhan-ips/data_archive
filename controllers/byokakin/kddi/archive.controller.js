@@ -23,11 +23,11 @@ module.exports = {
       const resKDDICustomerList = await ArchiveKDDI.getKDDICustomerList();
 
       const resKDDIKotehiData = await ArchiveKDDI.insertKDDIKotehiData(filePath, fileName, resKDDICustomerList, resKDDIFreeDialNumList,resKDDIFreeAccountNumList,billingYear, billingMonth);
-      console.log("data");
+      //console.log("data");
       console.log(JSON.stringify(resKDDIKotehiData));
 
       //const getDataRes = await ArchiveKDDI.insertByBatches(resKDDIKotehiData);
- 
+      console.log("Done ...")
       return res.status(200).json({
         message: 'success! data inserted sucessfully',
 
