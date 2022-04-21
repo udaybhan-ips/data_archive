@@ -80,13 +80,16 @@ module.exports = {
               updateData = updateData.substring(0, updateData.length - 1);
             }
 
-            let where =  `where carrier_code='${data.carrier_code}'`;
+            let where =  `where id='${data.id}'`;
 
-            if(data.company_code){
-              where = where + `and company_code ='${data.company_code}'`;
-            }
+            // if(data.company_code){
+            //   where = where + `and company_code ='${data.company_code}'`;
+            // }
 
             const queryUpdate= `update carrier set ${updateData} ${where} `;
+
+            console.log("carrier update .. "+queryUpdate);
+
             const resUpdate = await db.queryIBS(queryUpdate,[]);
 
             return resUpdate.rows[0];

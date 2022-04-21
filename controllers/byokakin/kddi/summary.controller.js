@@ -6,6 +6,7 @@ module.exports = {
     try {
         const [summaryRes,summaryErr] = await handleError(SummayKDDI.getSummaryByMonth(req.body));
         if(summaryErr) {
+
              return res.status(500).json({
               message: summaryErr.message
             });  

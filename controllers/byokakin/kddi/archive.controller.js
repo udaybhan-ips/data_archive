@@ -39,7 +39,8 @@ module.exports = {
 
   uploadKDDIRAW: async function (req, res) {
     try {
-      const billingMonth = "2022-02-01";
+      const billingMonth = "03";
+      const billingYear ="2022";
       const serviceType = "RAW";
       
 
@@ -48,7 +49,7 @@ module.exports = {
       //const resKDDIFreeAccountNumList = await ArchiveKDDI.getKDDIFreeAccountNumList();
       //const resKDDICustomerList = await ArchiveKDDI.getKDDICustomerList();
 
-      const resKDDIRAWData = await ArchiveKDDI.insertKDDIRAWData();
+      const resKDDIRAWData = await ArchiveKDDI.insertKDDIRAWData("",billingYear, billingMonth);
       //console.log("data");
       //console.log(JSON.stringify(resKDDIKotehiData));
 

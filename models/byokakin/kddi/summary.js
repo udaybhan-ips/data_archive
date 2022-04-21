@@ -14,7 +14,7 @@ module.exports = {
 
       } catch (error) {
             console.log("error in getting summary data")
-            throw new Error(error)
+            throw new Error(error.message)
       }
   },
   

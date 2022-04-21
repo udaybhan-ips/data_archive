@@ -428,10 +428,10 @@ module.exports = {
     }
   },
 
-  insertKDDIRAWData: async function (filesPathtest) {
+  insertKDDIRAWData: async function (filesPathtest, billingYear, billingMonth) {
 
     let files = [];
-    let filesPath = path.join(__dirname, '../RAWCDR/202202');
+    let filesPath = path.join(__dirname, '../RAWCDR/202203');
     files = await readFilesName(filesPath);
     //console.log("actual path and name =" + (files));
 
@@ -445,9 +445,9 @@ module.exports = {
         console.log("file name ..." + files[i]);
 
         if (path.extname(files[i]).toLowerCase() == ".csv") {
-          fileName = path.join(__dirname, `../RAWCDR/202202/${files[i]}`)
+          fileName = path.join(__dirname, `../RAWCDR/202203/${files[i]}`)
 
-
+          await new Promise(resolve => setTimeout(resolve, 10000));
           let csvstream = fs.createReadStream(fileName)
             .pipe(iconv.decodeStream("Shift_JIS"))
             .pipe(csv.parse())
@@ -471,7 +471,7 @@ module.exports = {
             })
             .on('end', function () {
               csvData.shift();
-              const res = insertByBatches(csvData, 'RAWCDR');
+              const res = insertByBatches(csvData, 'RAWCDR', billingYear, billingMonth);
               resData.push(res);
             })
           console.log("res.." + resData.length);
@@ -534,6 +534,7 @@ async function insertByBatches(records, type, billingYear, billingMonth) {
     } else if (type === 'RAWCDR') {
       let tableNameKDDIRAW = { table: `byokakin_kddi_raw_cdr_${billingYear}${billingMonth}` };
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetKDDIRAW, tableNameKDDIRAW);
+      //await new Promise(resolve => setTimeout(resolve, 10000));
     } else if (type == 'kddi_kotehi_bill_detail') {
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetKDDIBillDetail, tableNameKDDIBillDetail);
     }

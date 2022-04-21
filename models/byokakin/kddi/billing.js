@@ -1,5 +1,8 @@
 var db = require('./../../../config/database');
 const BATCH_SIZE = 1000000;
+var PDFDocument = require("pdfkit");
+var utility = require('../../../public/javascripts/utility');
+var fs = require("fs");
 
 let ColumnSetKDDIProcessedData = ['cdrid', 'cdrclassification', 'customercode', 'terminaltype', 'freedialnumber', 'callingnumber', 'calldate',
   'calltime', 'callduration', 'cld', 'sourcearea', 'destinationarea', 'cdrcallcharge', 'callrate', 'finalcallcharge', 'vendorcallcharge'];
@@ -7,6 +10,7 @@ let ColumnSetKDDIProcessedData = ['cdrid', 'cdrclassification', 'customercode', 
 
 
 module.exports = {
+
   getRates: async function (customer_id) {
     try {
       const query = `select  * from ntt_kddi_charge_c where customercode__c::int ='${customer_id}'  and edat_fini__c::date >  now()::date 
@@ -53,7 +57,7 @@ module.exports = {
     }
   },
 
- 
+
   getKDDICompList: async function () {
 
     try {
@@ -73,9 +77,10 @@ module.exports = {
 
     try {
 
-      const query =`select  raw_cdr.* from byokakin_kddi_raw_cdr_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
-      (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g')=free_dial.free_numb__c 
-      and free_dial.cust_code__c::int = '${customer_code}' and  free_dial.carr_comp__c='KDDI')`;
+      const query = `select  raw_cdr.* from byokakin_kddi_raw_cdr_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
+      (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g') = free_dial.free_numb__c 
+      and free_dial.cust_code__c::int = '${customer_code}' and 
+      (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')  and  free_dial.carr_comp__c='KDDI' ) `;
 
       const getKDDIRAWDataRes = await db.queryByokakin(query, []);
 
@@ -90,11 +95,12 @@ module.exports = {
   },
 
   getKDDIRAWInboundData: async function (billingYear, billingMonth, customer_code) {
-    
+
     try {
 
       const query = `select  raw_cdr.* from byokakin_kddi_infinidata_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
-      (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g')=free_dial.free_numb__c 
+      (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g')=free_dial.free_numb__c  and 
+      (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')
       and free_dial.cust_code__c::int = '${customer_code}' and  free_dial.carr_comp__c='KDDI')`;
 
 
@@ -110,36 +116,36 @@ module.exports = {
     }
   },
 
-  getSummaryData: async function(customerId, year, month){
-    try{
+  getSummaryData: async function (customerId, year, month) {
+    try {
 
-      const query =`select customercode, cdr_amount::int as cdr_amount, kotei_amount  from ( select customercode, sum (finalcallcharge) as cdr_amount  from  byokakin_kddi_processedcdr_${year}${month} 
+      const query = `select customercode, cdr_amount::int as cdr_amount, kotei_amount  from ( select customercode, sum (finalcallcharge) as cdr_amount  from  byokakin_kddi_processedcdr_${year}${month} 
        where customercode='${customerId}' group by customercode) as bkpc join 
        (select sum(amount) kotei_amount, substring(split_part(bill_numb__c, '-',2),4) as comp_code 
        from kddi_kotei_bill_details where bill_start__c::date ='${year}-${month}-01' and bill_numb__c ilike '%${customerId}%' 
        group by substring(split_part(bill_numb__c, '-',2),4)) as kkbd on (bkpc.customercode::int= kkbd.comp_code::int)`;
 
-       const summaryRes = await db.queryByokakin(query,[]);
-       if(!summaryRes){
+      const summaryRes = await db.queryByokakin(query, []);
+      if (!summaryRes) {
         throw new Error('not found')
-       }
-       return summaryRes.rows;
+      }
+      return summaryRes.rows;
 
-    }catch(error){
-      console.log("error in geting summary data.."+error.message);
-      throw new Error("error in geting summary data.."+error.message);
+    } catch (error) {
+      console.log("error in geting summary data.." + error.message);
+      throw new Error("error in geting summary data.." + error.message);
     }
   },
   createSummaryData: async function (bill_no, customer_id, year, month, data) {
 
     try {
 
-      let tax = 0, subtotal = 0, total = 0 ;
-      if(data && data.length === 0){
-         throw new Error ('there is no data');
+      let tax = 0, subtotal = 0, total = 0;
+      if (data && data.length === 0) {
+        throw new Error('there is no data');
       }
-      subtotal = parseInt(data[0]['cdr_amount'],10) + parseInt(data[0]['kotei_amount'],10) ;
-      tax = (subtotal*.1);
+      subtotal = parseInt(data[0]['cdr_amount'], 10) + parseInt(data[0]['kotei_amount'], 10);
+      tax = (subtotal * .1);
       total = subtotal + tax;
 
       let query = `insert into byokakin_billing_history (bill_no , customercode , carrier , cdrmonth , billtype , count , fixed_cost_subtotal ,
@@ -180,6 +186,255 @@ module.exports = {
     return resArr;
 
   },
+
+  genrateInvoice: async function (company_code, billingYear, billingMonth) {
+    try {
+
+      let path = __dirname + `\\Invoice\\${company_code}${billingYear}${billingMonth}.pdf`;
+
+      const invoiceData = await getInvoiceData(company_code, billingYear, billingMonth);
+      const customerAddress = await getCustomerInfo(company_code);
+      let koteiAmount = 0;
+      let cdrAmount = 0;
+
+      invoiceData.map(obj => {
+        koteiAmount = koteiAmount + parseInt(obj.kotei_amount);
+        cdrAmount = cdrAmount + parseInt(obj.cdr_amount);
+      });
+      await createInvoice(company_code, customerAddress, billingYear, billingMonth, invoiceData, path, koteiAmount, cdrAmount);
+      console.log("Done...")
+    } catch (err) {
+      console.log("error...." + err.message);
+    }
+  },
+}
+
+
+async function createInvoice(company_code, address, billingYear, billingMonth, invoice, path, koteiAmount, cdrAmount) {
+
+  const subTotal = parseInt(koteiAmount + cdrAmount);
+  const tax = parseInt(subTotal * .1);
+  const totalAmount = subTotal + tax;
+
+  let doc = new PDFDocument({ margin: 50 });
+  let MAXY = doc.page.height - 50;
+  let fontpath = (__dirname + '\\..\\..\\..\\controllers\\font\\ipaexg.ttf');
+  doc.font(fontpath);
+
+  let y = await generateHeader(address, doc, koteiAmount, cdrAmount, subTotal, tax, totalAmount);
+  //drawLine(doc, 198);
+  console.log("y=--" + y);
+  drawLine(doc, y + 25);
+  basciInfo(doc, y + 25)
+  drawLine(doc, y + 75);
+
+  y = generateCustomerInformation(doc, invoice, y + 175, koteiAmount, cdrAmount, subTotal, tax, totalAmount);
+
+  addTableHeader(doc, y + 25);
+
+  y = customTable(doc, y + 35, invoice, MAXY);
+  doc.end();
+  doc.pipe(fs.createWriteStream(path));
+}
+
+
+
+function generateCustomerInformation(doc, invoice, y, koteiAmount, cdrAmount, subTotal, tax, totalAmount) {
+
+
+  doc
+    .text(`固定費小計`, 50, y, { width: 100, align: "center" })
+    .text(`通話料小計`, 150, y, { width: 100, align: "center" })
+    .text(`小計`, 250, y, { width: 100, align: "center" })
+    .text(`消費税`, 350, y, { width: 100, align: "center" })
+    .text(`合計`, 450, y, { width: 110, align: "center" })
+
+  doc.rect(50, y - 5, 100, 30).stroke()
+  doc.rect(150, y - 5, 100, 30).stroke()
+  doc.rect(250, y - 5, 100, 30).stroke()
+  doc.rect(350, y - 5, 100, 30).stroke()
+  doc.rect(450, y - 5, 110, 30).stroke()
+    .fontSize(12)
+    .text(`¥${utility.numberWithCommas(koteiAmount)}`, 50, y + 30, { width: 100, align: "center" })
+    .text(`¥${utility.numberWithCommas(cdrAmount)}`, 150, y + 30, { width: 100, align: "center" })
+    .text(`¥${utility.numberWithCommas(subTotal)}`, 250, y + 30, { width: 100, align: "center" })
+    .text(`¥${utility.numberWithCommas(tax)}`, 350, y + 30, { width: 100, align: "center" })
+    .text(`¥${utility.numberWithCommas(totalAmount)}`, 450, y + 30, { width: 110, align: "center" })
+    .fontSize(8)
+  doc.rect(50, y + 25, 100, 25).stroke()
+  doc.rect(150, y + 25, 100, 25).stroke()
+  doc.rect(250, y + 25, 100, 25).stroke()
+  doc.rect(350, y + 25, 100, 25).stroke()
+  doc.rect(450, y + 25, 110, 25).stroke()
+
+    .moveDown();
+  return y + 35;
+}
+
+function basciInfo(doc, y) {
+  doc
+    .fontSize(8)
+    .text(`明細番号`, 50, y + 10, { width: 100, align: "left" })
+    .text(`会社 `, 50, y + 25, { width: 100, align: "left" })
+    .text(`1000000188_KDDI_202202_R_01`, 125, y + 10, { width: 250, align: "left" })
+    .text(`現代通信株式会社 `, 125, y + 25, { width: 100, align: "left" })
+
+    .text(`ご利用月`, 50, y + 65, { width: 100, align: "left" })
+    .text(`請求日 `, 50, y + 80, { width: 100, align: "left" })
+
+    .text(`2022-02-01 ～ 2022-02-28`, 125, y + 65, { width: 250, align: "left" })
+    .text(`2022-03-14`, 125, y + 80, { width: 100, align: "left" })
+
+    .moveDown()
+  return y + 35;
+}
+
+function drawLine(doc, startX, Y = 50, Z = 560) {
+  doc
+    .moveTo(Y, startX)                            // set the current point
+    .lineTo(Z, startX)                            // draw a line
+    .stroke();
+  return doc;                                // stroke the path
+}
+
+function addTableHeader(doc, y) {
+
+
+  doc
+    .fontSize(12)
+    .text(`課金番号`, 50, y+5, { width: 75, align: "center" })
+    .text(`統合明細科目名称`, 125, y+5, { width: 100, align: "center" })
+    .text(`品 目 `, 225, y+5, { width: 200, align: "center" })
+    .text(`課税対象`, 425, y+5, { width: 50, align: "center" })
+    .text(`統合明細金額`, 475, y+5, { width: 85, align: "center" })
+
+  doc.rect(50, y - 5, 75, 30).stroke()
+  doc.rect(125, y - 5, 100, 30).stroke()
+  doc.rect(225, y - 5, 200, 30).stroke()
+  doc.rect(425, y - 5, 50, 30).stroke()
+  doc.rect(475, y - 5, 85, 30).stroke()
+
+    //drawLine(doc, y)
+    .moveDown();
+}
+
+
+function customTable(doc, y, data, MAXY) {
+  console.log("in table ");
+  let height = y;
+  let counter = 1;
+  for (let i = 0; i < data.length; i++) {
+    height = height + 20;
+    textInRowFirst(doc, data[i].account, 50, height, "center", 75);
+    textInRowFirst(doc, data[i].servicename, 125, height, "center", 100);
+    textInRowFirst(doc, data[i].productname, 225, height, "center", 200);
+    textInRowFirst(doc, data[i].taxinclude, 425, height, "center", 50);
+    textInRowFirst(doc, '¥' + utility.numberWithCommas(parseInt(data[i].amount)), 475, height, "right", 85);
+
+    if (height >= 680) {
+      doc.text(counter, 500, 720)
+      doc.addPage({ margin: 50 })
+      height = 50;
+      counter++;
+      //addTableHeader(doc, 50, 50);
+
+    }
+  }
+  doc.text(counter, 500, 720)
+
+  return height;
+}
+
+function textInRowFirst(doc, text, x, heigth, align, width) {
+
+  doc.y = heigth;
+  doc.x = x;
+  doc.fontSize(8)
+  doc.fillColor('black')
+  doc.text(text, { width, align })
+  doc.rect(x, heigth - 5, width, 20).stroke()
+
+  return doc;
+}
+
+
+async function generateHeader(customerDetails, doc) {
+
+  const postNumber = customerDetails[0]['post_number'];
+  const customerName = customerDetails[0]['customer_name'];
+  const address = customerDetails[0]['address'];
+
+  const Phone = "TEL. 03-3549-7621（代）";
+  const Fax = "FAX. 03-3545-7331";
+
+
+  doc
+    // .image("logo.png", 50, 45, { width: 50 })
+    //.fillColor("#444444")
+    .fontSize(10)
+    .text(`株式会社　アイ・ピー・エス`, 50, 57, { align: "right" })
+    .text(`〒${postNumber}`, 50, 70, { align: "right" })
+    .text(`${address}`, 50, 83, { align: "right" })
+    .text(`${Phone}`, 10, 96, { align: "right" })
+    .text(`${Fax}`, 10, 109, { align: "right" })
+    .fontSize(30)
+    .text("通信費明細書", 50, 80, { align: "left" })
+
+    .moveDown();
+  return 140;
+
+}
+
+async function generateFooter(doc, y) {
+  // console.log("in footer")
+  doc
+    .fontSize(8)
+    .text("≪　ご連絡事項　≫", 50)
+    .moveDown()
+    .text("毎度格別のお引き立てをいただきまして、誠にありがとうございます。")
+    .moveDown()
+    .text("ご請求書を送付させていただきますので、ご査収の上お支払期日までに上記の振込先にお振込いただきますようよろしくお願い申し上げます。")
+    .moveDown()
+    .text("なお、誠に勝手ながら銀行振込に係る手数料につきましては、貴社にてご負担いただきますようお願い申し上げます。")
+    .moveDown()
+
+}
+
+
+async function getCustomerInfo(company_code) {
+  try {
+    const query = `select * from m_customer where customer_cd='00000130'`;
+
+    const ratesRes = await db.queryIBS(query, [], true);
+
+    if (ratesRes.rows) {
+      return (ratesRes.rows);
+    }
+
+  } catch (error) {
+    return error;
+  }
+}
+
+async function getInvoiceData(company_code, year, month) {
+  try {
+    const query = `select * from (select (amount) amount, 0 as cdr_amount, (amount) kotei_amount , 
+    substring(split_part(bill_numb__c, '-',2),4) as comp_code, cdrid, servicename, productname, taxinclude, account
+     from kddi_kotei_bill_details where bill_start__c::date ='2022-02-01' and bill_numb__c ilike '%188%' 
+      UNION ALL
+       select sum(finalcallcharge) as amount, sum(finalcallcharge) as amount , 0 as kotei_amount ,
+        '' as  comp_code, 0 as cdrid, 'ダイヤル通話料 ' as servicename, '' as productname,''as taxinclude, 
+        replace(freedialnumber,'-','') as account   from  byokakin_kddi_processedcdr_202202 
+          where customercode='188' group by  freedialnumber )as foo order by account` ;
+    const ratesRes = await db.queryByokakin(query, []);
+
+    if (ratesRes.rows) {
+      return (ratesRes.rows);
+    }
+
+  } catch (error) {
+    return error;
+  }
 }
 
 
@@ -189,10 +444,10 @@ async function getNextInsertBatch(cdrType, data, rates, customerId, billingYear,
 
   try {
     for (let i = 0; i < data.length; i++) {
-      let obj = {}, terminalType, freedialNumber, callingNumber, callDuration, destinationArea, chargeAmt, callDate, callTime, sourceArea, callCharge ;
+      let obj = {}, terminalType, freedialNumber, callingNumber, callDuration, destinationArea, chargeAmt, callDate, callTime, sourceArea, callCharge;
 
       freedialNumber = data[i]['did'];
-      
+
 
       if (cdrType === 'OUTBOUND') {
         const terminalTypeObj = await getTerminalType(data[i]['callcharge'], data[i]['cld'], data[i]['destination'], data[i]['calltype']);
@@ -204,18 +459,18 @@ async function getNextInsertBatch(cdrType, data, rates, customerId, billingYear,
         callDate = data[i]['calldate'];
         callTime = data[i]['calltime'];
         sourceArea = '東京';
-        callCharge =  data[i]['callcharge'];
+        callCharge = data[i]['callcharge'];
 
       } else {
         terminalType = await getTerminalTypeInbound(data[i]['terminaltype']);
         callingNumber = data[i]['usednumber'];
-        callDate = data[i]['calldate'].substr(0,4) + '-' + data[i]['calldate'].substr(4,2) + '-' + data[i]['calldate'].substr(6,2);
+        callDate = data[i]['calldate'].substr(0, 4) + '-' + data[i]['calldate'].substr(4, 2) + '-' + data[i]['calldate'].substr(6, 2);
         callTime = await getCDRFormatTime(data[i]['calltime']);
         callDuration = await getCallDuration(await getCDRFormatTime(data[i]['callduration']));
-        sourceArea = data[i]['source'] ;
+        sourceArea = data[i]['source'];
         destinationArea = data[i]['destination'];
         callCharge = null;
-        chargeAmt = await getFinalCharge(terminalType, rates, callDuration, data[i]['callcharge'], data[i]['calltype'] , 'INBOUND');
+        chargeAmt = await getFinalCharge(terminalType, rates, callDuration, data[i]['callcharge'], data[i]['calltype'], 'INBOUND');
       }
 
       obj['cdrid'] = data[i]['cdrid'];
@@ -247,44 +502,49 @@ async function getNextInsertBatch(cdrType, data, rates, customerId, billingYear,
 
 
 
-async function getTerminalTypeInbound(terminalType){
+async function getTerminalTypeInbound(terminalType) {
   let result = "";
 
   //console.log("terminal type..."+terminalType);
 
-  if(terminalType.search(/L|I|S|N|U/) !== -1){
+  if (terminalType.search(/L|I|S|N|U/) !== -1) {
     result = '固定';
-  }else if(terminalType.search(/C|A/) !== -1){
+  } else if (terminalType.search(/C|A/) !== -1) {
     result = '携帯';
-  }else if(terminalType.search(/X|^/) !== -1){
+  } else if (terminalType.search(/X|^/) !== -1) {
     result = '公衆';
-  }else{
+  } else {
     result = 'その他'
   }
-  
+
   return result;
 
 }
 
 
-async function getCDRFormatTime(time){
- 
+async function getCDRFormatTime(time) {
+
   const tmp = time.toString().padStart(7, "0");
 
-  return tmp.substr(0,2) + ':' + tmp.substr(2,2) + ':' + tmp.substr(4,2)+ '.' + tmp.substr(6,1) ;
+  return tmp.substr(0, 2) + ':' + tmp.substr(2, 2) + ':' + tmp.substr(4, 2) + '.' + tmp.substr(6, 1);
 
 }
 
 
 async function getFinalCharge(terminalType, rates, callDuration, callCharge, callType, CDR_CLASSIFICATION) {
   let resData = {};
+
+  //console.log("terminalType.."+terminalType);
+ 
+  //console.log("callCharge.."+callCharge);
+  //console.log("terminalType.."+terminalType);
   try {
 
     let callSort = "";
-    
-    if(CDR_CLASSIFICATION == 'INBOUND'){
+
+    if (CDR_CLASSIFICATION == 'INBOUND') {
       callSort = terminalType;
-    }else{
+    } else {
       callSort = await getCDRCallSortOutboud(terminalType, callType);
     }
 
@@ -293,42 +553,44 @@ async function getFinalCharge(terminalType, rates, callDuration, callCharge, cal
       obj.call_sort__c === callSort ? true : false
     ))
 
-    if(ratesData.length > 0){
+    //console.log("ratesData.."+ JSON.stringify(ratesData));
+
+    if (ratesData.length > 0) {
       ratesData = ratesData[0];
-    }else{
+    } else {
       resData['resFinalCharge'] = callCharge;
       resData['vendorCallCharge'] = callCharge;
-      resData['callRate'] = 0 ;
+      resData['callRate'] = 0;
       return resData;
     }
 
     if (terminalType.includes("その他")) {
       resData['resFinalCharge'] = callCharge;
       resData['vendorCallCharge'] = callCharge;
-      resData['callRate'] = ratesData.amnt_conv__c ;
+      resData['callRate'] = ratesData.amnt_conv__c;
       return resData;
     }
 
     if (callCharge == 0) {
       resData['resFinalCharge'] = callCharge;
       resData['vendorCallCharge'] = callCharge;
-      resData['callRate'] = ratesData.amnt_conv__c ;
+      resData['callRate'] = ratesData.amnt_conv__c;
       return resData;
-    } 
-    
-      let resFinalCharge = 0 ,  vendorCallCharge =0; 
+    }
 
-      if (ratesData.rate_per_min == 0) {
-         resFinalCharge = Math.ceil(callDuration / ratesData.kaki_valu__c) * (ratesData.amnt_conv__c);
-         vendorCallCharge = Math.ceil(callDuration / 1) * (1 * ratesData.genka_rate__c / 60)
-      } else {
-        resFinalCharge = Math.ceil(callDuration / ratesData.kaki_valu__c) * (ratesData.kaki_valu__c * ratesData.amnt_conv__c / 60)
-        vendorCallCharge = Math.ceil(callDuration / 1) * (1 * ratesData.genka_rate__c / 60)
-      }
+    let resFinalCharge = 0, vendorCallCharge = 0;
 
-      resData['resFinalCharge'] = resFinalCharge;
-      resData['vendorCallCharge'] = vendorCallCharge;
-      resData['callRate'] = ratesData.amnt_conv__c ;
+    if (ratesData.rate_per_min == 0) {
+      resFinalCharge = Math.ceil(callDuration / ratesData.kaki_valu__c) * (ratesData.amnt_conv__c);
+      vendorCallCharge = Math.ceil(callDuration / 1) * (1 * ratesData.genka_rate__c / 60)
+    } else {
+      resFinalCharge = Math.ceil(callDuration / ratesData.kaki_valu__c) * (ratesData.kaki_valu__c * ratesData.amnt_conv__c / 60)
+      vendorCallCharge = Math.ceil(callDuration / 1) * (1 * ratesData.genka_rate__c / 60)
+    }
+
+    resData['resFinalCharge'] = resFinalCharge;
+    resData['vendorCallCharge'] = vendorCallCharge;
+    resData['callRate'] = ratesData.amnt_conv__c;
 
     //console.log("call rates.."+)
 
@@ -352,7 +614,7 @@ function getDestinationArea(dest) {
 
 async function getTerminalType(callCharge, cld, destination, callType) {
 
-  let res = {}, terminalType = "" , firstFourDigit = "", firstThreeDigit = "", firstDigit = "", copyTerminalType = '';
+  let res = {}, terminalType = "", firstFourDigit = "", firstThreeDigit = "", firstDigit = "", copyTerminalType = '';
   try {
     firstFourDigit = cld.substring(0, 4);
     firstThreeDigit = cld.substring(0, 3);
@@ -360,7 +622,7 @@ async function getTerminalType(callCharge, cld, destination, callType) {
 
     if (parseInt(callCharge, 10) == 0) {
       terminalType = 'IP電話';
-      return {"terminalType":terminalType, "tmpTerminalType":terminalType}
+      return { "terminalType": terminalType, "tmpTerminalType": terminalType }
     }
 
     if (firstFourDigit == '0035' || firstFourDigit == '0180' || firstFourDigit == '0570' ||
@@ -409,7 +671,7 @@ async function getTerminalType(callCharge, cld, destination, callType) {
     console.log("Error in get terminal type.." + error.message)
   }
 
-  return {"terminalType":terminalType, "tmpTerminalType":copyTerminalType} ;
+  return { "terminalType": terminalType, "tmpTerminalType": copyTerminalType };
 }
 
 

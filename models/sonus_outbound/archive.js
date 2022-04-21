@@ -311,7 +311,7 @@ function utcToDate(utcDate){
     //   }
     // })
 
-    console.log("customer info.."+JSON.stringify(customerInfo));
+    //console.log("customer info.."+JSON.stringify(customerInfo));
   
     try{
       

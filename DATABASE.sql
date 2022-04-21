@@ -60,3 +60,21 @@ fax_number integer, email varchar, pay_type integer, staff_name varchar, logo va
  create table cdr_sonus_outbound_summary (id serial, invoice_no integer, customer_name varchar, customer_id varchar, billing_month 
  varchar, billing_year varchar, billing_date timestamp without time zone , update_date timestamp without time zone default now(),
   duration bigint, landline_amt bigint, mobile_amt bigint, total_amt bigint);
+
+  create table byokakin_kddi_infinidata_202203 (cdrid bigint, servicecode varchar(30), did varchar(30), usednumber varchar(30), cld varchar(30), calldate varchar(15), calltime varchar(15), callduration varchar(15), source varchar, destination varchar, terminaltype varchar);
+
+create table byokakin_kddi_processedcdr_202203 (cdrid bigint, cdrclassification varchar(10), customercode varchar(10), terminaltype varchar(10),freedialnumber varchar(30), callingnumber varchar(30), calldate varchar, calltime varchar(15), callduration varchar(15), cld varchar(30), sourcearea varchar, destinationarea varchar, cdrcallcharge numeric(16,5), callrate  numeric(16,5),finalcallcharge numeric(16,5), vendorcallcharge numeric(16,5) );
+
+create table byokakin_kddi_raw_cdr_202203 (cdrid serial, did varchar(30), freedialnum varchar(30),   cld varchar(30), calldate timestamp without time zone, calltime varchar(15), callduration varchar(15), source varchar, destination varchar, callclassi varchar, calltype varchar, callcharge numeric(16,5), customercode varchar(10));
+
+
+update ntt_kddi_freedial_c set free_numb__c=RIGHT(free_numb__c, 10) where length(free_numb__c) =12
+update ntt_kddi_freedial_c set free_numb__c=LEFT(free_numb__c, 10) where length(free_numb__c) =12 and id not in (52458, 52514, 52458)
+update ntt_kddi_freedial_c set free_numb__c=LEFT(free_numb__c, 10) where length(free_numb__c) =13
+update ntt_kddi_freedial_c set free_numb__c= LEFT(free_numb__c, 10) where length(free_numb__c) =14 and id !=9198
+update ntt_kddi_freedial_c set free_numb__c ='0120984958' where length(free_numb__c) =14
+update ntt_kddi_freedial_c set free_numb__c= LEFT(free_numb__c, 10)    where   length(free_numb__c) =15 and id=52604
+update ntt_kddi_freedial_c set free_numb__c= '036361094'    where   length(free_numb__c) =15 and id=53386;
+ update ntt_kddi_freedial_c set free_numb__c=RIGHT(free_numb__c, 10)  where   length(free_numb__c) =16;
+ update ntt_kddi_freedial_c set free_numb__c= LEFT(free_numb__c, 10) where   length(free_numb__c) =17 and id != 62543
+ update ntt_kddi_freedial_c set free_numb__c='0120500778'  where    id = 62543;
