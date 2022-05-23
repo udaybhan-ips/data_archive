@@ -47,7 +47,7 @@ module.exports = {
     try {
       const query = `SELECT GW, SESSIONID, STARTTIME, CALLDURATION, ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, DISCONNECTTIME, ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
         CALLDURATION*0.01 AS DURATION, CEIL(CALLDURATION*0.01) AS DURATIONKIRIAGE, INANI, INGRPSTNTRUNKNAME,
-        OUTGOING, INCALLEDNUMBER, CALLINGPARTYCATEGORY, EGCALLEDNUMBER, INGRESSPROTOCOLVARIANT,CALLSTATUS FROM COLLECTOR_73  
+        OUTGOING, INCALLEDNUMBER, CALLINGPARTYCATEGORY, EGCALLEDNUMBER, INGRESSPROTOCOLVARIANT,CALLSTATUS FROM COLLECTOR_73 
         where STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
         AND (GW IN ('NFPGSX4','IPSGSX5')) 
         AND (CALLDURATION > 0)
@@ -249,14 +249,14 @@ async function getCompanyCode(STRXFB, STRXFC, STRXFD, STRXFE, DATSTARTTIME, STRT
   let companyCode = "9999999999";
 
   let companyCodeInfoArr = getCompanyCodeInfoRes;
-  // console.log("companyCodeInfoArr="+JSON.stringify(companyCodeInfoArr));
+  
   try {
     for (let i = 0; i < companyCodeInfoArr.length; i++) {
 
       if (companyCodeInfoArr[i]['carrier_code'] == STRXFB && (companyCodeInfoArr[i]['relay_code'] == '')) {
 
         if (companyCodeInfoArr[i]['pattern'] == '1') {
-          // console.log("pattern="+companyCodeInfoArr[i]['pattern']);
+          
           let compCode = await getCompanyCodePattern_1(companyCodeInfoArr, STRXFB, STRXFC);
           if (compCode) {
             return compCode;
@@ -265,16 +265,13 @@ async function getCompanyCode(STRXFB, STRXFC, STRXFD, STRXFE, DATSTARTTIME, STRT
           }
 
         } else if (companyCodeInfoArr[i]['pattern'] == '2') {
-          //          console.log("aa"+STRXFD.length);
           let compCode = await getCompanyCodePattern_2(companyCodeInfoArr, STRXFB, STRXFC);
           if(compCode){
             return compCode;
           }
           else if (STRXFD == '' || STRXFD == null) {
-            //          console.log("if");
             return companyCodeInfoArr[i]['company_code1'].replace(" ", "");
           } else {
-            //        console.log("else");
             return await getCompanyCodeOnRelayCode(companyCodeInfoArr, STRXFD, STRXFB, companyCodeInfoArr[i]['pattern'], companyCodeInfoArr[i]['company_code1']);
 
           }
@@ -319,14 +316,11 @@ async function getCompanyCodeOnRelayCode(data, relayCode, carrierCode, pattern, 
         if (data[i]['carrier_code'] == carrierCode && data[i]['relay_code'] == relayCode) {
           for (let j = 0; j < data.length; j++) {
             if (data[j]['carrier_code'] == carrierCode && data[j]['relay_carrier'] == relayCode) {
-
-              //       console.log("testing");
               if (data[j]['company_code2'] == '' || data[j]['company_code2'] == null || data[j]['company_code2'] == undefined) {
                 return company_code1.replace(" ", "");
               } else {
                 return data[j]['company_code2'].replace(" ", "");
               }
-
             } else {
               return data[i]['company_code1'].replace(" ", "");
             }
@@ -391,12 +385,6 @@ async function getCompanyCodePattern_2(data, carrierCode, term_carrier_id) {
       return tmpObj[i]['company_code1'].replace(" ", "");
     }
   }
-  // for (let i = 0; i < tmpObj.length; i++) {
-  //   if (tmpObj[i]['term_carrier_id'] == '' || tmpObj[i]['term_carrier_id'] == null || tmpObj[i]['term_carrier_id'] == 'null') {
-
-  //     return tmpObj[i]['company_code1'].replace(" ", "");
-  //   }
-  // }
   return null;
 }
 
@@ -404,10 +392,6 @@ async function getCompanyCodePattern_2(data, carrierCode, term_carrier_id) {
 async function getNextInsertBatch(data, getCompanyCodeInfoRes, getRemoteControlNumberDataRes) {
   const dataLen = data.length;
   console.log("data preapering for ");
-  // console.log("getCompanyCodeInfoRes leng="+getCompanyCodeInfoRes.length);
-  //console.log("getRemoteControlNumberDataRes=="+getRemoteControlNumberDataRes.length);
-
-
   let valueArray = [];
 
   try {
@@ -497,25 +481,14 @@ async function getNextInsertBatchBillCDR(data, companyInfo, carrierInfo) {
   } catch (err) {
     console.log("err" + err.message);
   }
-
   //console.log("arr="+JSON.stringify(valueArray));
-
-
   return valueArray;
 
 }
 
 async function getTerminalUse(strOrigANI, carrierInfo) {
-  // console.log("called strOrigANI="+strOrigANI+"\n carrierInfo="+carrierInfo.length);
-
-  //console.log("typeof =="+typeof(carrierInfo));
-
   for (let i = 0; i < carrierInfo.length; i++) {
-
-    //console.log("carrierInfo[i]['carrier_code']==="+carrierInfo[i]['carrier_code']);
-    //console.log((carrierInfo[i]));
     if (carrierInfo[i]['carrier_code'] == strOrigANI) {
-      //console.log("term_usee"+carrierInfo[i]['term_use']);
       return carrierInfo[i]['term_use'];
     }
   }
@@ -523,11 +496,8 @@ async function getTerminalUse(strOrigANI, carrierInfo) {
 }
 
 async function getKickCompany(calledNumber, companyInfo) {
-  //console.log("called number="+calledNumber+"\n companyInfo="+companyInfo.length);
   for (let i = 0; i < companyInfo.length; i++) {
-    //console.log("ompanyInfo[i]['_03_numbers']==="+companyInfo[i]['_03_numbers']);
     if (companyInfo[i]['_03_numbers'] == calledNumber) {
-      //console.log("cus=="+companyInfo[i]['customer_cd']);
       return companyInfo[i]['customer_cd'];
     }
   }
@@ -557,8 +527,6 @@ async function getDurationUse(duration) {
       return durationArr[0] + '.' + durationArr[1];
     }
   }
-
-
   let tmp = parseInt(durationArr[1]);
 
   let decimalVal = 0;

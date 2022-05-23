@@ -4,24 +4,25 @@ var billingController = require('../kickback/billing.controller');
 var CDRsController = require('../kickback/cdr.controller');
 var EmailController = require('../kickback/emailNotification.controller');
 
-// var archiverJob = new CronJob ('30 19 * * *',function(){
-//     console.log('This is kickback archiver start');
-//     archiveController.getData();
-//     console.log('This is kickback archiver End');  
-// },null, true, 'Asia/Tokyo');
+var archiverJob = new CronJob ('4 11 * * *',function(){
+    console.log('This is kickback archiver start');
+    archiveController.getData();
+    console.log('This is kickback archiver End');  
+},null, true, 'Asia/Tokyo');
  
-// var archiverProJob = new CronJob ('1 20 * * *',function(){
-//     console.log('This is kickback Pro archiver start');
-//     archiveController.getProData();
-//     console.log('This is kickback Pro archiver End');  
-// },null, true, 'Asia/Tokyo');
+var archiverProJob = new CronJob ('28 11 * * *',function(){
+    console.log('This is kickback Pro archiver start');
+    archiveController.getProData();
+    console.log('This is kickback Pro archiver End');  
+},null, true, 'Asia/Tokyo');
 
 
-// var emailNotificationJob = new CronJob ('40 20 * * *',function(){
-//     console.log('This is kickback email notification start');
-//     EmailController.sendEmail();
-//     console.log('This is kickback email notification end');
-// },null, true, 'Asia/Tokyo'); 
+var emailNotificationJob = new CronJob ('58 11 * * *',function(){
+    console.log('This is kickback email notification start');
+    EmailController.sendEmail();
+    console.log('This is kickback email notification end');
+},null, true, 'Asia/Tokyo'); 
+
 
 // var CDRsControllerJob = new CronJob ('0 3 2 * *',function(){
 //     console.log('This is kickback CDR creation start');
@@ -30,7 +31,7 @@ var EmailController = require('../kickback/emailNotification.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var billingControllerJob = new CronJob ('32 18 * * *',function(){
+// var billingControllerJob = new CronJob ('59 15 * * *',function(){
 //     console.log('This is kickback  billing start');
 //     billingController.getData();
 //     console.log('This is kickback billing end');

@@ -1,5 +1,3 @@
-
-
 var EmailNotification = require('../../models/kickback/emailNotification');
 
 let internlReport = true;

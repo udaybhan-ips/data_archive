@@ -178,14 +178,14 @@ module.exports = {
 
       let where = "";
       if (leg == 'A') {
-        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
+        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 30 DAY)  
         AND (GW IN ('NFPGSX4','IPSGSX5')) 
         AND (CALLDURATION > 0)
         AND RECORDTYPEID = 3 
         AND ((INCALLEDNUMBER like '00322223%') OR (INCALLEDNUMBER like '00322224%') OR (INCALLEDNUMBER like '00322225%'))
         order by STARTTIME asc `;
       } else {
-        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
+        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 30 DAY)  
         AND (GW IN ('NFPGSX4','IPSGSX5')) 
         AND (CALLDURATION > 0)
         AND RECORDTYPEID = 3 
@@ -227,14 +227,14 @@ module.exports = {
 
       let where = "";
       if (leg == 'A') {
-        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
+        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 30 DAY)  
         AND (GW IN ('NFPGSX4','IPSGSX5')) 
         AND (CALLDURATION > 0)
         AND RECORDTYPEID = 3 
         AND ((EGCALLEDNUMBER LIKE '%33328222%'))
         order by STARTTIME asc `;
       } else {
-        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
+        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 30 DAY)  
         AND (GW IN ('NFPGSX4','IPSGSX5')) 
         AND (CALLDURATION > 0)
         AND RECORDTYPEID = 3 

@@ -1,4 +1,4 @@
-var CDRKickback = require('../../models/kickback/cdr');
+var CDRByokakin = require('../../../models/byokakin/kddi/cdr');
 let dateId=3
 module.exports = {
 
@@ -11,7 +11,7 @@ module.exports = {
   createCDR: async function(req, res) {
 
   try{
-    const [Dates,targetDateErr] = await handleError(CDRKickback.getTargetDate(dateId));
+    const [Dates,targetDateErr] = await handleError(CDRByokakin.getTargetDate(dateId));
     if(targetDateErr) {
       throw new Error('Could not fetch target date');  
     } 
@@ -23,7 +23,7 @@ module.exports = {
       billingMonth='0'+billingMonth;
     }
 
-    const [customerListRes,customerListErr] = await handleError(CDRKickback.getAllKickbackCustomer(dateId));
+    const [customerListRes,customerListErr] = await handleError(CDRByokakin.getAllByokakinCustomer(dateId));
     if(customerListErr) {
       throw new Error('Could not fetch customer list');  
     }
@@ -32,7 +32,7 @@ module.exports = {
 
     for(let i=0; i<customerListRes.length;i++){
       
-      const [createCDRRes, createCDRErr] = await handleError(CDRKickback.createCDR(customerListRes[i]['cdr_comp_name'], customerListRes[i]['customer_id'], billingYear, billingMonth));
+      const [createCDRRes, createCDRErr] = await handleError(CDRByokakin.createCDR(customerListRes[i]['cdr_comp_name'], customerListRes[i]['customer_id'], billingYear, billingMonth));
       if(createCDRErr) {
         throw new Error('Error while creating cdr '+ createCDRErr.message);  
       }
@@ -52,10 +52,10 @@ module.exports = {
 }   
   },
   
-  async getKickbackCustomerList(req, res){
+  async getByokakinCustomerList(req, res){
     try {
-        const getKickbackCustListRes = await CDRKickback.getAllKickbackCustomer();
-        return res.status(200).json(getKickbackCustListRes);
+        const getByokakinCustListRes = await CDRByokakin.getAllByokakinCustomer();
+        return res.status(200).json(getByokakinCustListRes);
       
   } catch (error) {
     return res.status(400).json({

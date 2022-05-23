@@ -61,7 +61,8 @@ module.exports = {
   getKDDICompList: async function () {
 
     try {
-      const query = `select id, customer_code from kddi_customer where deleted = false  order by customer_code::int `;
+      const query = `select id, customer_code from kddi_customer where customer_code::int in (select  distinct(substring(split_part(bill_numb__c, '-',2),4))::int  as comp_code  from  kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY') ='03-2022') and deleted = false  order by customer_code::int `;
+     // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getKDDICompListRes = await db.queryByokakin(query, []);
 
       if (getKDDICompListRes.rows) {
@@ -119,7 +120,8 @@ module.exports = {
   getSummaryData: async function (customerId, year, month) {
     try {
 
-      const query = `select customercode, cdr_amount::int as cdr_amount, kotei_amount  from ( select customercode, sum (finalcallcharge) as cdr_amount  from  byokakin_kddi_processedcdr_${year}${month} 
+      const query = `select customercode, cdr_amount::int as cdr_amount, kotei_amount  from ( select customercode,
+         sum (finalcallcharge) as cdr_amount  from  byokakin_kddi_processedcdr_${year}${month} 
        where customercode='${customerId}' group by customercode) as bkpc join 
        (select sum(amount) kotei_amount, substring(split_part(bill_numb__c, '-',2),4) as comp_code 
        from kddi_kotei_bill_details where bill_start__c::date ='${year}-${month}-01' and bill_numb__c ilike '%${customerId}%' 
@@ -198,9 +200,13 @@ module.exports = {
       let cdrAmount = 0;
 
       invoiceData.map(obj => {
-        koteiAmount = koteiAmount + parseInt(obj.kotei_amount);
-        cdrAmount = cdrAmount + parseInt(obj.cdr_amount);
+        koteiAmount = koteiAmount + parseFloat(obj.kotei_amount);
+        cdrAmount = cdrAmount + parseFloat(obj.cdr_amount);
       });
+
+      cdrAmount = parseInt(cdrAmount,10);
+      koteiAmount = parseInt(koteiAmount,10);
+
       await createInvoice(company_code, customerAddress, billingYear, billingMonth, invoiceData, path, koteiAmount, cdrAmount);
       console.log("Done...")
     } catch (err) {
@@ -225,7 +231,7 @@ async function createInvoice(company_code, address, billingYear, billingMonth, i
   //drawLine(doc, 198);
   console.log("y=--" + y);
   drawLine(doc, y + 25);
-  basciInfo(doc, y + 25)
+  basciInfo(doc, y + 25, company_code, billingYear, billingMonth)
   drawLine(doc, y + 75);
 
   y = generateCustomerInformation(doc, invoice, y + 175, koteiAmount, cdrAmount, subTotal, tax, totalAmount);
@@ -271,19 +277,19 @@ function generateCustomerInformation(doc, invoice, y, koteiAmount, cdrAmount, su
   return y + 35;
 }
 
-function basciInfo(doc, y) {
+function basciInfo(doc, y, company_code, billingYear, billingMonth) {
   doc
     .fontSize(8)
     .text(`明細番号`, 50, y + 10, { width: 100, align: "left" })
     .text(`会社 `, 50, y + 25, { width: 100, align: "left" })
-    .text(`1000000188_KDDI_202202_R_01`, 125, y + 10, { width: 250, align: "left" })
+    .text(`1000000${company_code}_KDDI_${billingYear}${billingMonth}_01`, 125, y + 10, { width: 250, align: "left" })
     .text(`現代通信株式会社 `, 125, y + 25, { width: 100, align: "left" })
 
     .text(`ご利用月`, 50, y + 65, { width: 100, align: "left" })
     .text(`請求日 `, 50, y + 80, { width: 100, align: "left" })
 
-    .text(`2022-02-01 ～ 2022-02-28`, 125, y + 65, { width: 250, align: "left" })
-    .text(`2022-03-14`, 125, y + 80, { width: 100, align: "left" })
+    .text(`2022-03-01 ～ 2022-03-31`, 125, y + 65, { width: 250, align: "left" })
+    .text(`2022-04-14`, 125, y + 80, { width: 100, align: "left" })
 
     .moveDown()
   return y + 35;
@@ -329,7 +335,7 @@ function customTable(doc, y, data, MAXY) {
     textInRowFirst(doc, data[i].servicename, 125, height, "center", 100);
     textInRowFirst(doc, data[i].productname, 225, height, "center", 200);
     textInRowFirst(doc, data[i].taxinclude, 425, height, "center", 50);
-    textInRowFirst(doc, '¥' + utility.numberWithCommas(parseInt(data[i].amount)), 475, height, "right", 85);
+    textInRowFirst(doc, '¥' + utility.numberWithCommas(parseFloat(data[i].amount).toFixed(2)), 475, height, "right", 85);
 
     if (height >= 680) {
       doc.text(counter, 500, 720)
@@ -420,12 +426,20 @@ async function getInvoiceData(company_code, year, month) {
   try {
     const query = `select * from (select (amount) amount, 0 as cdr_amount, (amount) kotei_amount , 
     substring(split_part(bill_numb__c, '-',2),4) as comp_code, cdrid, servicename, productname, taxinclude, account
-     from kddi_kotei_bill_details where bill_start__c::date ='2022-02-01' and bill_numb__c ilike '%188%' 
+     from kddi_kotei_bill_details where bill_start__c::date ='2022-03-01' and bill_numb__c ilike '%${company_code}%' 
       UNION ALL
-       select sum(finalcallcharge) as amount, sum(finalcallcharge) as amount , 0 as kotei_amount ,
-        '' as  comp_code, 0 as cdrid, 'ダイヤル通話料 ' as servicename, '' as productname,''as taxinclude, 
-        replace(freedialnumber,'-','') as account   from  byokakin_kddi_processedcdr_202202 
-          where customercode='188' group by  freedialnumber )as foo order by account` ;
+       select   sum( case when terminaltype!='その他' then finalcallcharge else 0 end) as amount ,
+       sum( case when terminaltype!='その他' then finalcallcharge else 0 end) as amount, 0 as kotei_amount ,
+        '' as  comp_code, 0 as cdrid, 'ダイヤル通話料' as servicename, '' as productname,'' as taxinclude, 
+        replace(freedialnumber,'-','') as account   from  byokakin_kddi_processedcdr_${year}${month} 
+          where customercode='${company_code}' and ( case when terminaltype!='その他' then finalcallcharge else 0 end) > 0 group by  freedialnumber 
+          UNION ALL
+          select   sum( case when terminaltype='その他' then finalcallcharge else 0 end) as amount, 
+          sum( case when terminaltype='その他' then finalcallcharge else 0 end) as amount, 0 as kotei_amount ,
+          '' as  comp_code, 0 as cdrid, 'その他通話料' as servicename, '' as productname,'' as taxinclude, 
+          replace(freedialnumber,'-','') as account   from  byokakin_kddi_processedcdr_${year}${month} 
+            where customercode='${company_code}' and ( case when terminaltype='その他' then finalcallcharge else 0 end) > 0 group by  freedialnumber              
+      )as foo order by account, servicename` ;
     const ratesRes = await db.queryByokakin(query, []);
 
     if (ratesRes.rows) {

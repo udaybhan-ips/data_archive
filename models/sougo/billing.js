@@ -51,7 +51,8 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main  order by company_code `;
+      const query = `select distinct(company_code) as company_code from billcdr_main 
+      where company_code in ('1011000039','1011000006') order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
     } catch (error) {
@@ -122,22 +123,22 @@ module.exports = {
                 '${info[ii]['item_type']}', '${info[ii]['item_name']}',${info[ii]['call_count']}, ${info[ii]['call_sec']}, ${info[ii]['rate']} 
                 ,${info[ii]['amount']},'${info[ii]['remarks']}','now()','system', 'now()','system')`;
 
-          console.log("query==" + query);
-          let insertBillingdetailsRes = await db.queryIBS(query, []);
+          //console.log("query==" + query);
+          await db.queryIBS(query, []);
         }
       }
 
       if (amount > 0) {
-        tax = amount * .1;
+        tax = amount * .1; // 10% tax
         billAmount = amount + tax;
       }
 
       let query = `insert into bill_history (bill_no , company_code , date_bill , date_payment , bill_term_start , bill_term_end , bill_period ,
          amount , tax ,print_flag , date_insert , name_insert , date_update , name_update , bill_include ,call_count) VALUES('${bill_no}', '${company_code}', '${year}-${month}-01', '${year}-${month}-25','${year}-${month}-01', '${year}-${month}-${numerOfDays}',
          '1' ,'${amount}','${tax}','0','now()','System','now()','System', '0','${call_count}')`;
-      console.log("query==" + query);
+      //console.log("query==" + query);
 
-      let insertHisDataFC = await db.queryIBS(query, []);
+      await db.queryIBS(query, []);
     } catch (error) {
       console.log("Error in result ---" + error.message);
       return error;
@@ -293,21 +294,12 @@ async function getCarrierName(data, carrier_code) {
 
 async function getSougoRates(data, carrier_code, company_code) {
   let res = {};
-
-  console.log("carrier code==" + carrier_code);
-  console.log("company_code==" + company_code);
-  console.log("data==" + data.length);
-
-  let tmpObj = data.filter((obj) => {
+ let tmpObj = data.filter((obj) => {
     if (obj['carrier_code'] == carrier_code)
       return true;
   });
 
-  console.log("tmpObj=" + JSON.stringify(tmpObj));
-
   let filterLength = tmpObj.length;
-
-  console.log("lenght==" + filterLength);
 
   if (filterLength == 1) {
     res['rate_setup'] = tmpObj[0]['rate_setup'];
@@ -407,17 +399,17 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
   
     if (tmpPaymentDate == 'yearly') {
       if (parseInt(billingMonth) > 4)
-        paymentDueDate = `${billingYear + 1}/05/02`;
+        paymentDueDate = `${billingYear + 1}/05/01`;
       else
-        paymentDueDate = `${currentYear}/05/02`;
+        paymentDueDate = `${currentYear +1 }/05/01`;
     } else if (tmpPaymentDate == 'half_yearly') {
       if (parseInt(billingMonth) > 10 && parseInt(billingMonth) <=3 )
-        paymentDueDate = `${billingYear }/05/02`;
+        paymentDueDate = `${billingYear }/10/31`;
       else
-        paymentDueDate = `${currentYear}/05/02`;
+        paymentDueDate = `${currentYear}/10/31`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
-      paymentDueDate = `${currentYear}/05/02`;
+      paymentDueDate = `${currentYear}/05/31`;
     }
 
   await generateHeader(address, doc, totalCallAmount);
