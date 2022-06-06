@@ -78,3 +78,16 @@ update ntt_kddi_freedial_c set free_numb__c= '036361094'    where   length(free_
  update ntt_kddi_freedial_c set free_numb__c=RIGHT(free_numb__c, 10)  where   length(free_numb__c) =16;
  update ntt_kddi_freedial_c set free_numb__c= LEFT(free_numb__c, 10) where   length(free_numb__c) =17 and id != 62543
  update ntt_kddi_freedial_c set free_numb__c='0120500778'  where    id = 62543;
+
+
+
+ CREATE TABLE IF NOT EXISTS "cdr_202206" ("cdr_id" BIGSERIAL, "date_bill" TIMESTAMP WITHout TIME ZONE not null , orig_ani VARCHAR , term_ani VARCHAR,
+ "start_time" TIMESTAMP WITHout TIME ZONE not null , "stop_time" TIMESTAMP WITHout TIME ZONE not null
+  ,"duration" VARCHAR(255), "duration_use" VARCHAR(255),
+  "dom_int_call" VARCHAR(255), "orig_carrier_id" VARCHAR(255),
+ "selected_carrier_id" VARCHAR, "billing_company_code" VARCHAR, "trunk_port" VARCHAR, "sonus_session_id" VARCHAR,
+ "sonus_start_time" TIMESTAMP WITHOUT TIME ZONE, "sonus_disconnect_time" TIMESTAMP WITHout TIME ZONE, "sonus_call_duration" VARCHAR,
+ "sonus_call_duration_second" VARCHAR, "sonus_anani" VARCHAR, "sonus_incallednumber" VARCHAR, "sonus_ingressprotocolvariant" VARCHAR,
+ "registerdate" TIMESTAMP WITHOUT TIME ZONE, "sonus_ingrpstntrunkname" VARCHAR, "sonus_gw" VARCHAR, "sonus_callstatus" VARCHAR,
+ "sonus_callingnumber" VARCHAR, "sonus_egcallednumber" VARCHAR, "sonus_egrprotovariant" VARCHAR, "createdAt" TIMESTAMP WITHOUT TIME ZONE ,
+ "updatedAt" TIMESTAMP WITHOUT TIME ZONE , in_outbound integer, term_carrier_id varchar, transit_carrier_id varchar, PRIMARY KEY ("cdr_id"));;

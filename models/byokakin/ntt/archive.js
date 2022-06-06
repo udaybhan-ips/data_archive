@@ -3,20 +3,21 @@ const { BATCH_SIZE } = require('../../../config/config');
 const iconv = require('iconv-lite');
 const utility = require("../../../public/javascripts/utility")
 
-let ColumnSet = ['comp_acco__c', 'companyname', 'recordtype', 'account', 'groupcode', 'basicservicetype', 'freedialnumber', 'basicchargedesc', 'amount', 'taxinclude', 'telcotype', 'datebill'];
-let tableName = { table: 'kddi_kotei_cdr_basic' };
 
-let ColumnSetContents = ['comp_acco__c', 'companyname', 'recordtype', 'account', 'groupcode', 'basicservicetype', 'billaccount', 'freedialnumber', 'startdate', 'enddate', 'gendetaildesc', 'basicchargedesc', 'carriercode', 'contentsnumber', 'contentsprovider', 'amount', 'taxinclude', 'datebill'];
-let tableNameContents = { table: 'kddi_kotei_cdr_contents' };
+let ColumnSetNTTKoteihi = [ 'did', 'carrier', 'service_name', 'amount', 'taxclassification', 'dailydisplay', 'date_added'];
+let tableNameNTTKoteihi = { table: 'byokakin_ntt_koteihi_202203' };
+let ColumnSetNTTKoteihiCDR = ['companyname', 'comp_acco__c', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'hiwarihyouji', 'datebill', 'linkedcdrid'];
+let tableNameNTTKoteihiCDR = { table: 'ntt_koteihi_cdr' };
+let ColumnSetNTTKoteihiCDRBILL = ['id', 'cdrid', 'bill_code',  'comp_acco__c', 'bill_count', 'sort_order', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'hiwarihyouji', 'datebill'];
+let tableNameNTTKoteihiCDRBILL = { table: 'ntt_koteihi_cdr_bill' };
 
-let ColumnSetInfini = ['servicecode', 'did', 'usednumber', 'cld', 'calldate', 'calltime', 'callduration', 'source', 'destination', 'terminaltype'];
-let tableNameInfini = { table: 'byokakin_kddi_infinidata_202204' };
 
-let ColumnSetKDDIRAW = ['did', 'freedialnum', 'cld', 'calldate', 'calltime', 'callduration', 'source', 'destination', 'callclassi', 'calltype', 'callcharge', 'customercode'];
-let tableNameKDDIRAW = { table: 'byokakin_kddi_raw_cdr_202204' };
+// let ColumnSetNTTInbound = ['servicecode', 'did', 'usednumber', 'cld', 'calldate', 'calltime', 'callduration', 'source', 'destination', 'terminaltype'];
+// let tableNameNTTInbound = { table: 'byokakin_kddi_infinidata_202204' };
 
-let ColumnSetKDDIBillDetail = ['bill_numb__c', 'bill_start__c', 'cdrtype', 'cdrid', 'cdrcnt', 'account', 'servicename', 'productname', 'taxinclude', 'amount', 'comp_acco__c'];
-let tableNameKDDIBillDetail = { table: 'kddi_kotei_bill_details' };
+// let ColumnSetNTTOutbound = ['did', 'freedialnum', 'cld', 'calldate', 'calltime', 'callduration', 'source', 'destination', 'callclassi', 'calltype', 'callcharge', 'customercode'];
+// let tableNameNTTOutbound = { table: 'byokakin_kddi_raw_cdr_202204' };
+
 
 
 var fs = require('fs');
@@ -43,16 +44,16 @@ module.exports = {
     }
   },
 
-  getKDDICustomer: async function () {
+  getNTTCustomer: async function () {
     try {
-      const query = `select m_cus.* from (select id, customer_cd, customer_name, address, staff_name from  m_customer where is_deleted=false)as m_cus join (select * from kddi_customer where deleted=false) as kddi_cus on ( m_cus.customer_cd::int = kddi_cus.customer_code::int) order by m_cus.customer_cd desc`;
-      const KDDICustomerListRes = await db.query(query, [], true);
+      const query = `select m_cus.* from (select id, customer_cd, customer_name, address, staff_name from  m_customer where is_deleted=false)as m_cus join (select * from ntt_customer where deleted=false) as ntt_cus on ( m_cus.customer_cd::int = ntt_cus.customer_code::int) order by m_cus.customer_cd desc`;
+      const NTTCustomerListRes = await db.query(query, [], true);
       // console.log(targetDateRes);
-      if (KDDICustomerListRes.rows) {
-        return KDDICustomerListRes.rows
+      if (NTTCustomerListRes.rows) {
+        return NTTCustomerListRes.rows
       }
 
-      throw new Error('Error in fetching customer.' + KDDICustomerListRes)
+      throw new Error('Error in fetching customer.' + NTTCustomerListRes)
 
     } catch (error) {
       console.log("error...." + error.message)
@@ -60,55 +61,24 @@ module.exports = {
     }
   },
 
-  getKDDICustomerList: async function () {
+  getCustomerList: async function () {
     try {
-      const query = `select customer_name, customer_cd, id from m_customer `
-      const getKDDICustomerList = await db.queryIBS(query, []);
-      return getKDDICustomerList.rows;
+      const query = `select customer_name, customer_cd, id from m_customer order by customer_cd `
+      const getCustomerList = await db.queryIBS(query, []);
+      return getCustomerList.rows;
     } catch (e) {
       console.log("err in get kddi company list=" + e.message);
       return e;
     }
   },
-  getKDDIKotehiABasciData: async function () {
+  
+  getNTTFreeDialNumList: async function () {
     try {
-      const query = `select id, data_code, data_name from kddi_kotehi_a_basic_construct order by data_name`
-      const getKDDIKotehiABasciDataRes = await db.queryByokakin(query, []);
-      return getKDDIKotehiABasciDataRes.rows;
+      const query = `select data_idno, cust_code__c, carr_comp__c, free_numb__c from  ntt_kddi_freedial_c where carr_comp__c='NTT' `
+      const getNTTFreeDialNumListRes = await db.queryByokakin(query, []);
+      return getNTTFreeDialNumListRes.rows;
     } catch (e) {
-      console.log("err in get kddi kotehi basic code company list=" + e.message);
-      return e;
-    }
-  },
-  getKDDIKotehiAServiceDataData: async function () {
-    try {
-      const query = `select id, data_code, data_name from kddi_kotehi_a_service_details order by data_name`
-      const getKDDIKotehiAServiceDataDataRes = await db.queryByokakin(query, []);
-      return getKDDIKotehiAServiceDataDataRes.rows;
-    } catch (e) {
-      console.log("err in get kddi kotehi a service code company list=" + e.message);
-      return e;
-    }
-  },
-
-  getKDDIKotehiABasicServiceData: async function () {
-    try {
-      const query = `select id, data_code, data_name from kddi_kotehi_a_product_service order by data_name`
-      const getKDDIKotehiABasicServiceDataDataRes = await db.queryByokakin(query, []);
-      return getKDDIKotehiABasicServiceDataDataRes.rows;
-    } catch (e) {
-      console.log("err in get kddi kotehi a Basic service code company list=" + e.message);
-      return e;
-    }
-  },
-
-  getKDDIFreeDialNumList: async function () {
-    try {
-      const query = `select data_idno, cust_code__c, carr_comp__c, free_numb__c from  ntt_kddi_freedial_c where carr_comp__c='KDDI' `
-      const getKDDIFreeDialNumListRes = await db.queryByokakin(query, []);
-      return getKDDIFreeDialNumListRes.rows;
-    } catch (e) {
-      console.log("err in get kddi free dial number list=" + e.message);
+      console.log("err in get ntt free dial number list=" + e.message);
       return e;
     }
   },
@@ -123,27 +93,18 @@ module.exports = {
       return e;
     }
   },
-  getKDDIKotehiData: async function ({ year, month, comCode }) {
+  getNTTKotehiData: async function ({ year, month, comCode }) {
     try {
-      let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
-
-      const lastYear = lastMonthDate.year;
-      const lastMonth = lastMonthDate.month;
-
-      const query = `select *, ROW_NUMBER() OVER(ORDER BY cdrid) id from ( select cdrid , comp_acco__c, companyname, recordtype, account,
-        freedialnumber as billaccount, amount, '' as gendetaildesc, basicchargedesc, datebill    from kddi_kotei_cdr_basic 
-        UNION ALL select cdrid ,comp_acco__c, companyname, recordtype, account, billaccount, amount, 
-        gendetaildesc, basicchargedesc, datebill from kddi_kotei_cdr_contents ) as foo
-        where  to_char(foo.datebill::date, 'MM-YYYY')='${month}-${year}' `;
-      const getKDDIKotehiDataRes = await db.queryByokakin(query, []);
-      return getKDDIKotehiDataRes.rows;
+      const query = `select row_number() over() as id, * from ntt_koteihi_cdr where  to_char(datebill::date, 'MM-YYYY')='${month}-${year}' `;
+      const getNTTKotehiDataRes = await db.queryByokakin(query, []);
+      return getNTTKotehiDataRes.rows;
     } catch (e) {
-      console.log("err in get kddi free account number list=" + e.message);
-      return e;
+      console.log("err in get ntt kotehi data=" + e.message);
+      throw new Error(e);
     }
   },
 
-  getLastMonthKDDIKotehiData: async function ({ year, month, comCode }) {
+  getNTTKotehiLastMonthData: async function ({ year, month, comCode }) {
     try {
       let where = "";
 
@@ -151,57 +112,41 @@ module.exports = {
 
       const lastYear = lastMonthDate.year;
       const lastMonth = lastMonthDate.month;
-
-      if (comCode && year && month) {
-        where = ` where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}' and substring(split_part(bill_numb__c, '-',2),4) as comp_code ='${comCode}'`;
-      } else if (!comCode && lastMonth && lastYear) {
-        where = `where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}'`;
-      } else {
-        throw new Error('please select billing year and month');
-      }
-
-      const query = `select *, ROW_NUMBER() OVER(ORDER BY cdrid) id from ( select cdrid , comp_acco__c, companyname, recordtype, account,
-        freedialnumber as billaccount, amount, '' as gendetaildesc, basicchargedesc, datebill    from kddi_kotei_cdr_basic 
-         UNION ALL select cdrid ,comp_acco__c, companyname, recordtype, account, billaccount, amount, 
-         gendetaildesc, basicchargedesc, datebill from kddi_kotei_cdr_contents ) as foo
-         where  to_char(foo.datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}'  `;
-      const getLastMonthKDDIKotehiDataRes = await db.queryByokakin(query, []);
-      return getLastMonthKDDIKotehiDataRes.rows;
+      const query = ` select row_number() over() as id, * from ntt_koteihi_cdr where  to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}'`;
+      const getLastMonthNTTKotehiDataRes = await db.queryByokakin(query, []);
+      return getLastMonthNTTKotehiDataRes.rows;
     } catch (e) {
-      console.log("err in last month kddi kotehi data=" + e.message);
+      console.log("err in last month NTT kotehi data=" + e.message);
       return e;
     }
   },
 
 
-  getKDDIKotehiLastMonthData: async function ({ year, month, comp_code }) {
+  getNTTKotehiLastMonthProcessedData: async function ({ year, month, comp_code }) {
     try {
 
       let where = "";
-
       let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
-
       const lastYear = lastMonthDate.year;
       const lastMonth = lastMonthDate.month;
-      
-
       console.log("year, month, com code.." + year, month, comp_code);
 
       if (comp_code && year && month) {
-        where = ` where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}' and substring(split_part(bill_numb__c, '-',2),4) as comp_code ='${comCode}'`;
+        where = ` where to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}' and substring(split_part(bill_code, '-',2),4) as comp_code ='${comCode}'`;
       } else if (!comp_code && year && month) {
-        where = `where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}'`;
+        where = `where to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}'`;
       } else {
         throw new Error('please select billing year and month');
       }
 
-      const query = ` select *, substring(split_part(bill_numb__c, '-',2),4) as comp_code from kddi_kotei_bill_details ${where}`;
+      const query = ` select row_number() over() as id, *, substring(split_part(bill_code, '-',2),4) as comp_code from ntt_koteihi_cdr_bill ${where}`;
 
       console.log("query...." + query)
-      const getKDDIKotehiLastMonthDataRes = await db.queryByokakin(query, []);
-      return getKDDIKotehiLastMonthDataRes.rows;
+
+      const getNTTKotehiLastMonthDataRes = await db.queryByokakin(query, []);
+      return getNTTKotehiLastMonthDataRes.rows;
     } catch (e) {
-      console.log("err in get kddi last month list=" + e.message);
+      console.log("err in get NTT last month list=" + e.message);
       return e;
     }
   },
@@ -323,105 +268,87 @@ module.exports = {
       return error;
     }
   },
-  insertKDDIKotehiData: async function (filePath, fileName, resKDDICustomerList, resKDDIFreeDialNumList, resKDDIFreeAccountNumList, billingYear, billingMonth) {
 
-    console.log("path and name =" + filePath + fileName);
+  chargeKotehiData: async function (billingYear, billingMonth, freeDialNumList, customerList){
+    try{
+      let query = `select * from byokakin_ntt_koteihi_${billingYear}${billingMonth}`;
+      const kotehiData = await db.queryByokakin(query,[]);
 
+      if(kotehiData && kotehiData.rows){
+        let tmpData = [];
 
-    // var stripBomStream = require('strip-bom-stream')
+        for(let i=0; i<kotehiData.rows.length; i++){
+          let tmpObj = {};
+          const comp_acco__c = await getCompanyCode(freeDialNumList, kotehiData.rows[i]['did']);
+          const companyName = await getCompanyName(customerList, comp_acco__c);
+          tmpObj['companyname'] = companyName;
+          tmpObj['comp_acco__c'] = comp_acco__c;
+          tmpObj['kaisenbango'] = kotehiData.rows[i]['did'];
+          tmpObj['riyougaisya'] = kotehiData.rows[i]['carrier'];
+          tmpObj['seikyuuuchiwake'] = kotehiData.rows[i]['service_name'];
+          tmpObj['kingaku'] = kotehiData.rows[i]['amount'];
+          tmpObj['zeikubun'] = kotehiData.rows[i]['taxclassification'];
+          tmpObj['hiwarihyouji'] = kotehiData.rows[i]['dailydisplay'];
+          tmpObj['datebill'] = `${billingYear}-${billingMonth}-01`;
+          tmpObj['linkedcdrid'] = kotehiData.rows[i]['cdrid'];
+          
+          tmpData.push(tmpObj);
+        }
+        insertByBatches(tmpData, 'ntt_koteihi_charge', billingYear, billingMonth);
+      }
+      
 
-    console.log("111" + __dirname);
+    }catch(error){
+      console.log("Error in ntt kotehi charging..."+error);
+      throw new Error(error);
+    }
+  },
+
+  insertNTTKotehiData: async function (filePath, fileName, billingYear, billingMonth) {
+
     try {
 
       let csvData = [];
-      let csvDataContents = [];
-      let csvInfiniData = [];
-      let csvstream = fs.createReadStream('NTCD202205BTU09118002_00.CSV')
+      let DID = null;
+      let carrier = null;
+      let csvstream = fs.createReadStream('000145702_回線番号別内訳料金_202204_1.csv')
+        .pipe(iconv.decodeStream("Shift_JIS"))
         .pipe(csv.parse())
         .on('data', async function (row) {
-
           let obj = {};
-          let obj1 = {};
-          let obj2 = {};
-          if (parseInt(row[0]) == 22) {
             csvstream.pause();
-            let callToNum = row[4];
-            callToNum = callToNum.replace("-", "");
-            callToNum = callToNum.replace("_", "");
-            callToNum = callToNum.replace(" ", "");
-            const comCode = await getCompanyCode(resKDDIFreeDialNumList, callToNum);
-            const companyName = await getCompanyName(resKDDICustomerList, comCode);
-            obj['comp_acco__c'] = comCode;
-            obj['companyname'] = companyName;
-            obj['recordtype'] = parseInt(row[0]);
-            obj['account'] = row[1];
-            obj['groupcode'] = row[2];
-            obj['basicservicetype'] = row[3];
-            obj['freedialnumber'] = callToNum;
-            obj['basicchargedesc'] = row[5];
-            obj['amount'] = parseInt(row[6], 10);
-            obj['taxinclude'] = row[7];
-            obj['telcotype'] = row[8];
-            obj['datebill'] = `${billingYear}-${billingMonth}-01`;
-            csvData.push(obj);
-            csvstream.resume();
+            let tmpDID = row[0] != null ? row[0].trim() : null ;
+            let tmpCarrier = row[1] != null ? row[1].trim() : null ;
 
-          } else if (parseInt(row[0]) === 24 || parseInt(row[0]) === 25) {
-            csvstream.pause();
-            let callToNum = row[5];
-            callToNum = callToNum.replace("-", "");
-            callToNum = callToNum.replace("_", "");
-            callToNum = callToNum.replace(" ", "");
-
-            const comCode = await getCompanyCodeByAccount(resKDDIFreeAccountNumList, row[4]);
-            const companyName = await getCompanyName(resKDDICustomerList, comCode);
-            obj1['comp_acco__c'] = comCode;
-            obj1['companyname'] = companyName;
-            obj1['recordtype'] = parseInt(row[0]);
-            obj1['account'] = row[1];
-            obj1['groupcode'] = row[2];
-            obj1['basicservicetype'] = row[3];
-            obj1['billaccount'] = row[4];
-            obj1['freedialnumber'] = callToNum;
-            obj1['startdate'] = row[6];
-            obj1['enddate'] = row[7];
-            obj1['gendetaildesc'] = row[8];
-            obj1['basicchargedesc'] = row[9];
-            obj1['carriercode'] = row[10];
-            obj1['contentsnumber'] = row[11];
-            obj1['contentsprovider'] = row[12];
-            obj1['amount'] = parseInt(row[13]);
-            obj1['taxinclude'] = row[14];
-            obj1['datebill'] = `${billingYear}-${billingMonth}-01`;;
-
-            csvDataContents.push(obj1);
-            csvstream.resume();
-          } else if (parseInt(row[0]) === 20) {
-            csvstream.pause();
-            obj2['servicecode'] = row[3];
-            obj2['did'] = row[4];
-            obj2['usednumber'] = row[8];
-            obj2['cld'] = row[9];
-            obj2['calldate'] = row[10];
-            obj2['calltime'] = row[11];
-            obj2['callduration'] = parseInt(row[12], 10);
-            obj2['source'] = row[13];
-            obj2['destination'] = row[14];
-            obj2['terminaltype'] = row[15];
-            csvInfiniData.push(obj2);
-            csvstream.resume();
-
-          }
+            if(tmpDID!= null && tmpDID!= ""){
+              if(tmpDID.indexOf("合計") == -1){
+                DID = tmpDID;
+              }
+            } else if(tmpCarrier!= null && tmpCarrier !=""){
+              if(tmpCarrier.indexOf("合計") == -1){
+                carrier = tmpCarrier;
+              }
+            }else{
+              if(row[3] != null && row[3].trim()!= ""){
+                obj['did'] = DID;
+                obj['carrier'] = carrier;
+                obj['service_name'] = row[2];
+                obj['amount'] = row[3].trim().replaceAll(",","");
+                obj['taxclassification'] = row[4];
+                obj['date_added'] =  `${billingYear}-${billingMonth}-01`;
+                obj['dailydisplay'] = row[5].trim();        
+                csvData.push(obj);
+              }
+            }            
+            csvstream.resume();          
         })
         .on('end', function () {
-          insertByBatches(csvData);
-          insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
-          insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
+          insertByBatches(csvData, 'ntt_koteihi', billingYear, billingMonth);
         })
         .on('error', function (error) {
           console.log("Error" + error.message);
         });
-      return csvData;
+    //  return csvData;
     } catch (error) {
       console.log("Error" + error.message);
       return error;
@@ -502,11 +429,11 @@ async function insertByBatches(records, type, billingYear, billingMonth) {
   let resArr = [];
 
   for (let i = 0; i < chunkArray.length; i++) {
-    if (type === 'contents') {
-      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetContents, tableNameContents);
-    } else if (type === 'infini') {
-      let tableNameInfini = { table: `byokakin_kddi_infinidata_${billingYear}${billingMonth}` };
-      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetInfini, tableNameInfini);
+    if (type === 'ntt_koteihi') {
+      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTKoteihi, tableNameNTTKoteihi);
+    } else if (type === 'ntt_koteihi_charge') {
+      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTKoteihiCDR, tableNameNTTKoteihiCDR);
+
     } else if (type === 'RAWCDR') {
       
       let tableNameKDDIRAW = { table: `byokakin_kddi_raw_cdr_${billingYear}${billingMonth}` };
@@ -526,18 +453,6 @@ async function insertByBatches(records, type, billingYear, billingMonth) {
 
 }
 
-async function inserBulkData(data) {
-  try {
-    const res = await db.queryBatchInsertByokakin(data, ColumnSetKDDIRAW, tableNameKDDIRAW);
-
-    console.log("rsult is .." + res)
-
-  } catch (error) {
-    console.log("error" + error.message);
-  }
-
-
-}
 
 
 
@@ -563,11 +478,11 @@ async function getCompanyCodeByAccount(companyCodeList, callToNum) {
 
 }
 
-async function getCompanyCode(companyCodeList, callToNum) {
+async function getCompanyCode(companyCodeList, did) {
   let res = '99999999';
   try {
     for (let i = 0; i < companyCodeList.length; i++) {
-      if (callToNum == companyCodeList[i]['free_numb__c'].trim()) {
+      if (did == companyCodeList[i]['free_numb__c'].trim()) {
         res = companyCodeList[i]['cust_code__c'];
         break;
       }

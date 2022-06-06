@@ -15,6 +15,7 @@ var jobKickback = require('./controllers/cron/kickback_cron');
 var jobSougo = require('./controllers/cron/sougo_cron');
 var jobMVNO = require('./controllers/cron/mvno_cron');
 var KDDI = require('./controllers/cron/kddi_cron');
+var NTT = require('./controllers/cron/ntt_cron');
 var DBBACKUP = require('./controllers/cron/db_backup');
 
 

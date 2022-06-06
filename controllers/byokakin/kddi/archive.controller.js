@@ -10,7 +10,7 @@ module.exports = {
 
       //console.log("req.."+JSON.stringify(req));
 
-      const billingMonth = "03";
+      const billingMonth = "04";
       const billingYear ="2022";
       const serviceType = "Kotehi";
       const callType = ['free_number','d_number'];
@@ -24,7 +24,7 @@ module.exports = {
 
       const resKDDIKotehiData = await ArchiveKDDI.insertKDDIKotehiData(filePath, fileName, resKDDICustomerList, resKDDIFreeDialNumList,resKDDIFreeAccountNumList,billingYear, billingMonth);
       //console.log("data");
-      console.log(JSON.stringify(resKDDIKotehiData));
+     // console.log(JSON.stringify(resKDDIKotehiData));
 
       //const getDataRes = await ArchiveKDDI.insertByBatches(resKDDIKotehiData);
       console.log("Done ...")
@@ -39,7 +39,7 @@ module.exports = {
 
   uploadKDDIRAW: async function (req, res) {
     try {
-      const billingMonth = "03";
+      const billingMonth = "04";
       const billingYear ="2022";
       const serviceType = "RAW";
       

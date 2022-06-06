@@ -396,13 +396,20 @@ async function getNextInsertBatch(data, getCompanyCodeInfoRes, getRemoteControlN
 
   try {
     for (let i = 0; i < dataLen; i++) {
+
+      let INCALLEDNUMBER = data[i]['INCALLEDNUMBER'] ;
+
+      if(data[i]['INCALLEDNUMBER'].substring(0,4) == '4266'){
+        INCALLEDNUMBER = data[i]['INCALLEDNUMBER'].substring(4);
+      }
+
       const { TRUNKPORT, XFB, XFC, XFD, XFE, XFEF, XFEL, INOU, INDO, XFEC } = await getInOutbound(data[i]['INGRESSPROTOCOLVARIANT'], data[i]['INGRPSTNTRUNKNAME']);
-      const companyCode = await getCompanyCode(XFB, XFC, XFD, XFE, data[i]['ORIGDATE'], data[i]['INCALLEDNUMBER'], getCompanyCodeInfoRes, getRemoteControlNumberDataRes);
+      const companyCode = await getCompanyCode(XFB, XFC, XFD, XFE, data[i]['ORIGDATE'], INCALLEDNUMBER, getCompanyCodeInfoRes, getRemoteControlNumberDataRes);
 
       let obj = {};
       obj['date_bill'] = data[i]['ORIGDATE'];
       obj['orig_ani'] = data[i]['INANI'];
-      obj['term_ani'] = data[i]['INCALLEDNUMBER'];
+      obj['term_ani'] = INCALLEDNUMBER;
       obj['stop_time'] = data[i]['STOPTIME'];
       obj['start_time'] = data[i]['ORIGDATE'];
       obj['duration'] = parseFloat(data[i]['DURATION']);
@@ -421,7 +428,7 @@ async function getNextInsertBatch(data, getCompanyCodeInfoRes, getRemoteControlN
       obj['sonus_call_duration'] = data[i]['CALLDURATION'];
       obj['sonus_call_duration_second'] = parseInt(data[i]['DURATION'], 10);
       obj['sonus_anani'] = data[i]['INANI'];
-      obj['sonus_incallednumber'] = data[i]['INCALLEDNUMBER'];
+      obj['sonus_incallednumber'] = INCALLEDNUMBER;
       obj['sonus_ingressprotocolvariant'] = data[i]['INGRESSPROTOCOLVARIANT'];
       obj['registerdate'] = 'now()';
       obj['sonus_ingrpstntrunkname'] = data[i]['INGRPSTNTRUNKNAME'];

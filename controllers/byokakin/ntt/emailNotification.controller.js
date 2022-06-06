@@ -1,8 +1,10 @@
+
+
 var EmailNotification = require('../../models/kickback/emailNotification');
 
 let internlReport = true;
 let externalReport = true;
-let internalSummaryReport = true;
+let internalSummaryReport = false;
 
 
 module.exports = {
@@ -14,11 +16,6 @@ module.exports = {
       if (targetDateErr) {
         console.log("Could not fetch target date");
         throw new Error('Could not fetch target date');
-      }
-
-      const [tableName, tableNameErr] = await handleError(EmailNotification.getTableName(Dates.targetDateWithTimezone));
-      if (tableNameErr) {
-        throw new Error('Could not fetch table name');
       }
 
       const [allKickComp, allKickCompErr] = await handleError(EmailNotification.getAllKickComp(Dates.targetDateWithTimezone));
@@ -37,11 +34,6 @@ module.exports = {
 
       }
 
-      const year = new Date(Dates.targetDateWithTimezone).getFullYear();
-      let month = new Date(Dates.targetDateWithTimezone).getMonth() + 1;
-      if (parseInt(month, 10) < 10) {
-        month = '0' + month;
-      }
 
       if (externalReport) {
 
@@ -96,7 +88,7 @@ module.exports = {
 
 
 
-              if (allKickCompEmail[i]['customer_cd'] == '00000720' ) {
+              if (allKickCompEmail[i]['customer_cd'] == '00000720') {
                 let procData = '';
                 let procData_2 = '';
                 let procData_3 = '';
@@ -229,7 +221,7 @@ module.exports = {
 
         }
 
-        let subject = `${month}月度 KICKBACK全体トラフィック速報`;
+        let subject = '11月度 KICKBACK全体トラフィック速報';
         const [sendEmailAllDataRes, sendEmailAllDataErr] = await handleError(EmailNotification.sendEmailAllData(getAllTrafficSummaryHTML, subject));
         if (sendEmailAllDataErr) {
           throw new Error('error while sending email');
@@ -238,61 +230,28 @@ module.exports = {
       }
       if (internalSummaryReport) {
 
-
-        const [getSummaryDataMysqlTotalRes, getSummaryDataMysqlTotalErr] = await handleError(EmailNotification.getSummaryDataByDayTotalMysql(Dates.targetDateWithTimezone));
-        if (getSummaryDataMysqlTotalErr) {
-          throw new Error('error while fetching data in total in at raw server');
-        }
-
-        const [getSonusSummaryTotalDataRes, getSonusSummaryTotalDataErr] = await handleError(EmailNotification.getSonusSummaryTotalData(year, month, tableName));
-        if (getSonusSummaryTotalDataErr) {
-          throw new Error('error while fetching data processed data');
-        }
-
-        const [getSummaryDataMysqlRes, getSummaryDataMysqlErr] = await handleError(EmailNotification.getSummaryDataByDayMysql(Dates.targetDateWithTimezone));
-        if (getSummaryDataMysqlErr) {
-          throw new Error('error while fetching data in traffic summary table');
-        }
-
-
         const [proDataAllRes, proDataAllErr] = await handleError(EmailNotification.getAllProTrafficSummary(Dates.targetDateWithTimezone));
         if (proDataAllErr) {
           throw new Error('error while fetching data processed data');
         }
+        const [getSummaryDataMysqlRes, getSummaryDataMysqlErr] = await handleError(EmailNotification.getSummaryDataMysql(Dates.targetDateWithTimezone));
+        if (getSummaryDataMysqlErr) {
+          throw new Error('error while inserting data in traffic summary table');
+        }
 
-        
-        const [getSonusSummaryByTermaniTotalDataRes, getSonusSummaryByTermaniTotalDataErr] = await handleError(EmailNotification.getSonusSummaryByTermaniTotalData(year, month, tableName));
-        if (getSonusSummaryByTermaniTotalDataErr) {
+        const [getSummaryDataRes, getSummaryDataErr] = await handleError(EmailNotification.getSummaryData( Dates.targetDateWithTimezone , allKickComp[i]['customer_cd']));
+        if (getSummaryDataErr) {
           throw new Error('error while fetching data processed data');
         }
 
-        const [createHTMLForAllDataRes, createHTMLForAllDataErr] = await handleError(EmailNotification.createHTMLForAllData(getSummaryDataMysqlTotalRes, getSonusSummaryTotalDataRes, getSummaryDataMysqlRes, getSonusSummaryByTermaniTotalDataRes, getSonusSummaryByTermaniTotalDataRes, proDataAllRes , year, month));
+        const [createHTMLForAllDataRes, createHTMLForAllDataErr] = await handleError(EmailNotification.createHTMLForAllData(proDataAllRes, getSummaryDataMysqlRes));
         if (createHTMLForAllDataErr) {
           throw new Error('error while creating table');
         }
-        
-        let subject = "BATCH: 03/050 CDR BALANCE CHECK MONITORING";
+        let subject = 'BATCH: 03/050 CDR BALANCE CHECK MONITORING New';
 
         const [sendEmailAllDataRes, sendEmailAllDataErr] = await handleError(EmailNotification.sendEmailAllData(createHTMLForAllDataRes, subject));
         if (sendEmailAllDataErr) {
-          throw new Error('error while sending email');
-        }
-
-
-        const [getCDRDailyTransitionSummaryRes, getCDRDailyTransitionSummaryErr] = await handleError(EmailNotification.getCDRDailyTransitionSummary(year, month));
-        if (getCDRDailyTransitionSummaryErr) {
-          throw new Error('error while fetching data processed data');
-        }
-        
-        const [createHTMLCDRDailyTransistionRes, createHTMLCDRDailyTransistionErr] = await handleError(EmailNotification.createHTMLCDRDailyTransistion(getCDRDailyTransitionSummaryRes, year, month));
-        if (createHTMLCDRDailyTransistionErr) {
-          throw new Error('error while creating table');
-        }
-
-        subject = "BATCH: 035050 CDR DAILY TRANSITION";
-
-        const [sendEmailAllDataTransRes, sendEmailAllDataTransErr] = await handleError(EmailNotification.sendEmailAllData(createHTMLCDRDailyTransistionRes, subject));
-        if (sendEmailAllDataTransErr) {
           throw new Error('error while sending email');
         }
 

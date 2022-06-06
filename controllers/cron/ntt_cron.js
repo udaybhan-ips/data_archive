@@ -1,13 +1,19 @@
 var CronJob = require("cron").CronJob;
-var archiveController = require('../byokakin/kddi/archive.controller');
-var billingController = require('../byokakin/kddi/billing.controller');
-// var CDRsController = require('../byokakin/kddi/cdr.controller');
+var archiveController = require('../byokakin/ntt/archive.controller');
+var billingController = require('../byokakin/ntt/billing.controller');
+// var CDRsController = require('../byokakin/ntt/cdr.controller');
 // var EmailController = require('../byokakin/emailNotification.controller');
 
-// var archiverJob = new CronJob ('53 10 * * *',function(){
-//     console.log('This is byokakin archiver start');
-//     archiveController.uploadKotehiKDDI();
-//     console.log('This is byokakin archiver End');  
+// var archiverJob = new CronJob ('26 9 * * *',function(){
+//     console.log('This is byokakin NTT archiver start');
+//     archiveController.uploadKotehiNTT();
+//     console.log('This is byokakin NTT archiver End');  
+// },null, true, 'Asia/Tokyo');
+
+// var archiverJob = new CronJob ('54 9 * * *',function(){
+//     console.log('This is byokakin NTT archiver start');
+//     archiveController.NTTKotehiCharge();
+//     console.log('This is byokakin NTT archiver End');  
 // },null, true, 'Asia/Tokyo');
 
 // var billingControllerJob = new CronJob ('51 14 * * *',function(){
@@ -20,7 +26,7 @@ var billingController = require('../byokakin/kddi/billing.controller');
  
 // var archiverJob = new CronJob ('19 14 * * *',function(){
 //     console.log('This is byokakin archiver start');
-//     archiveController.uploadKDDIRAW();
+//     archiveController.uploadNTTRAW();
 //     console.log('This is byokakin archiver End');  
 // },null, true, 'Asia/Tokyo');
 
