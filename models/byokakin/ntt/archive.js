@@ -8,7 +8,7 @@ let ColumnSetNTTKoteihi = [ 'did', 'carrier', 'service_name', 'amount', 'taxclas
 let tableNameNTTKoteihi = { table: 'byokakin_ntt_koteihi_202203' };
 let ColumnSetNTTKoteihiCDR = ['companyname', 'comp_acco__c', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'hiwarihyouji', 'datebill', 'linkedcdrid'];
 let tableNameNTTKoteihiCDR = { table: 'ntt_koteihi_cdr' };
-let ColumnSetNTTKoteihiCDRBILL = ['id', 'cdrid', 'bill_code',  'comp_acco__c', 'bill_count', 'sort_order', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'hiwarihyouji', 'datebill'];
+let ColumnSetNTTKoteihiCDRBILL = ['cdrid', 'bill_code',  'comp_acco__c', 'bill_count', 'companyname', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun',  'datebill'];
 let tableNameNTTKoteihiCDRBILL = { table: 'ntt_koteihi_cdr_bill' };
 
 
@@ -184,56 +184,53 @@ module.exports = {
 
         //console.log("data..."+ JSON.stringify(reqData));
     try {
-      const [{ data }, { currentUser }] = reqData;
-      let billingData, comCode = '', comCode4Dig = '';
+      const [{ data:[{row},{selectedData}]} ,{currentUser}] = reqData;
+
+      // console.log("data.."+JSON.stringify(row));
+      // console.log("selectedData.."+JSON.stringify(selectedData));
+      // console.log("currentUser.."+JSON.stringify(currentUser));
+
+      let comCode = '', comCode4Dig = '';
       
-      if (data.length > 0) {
-        comCode = data[0]['comp_acco__c']
-        comCode4Dig = comCode.slice(comCode.length - 4);
-        billingData = data[0]['datebill'];
+      if (row.length > 0) {
+        comCode = selectedData.comp_code;
+        comCode4Dig = comCode.slice(comCode.length - 4);        
       } else {
         throw new Error('request data not available');
       }
+      const query = ` select *, substring(split_part(bill_code, '-',2),4) as comp_code from ntt_koteihi_cdr_bill where   
+      to_char(datebill::date, 'MM-YYYY')='${selectedData.month}-${selectedData.year}' and  substring(split_part(bill_code, '-',2),4) = '${comCode4Dig}' `;
 
-      const year = new Date(billingData).getFullYear();
-      let month = new Date(billingData).getMonth() + 1;
-      if (parseInt(month, 10) < 10) {
-        month = '0' + month;
-      }
+      const getNTTKotehiLastMonthDataRes = await db.queryByokakin(query, []);
 
-      const query = ` select *, substring(split_part(bill_numb__c, '-',2),4) as comp_code from kddi_kotei_bill_details where   
-      to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' and  substring(split_part(bill_numb__c, '-',2),4) = '${comCode4Dig}' `;
-
-      const getKDDIKotehiLastMonthDataRes = await db.queryByokakin(query, []);
-
-      if (getKDDIKotehiLastMonthDataRes.rows && getKDDIKotehiLastMonthDataRes.rows.length > 0) {
+      if (getNTTKotehiLastMonthDataRes.rows && getNTTKotehiLastMonthDataRes.rows.length > 0) {
         return 'alredy processed';
       } else {
 
         let tmpData = [];
 
-        const bill_numb__c = `KDDI-FIX${comCode.slice(comCode.length - 4)}-${year}${month}-1`;
+        const bill_code = `NTT-FIX${comCode.slice(comCode.length - 4)}-${selectedData.year}${selectedData.month}-1`;
 
-        for (let i = 0; i < data.length; i++) {
+        for (let i = 0; i < row.length; i++) {
           let tmpObj = {};
 
-          tmpObj['cdrid'] = data[i]['cdrid'];
-          tmpObj['companyname'] = data[i]['companyname'];
-          tmpObj['comp_acco__c'] = data[i]['comp_acco__c'];
-          tmpObj['bill_numb__c'] = bill_numb__c;
-          tmpObj['bill_start__c'] = `${year}-${month}-01`;
-          tmpObj['cdrtype'] = data[i]['cdrtype'];
-          tmpObj['cdrcnt'] = data[i]['cdrcnt'];
-          tmpObj['account'] = data[i]['account'];
-          tmpObj['servicename'] = data[i]['servicename'];
-          tmpObj['productname'] = data[i]['product_name'];
-          tmpObj['taxinclude'] = '課税';
-          tmpObj['amount'] = data[i]['amount'];
+          tmpObj['cdrid'] = row[i]['cdrid'];
+          tmpObj['companyname'] = row[i]['companyname'];
+          tmpObj['comp_acco__c'] = row[i]['comp_acco__c'];
+          tmpObj['bill_code'] = bill_code;
+          tmpObj['datebill'] = `${selectedData.year}-${selectedData.month}-01`;
+        //  tmpObj['sort_order'] = data[i]['sort_order'];
+          tmpObj['bill_count'] = row[i]['cdrcnt'];
+          tmpObj['kaisenbango'] = row[i]['kaisenbango'];
+          tmpObj['riyougaisya'] = row[i]['riyougaisya'];
+          tmpObj['seikyuuuchiwake'] = row[i]['seikyuuuchiwake'];
+          tmpObj['zeikubun'] = row[i]['zeikubun'];
+          tmpObj['kingaku'] = row[i]['kingaku'];
           tmpData.push(tmpObj);
         }
 
 
-        const insertKotehiDataRes = await insertByBatches(tmpData, 'kddi_kotehi_bill_detail');
+        const insertKotehiDataRes = await insertByBatches(tmpData, 'ntt_koteihi_cdr_bill');
 
         console.log("insertKotehiDataRes.." + JSON.stringify(insertKotehiDataRes));
 
@@ -439,8 +436,8 @@ async function insertByBatches(records, type, billingYear, billingMonth) {
       let tableNameKDDIRAW = { table: `byokakin_kddi_raw_cdr_${billingYear}${billingMonth}` };
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetKDDIRAW, tableNameKDDIRAW);
       
-    } else if (type == 'kddi_kotehi_bill_detail') {
-      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetKDDIBillDetail, tableNameKDDIBillDetail);
+    } else if (type == 'ntt_koteihi_cdr_bill') {
+      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTKoteihiCDRBILL, tableNameNTTKoteihiCDRBILL);
     }
     else {
       res = await db.queryBatchInsert(chunkArray[i], null, ColumnSet, tableName);

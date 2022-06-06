@@ -198,7 +198,7 @@ module.exports = {
 
   async addKotehiData(req, res) {
 
-    
+    console.log("testing..")
     if(!req.body){
       return res.status(500).json({
         message: 'req data is empty'
