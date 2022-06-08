@@ -1,10 +1,10 @@
-var SummayKDDI = require('../../../models/byokakin/kddi/summary');
+var SummaryNTT = require('../../../models/byokakin/ntt/summary');
 
 module.exports = {
   getSummary: async function(req, res) {
     
     try {
-        const [summaryRes,summaryErr] = await handleError(SummayKDDI.getSummaryByMonth(req.body));
+        const [summaryRes,summaryErr] = await handleError(SummaryNTT.getSummaryByMonth(req.body));
         if(summaryErr) {
 
              return res.status(500).json({

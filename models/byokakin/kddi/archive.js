@@ -45,7 +45,9 @@ module.exports = {
 
   getKDDICustomer: async function () {
     try {
-      const query = `select m_cus.* from (select id, customer_cd, customer_name, address, staff_name from  m_customer where is_deleted=false)as m_cus join (select * from kddi_customer where deleted=false) as kddi_cus on ( m_cus.customer_cd::int = kddi_cus.customer_code::int) order by m_cus.customer_cd desc`;
+      const query = `select m_cus.* from (select id, customer_cd, customer_name, address, staff_name from  
+        m_customer where is_deleted=false)as m_cus join (select * from kddi_customer where deleted=false) 
+        as kddi_cus on ( m_cus.customer_cd::int = kddi_cus.customer_code::int) order by m_cus.customer_cd desc`;
       const KDDICustomerListRes = await db.query(query, [], true);
       // console.log(targetDateRes);
       if (KDDICustomerListRes.rows) {
@@ -237,7 +239,7 @@ module.exports = {
 
   addKotehiData: async function (reqData) {
 
-        //console.log("data..."+ JSON.stringify(reqData));
+        console.log("data..."+ JSON.stringify(reqData));
     try {
       const [{ data }, { currentUser }] = reqData;
       let billingData, comCode = '', comCode4Dig = '';
@@ -279,7 +281,7 @@ module.exports = {
           tmpObj['bill_start__c'] = `${year}-${month}-01`;
           tmpObj['cdrtype'] = data[i]['cdrtype'];
           tmpObj['cdrcnt'] = data[i]['cdrcnt'];
-          tmpObj['account'] = data[i]['account'];
+          tmpObj['account'] = data[i]['billaccount'];
           tmpObj['servicename'] = data[i]['servicename'];
           tmpObj['productname'] = data[i]['product_name'];
           tmpObj['taxinclude'] = '課税';
@@ -336,7 +338,7 @@ module.exports = {
       let csvData = [];
       let csvDataContents = [];
       let csvInfiniData = [];
-      let csvstream = fs.createReadStream('NTCD202205BTU09118002_00.CSV')
+      let csvstream = fs.createReadStream('NTCD202206BTU09118002_00.CSV')
         .pipe(csv.parse())
         .on('data', async function (row) {
 

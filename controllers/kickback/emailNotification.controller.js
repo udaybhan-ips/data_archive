@@ -2,7 +2,7 @@ var EmailNotification = require('../../models/kickback/emailNotification');
 
 let internlReport = true;
 let externalReport = true;
-let internalSummaryReport = true;
+let internalSummaryReport = false;
 
 
 module.exports = {

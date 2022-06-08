@@ -1,6 +1,6 @@
 var router = require('express').Router();
-var KDDISummaryController = require('../../../../controllers/byokakin/kddi/summary.controller');
+var NTTSummaryController = require('../../../../controllers/byokakin/ntt/summary.controller');
 
-router.post('/byokakin/kddi/cdr/getSummaryDataByMonth',  KDDISummaryController.getSummary);
+router.post('/byokakin/ntt/cdr/getSummaryDataByMonth',  NTTSummaryController.getSummary);
 
 module.exports = router;

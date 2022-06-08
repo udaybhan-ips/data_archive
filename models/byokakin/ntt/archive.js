@@ -151,14 +151,14 @@ module.exports = {
     }
   },
 
-  getKDDIKotehiProcessedData: async function ({ year, month }) {
+  getNTTKotehiProcessedData: async function ({ year, month }) {
     try {
       console.log("year, month .." + year, month);
-      const query = ` select  substring(split_part(bill_numb__c, '-',2),4) as comp_code,  sum (amount) from kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_numb__c, '-',2),4) `;
-      const getKDDIKotehiProcessedDataRes = await db.queryByokakin(query, []);
-      return getKDDIKotehiProcessedDataRes.rows;
+      const query = ` select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  sum (kingaku) as amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_code, '-',2),4) `;
+      const getNTTKotehiProcessedDataRes = await db.queryByokakin(query, []);
+      return getNTTKotehiProcessedDataRes.rows;
     } catch (e) {
-      console.log("err in get kddi last month list=" + e.message);
+      console.log("err in get ntt kotehi billing summary =" + e.message);
       return e;
     }
   },
@@ -167,7 +167,7 @@ module.exports = {
     try {
       console.log("year, month .." + billing_month, customer_cd);
 
-      const query = `delete from kddi_kotei_bill_details where to_char(bill_start__c,'YYYY-MM') ='${billing_month}' and comp_acco__c='${customer_cd}' `;
+      const query = `delete from ntt_koteihi_cdr_bill where to_char(datebill,'YYYY-MM') ='${billing_month}' and comp_acco__c='${customer_cd}' `;
       const deleteKotehiProcessedDataRes = await db.queryByokakin(query, []);
 
       console.log(JSON.stringify(deleteKotehiProcessedDataRes))

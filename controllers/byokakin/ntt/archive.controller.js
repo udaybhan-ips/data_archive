@@ -228,6 +228,7 @@ module.exports = {
   
 
   async getNTTKotehiProcessedData(req, res) {
+    console.log("testing")
     try {
       const [getNTTKotehiProcessedDataRes, getNTTKotehiProcessedDataErr] = await handleError(ArchiveNTT.getNTTKotehiProcessedData(req.body));
       if (getNTTKotehiProcessedDataErr) {
