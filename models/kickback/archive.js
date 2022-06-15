@@ -248,6 +248,10 @@ function addDays(date, days) {
 async function getCompanyCode(STRXFB, STRXFC, STRXFD, STRXFE, DATSTARTTIME, STRTELCALL, getCompanyCodeInfoRes, getRemoteControlNumberDataRes) {
   let companyCode = "9999999999";
 
+  // originated carrier Id STRXFB
+  // terminated carrier id STRXFC
+  // selected carrier Id STRXFD
+
   let companyCodeInfoArr = getCompanyCodeInfoRes;
   
   try {

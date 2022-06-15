@@ -42,9 +42,6 @@ module.exports = {
     try {
       const billingMonth = "04";
       const billingYear ="2022";
-      const serviceType = "RAW";
-      
-
       //const deleteTargetDateData = await ArchiveNTT.deleteTargetDateCDR(billingMonth, serviceType, callType);
       //const resNTTFreeDialNumList = await ArchiveNTT.getNTTFreeDialNumList();
       //const resNTTFreeAccountNumList = await ArchiveNTT.getNTTFreeAccountNumList();
@@ -300,16 +297,16 @@ module.exports = {
     }
   },
 
-  async getNTTKotehiAServiceDataData(req, res) {
+  async getNTTKotehiServiceData(req, res) {
     try {
-      const [getNTTKotehiAServiceDataDataRes, getNTTKotehiAServiceDataDataErr] = await handleError(ArchiveNTT.getNTTKotehiAServiceDataData(req.body));
-      if (getNTTKotehiAServiceDataDataErr) {
+      const [getNTTKotehiServiceDataRes, getNTTKotehiServiceDataErr] = await handleError(ArchiveNTT.getNTTKotehiServiceData(req.body));
+      if (getNTTKotehiServiceDataErr) {
         //throw new Error('Could not fetch the summary');
         return res.status(500).json({
-          message: getNTTKotehiAServiceDataDataErr.message
+          message: getNTTKotehiServiceDataErr.message
         });
       }
-      return res.status(200).json(getNTTKotehiAServiceDataDataRes);
+      return res.status(200).json(getNTTKotehiServiceDataRes);
 
     } catch (error) {
       return res.status(400).json({

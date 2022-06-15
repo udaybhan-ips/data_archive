@@ -24,7 +24,7 @@ var billingController = require('../byokakin/ntt/billing.controller');
 // },null, true, 'Asia/Tokyo');
 
  
-// var archiverJob = new CronJob ('19 14 * * *',function(){
+// var archiverJob = new CronJob ('12 16 * * *',function(){
 //     console.log('This is byokakin archiver start');
 //     archiveController.uploadNTTRAW();
 //     console.log('This is byokakin archiver End');  

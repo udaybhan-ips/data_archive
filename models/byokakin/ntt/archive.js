@@ -4,19 +4,20 @@ const iconv = require('iconv-lite');
 const utility = require("../../../public/javascripts/utility")
 
 
-let ColumnSetNTTKoteihi = [ 'did', 'carrier', 'service_name', 'amount', 'taxclassification', 'dailydisplay', 'date_added'];
+let ColumnSetNTTKoteihi = ['did', 'carrier', 'service_name', 'amount', 'taxclassification', 'dailydisplay', 'date_added'];
 let tableNameNTTKoteihi = { table: 'byokakin_ntt_koteihi_202203' };
 let ColumnSetNTTKoteihiCDR = ['companyname', 'comp_acco__c', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'hiwarihyouji', 'datebill', 'linkedcdrid'];
 let tableNameNTTKoteihiCDR = { table: 'ntt_koteihi_cdr' };
-let ColumnSetNTTKoteihiCDRBILL = ['cdrid', 'bill_code',  'comp_acco__c', 'bill_count', 'companyname', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun',  'datebill'];
+let ColumnSetNTTKoteihiCDRBILL = ['cdrid', 'bill_code', 'comp_acco__c', 'bill_count', 'companyname', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'datebill'];
 let tableNameNTTKoteihiCDRBILL = { table: 'ntt_koteihi_cdr_bill' };
 
 
-// let ColumnSetNTTInbound = ['servicecode', 'did', 'usednumber', 'cld', 'calldate', 'calltime', 'callduration', 'source', 'destination', 'terminaltype'];
-// let tableNameNTTInbound = { table: 'byokakin_kddi_infinidata_202204' };
+let ColumnSetNTTInbound = ['customername', 'did', 'calldate', 'calltime', 'callduration', 'callcharge', 'callcount104',
+  'freedialnum', 'source', 'division', 'terminaltype'];
 
-// let ColumnSetNTTOutbound = ['did', 'freedialnum', 'cld', 'calldate', 'calltime', 'callduration', 'source', 'destination', 'callclassi', 'calltype', 'callcharge', 'customercode'];
-// let tableNameNTTOutbound = { table: 'byokakin_kddi_raw_cdr_202204' };
+let ColumnSetNTTOutbound = ['customername', 'parentdid', 'calltype', 'calldate', 'calltime', 'cld', 'destination', 'callduration',
+  'callcharge', 'callcount104', 'did'];
+
 
 
 
@@ -71,7 +72,7 @@ module.exports = {
       return e;
     }
   },
-  
+
   getNTTFreeDialNumList: async function () {
     try {
       const query = `select data_idno, cust_code__c, carr_comp__c, free_numb__c from  ntt_kddi_freedial_c where carr_comp__c='NTT' `
@@ -182,19 +183,19 @@ module.exports = {
 
   addKotehiData: async function (reqData) {
 
-        //console.log("data..."+ JSON.stringify(reqData));
+    //console.log("data..."+ JSON.stringify(reqData));
     try {
-      const [{ data:[{row},{selectedData}]} ,{currentUser}] = reqData;
+      const [{ data: [{ row }, { selectedData }] }, { currentUser }] = reqData;
 
       // console.log("data.."+JSON.stringify(row));
       // console.log("selectedData.."+JSON.stringify(selectedData));
       // console.log("currentUser.."+JSON.stringify(currentUser));
 
       let comCode = '', comCode4Dig = '';
-      
+
       if (row.length > 0) {
         comCode = selectedData.comp_code;
-        comCode4Dig = comCode.slice(comCode.length - 4);        
+        comCode4Dig = comCode.slice(comCode.length - 4);
       } else {
         throw new Error('request data not available');
       }
@@ -219,7 +220,7 @@ module.exports = {
           tmpObj['comp_acco__c'] = row[i]['comp_acco__c'];
           tmpObj['bill_code'] = bill_code;
           tmpObj['datebill'] = `${selectedData.year}-${selectedData.month}-01`;
-        //  tmpObj['sort_order'] = data[i]['sort_order'];
+          //  tmpObj['sort_order'] = data[i]['sort_order'];
           tmpObj['bill_count'] = row[i]['cdrcnt'];
           tmpObj['kaisenbango'] = row[i]['kaisenbango'];
           tmpObj['riyougaisya'] = row[i]['riyougaisya'];
@@ -266,15 +267,15 @@ module.exports = {
     }
   },
 
-  chargeKotehiData: async function (billingYear, billingMonth, freeDialNumList, customerList){
-    try{
+  chargeKotehiData: async function (billingYear, billingMonth, freeDialNumList, customerList) {
+    try {
       let query = `select * from byokakin_ntt_koteihi_${billingYear}${billingMonth}`;
-      const kotehiData = await db.queryByokakin(query,[]);
+      const kotehiData = await db.queryByokakin(query, []);
 
-      if(kotehiData && kotehiData.rows){
+      if (kotehiData && kotehiData.rows) {
         let tmpData = [];
 
-        for(let i=0; i<kotehiData.rows.length; i++){
+        for (let i = 0; i < kotehiData.rows.length; i++) {
           let tmpObj = {};
           const comp_acco__c = await getCompanyCode(freeDialNumList, kotehiData.rows[i]['did']);
           const companyName = await getCompanyName(customerList, comp_acco__c);
@@ -288,16 +289,27 @@ module.exports = {
           tmpObj['hiwarihyouji'] = kotehiData.rows[i]['dailydisplay'];
           tmpObj['datebill'] = `${billingYear}-${billingMonth}-01`;
           tmpObj['linkedcdrid'] = kotehiData.rows[i]['cdrid'];
-          
+
           tmpData.push(tmpObj);
         }
         insertByBatches(tmpData, 'ntt_koteihi_charge', billingYear, billingMonth);
       }
-      
 
-    }catch(error){
-      console.log("Error in ntt kotehi charging..."+error);
+
+    } catch (error) {
+      console.log("Error in ntt kotehi charging..." + error);
       throw new Error(error);
+    }
+  },
+
+  getNTTKotehiServiceData: async function () {
+    try {
+      const query = `select id, product_name from ntt_koteihi_product_details order by product_name asc`
+      const getNTTKotehiServiceDataRes = await db.queryByokakin(query, []);
+      return getNTTKotehiServiceDataRes.rows;
+    } catch (e) {
+      console.log("err in get NTT kotehi a  service code company list=" + e.message);
+      return e;
     }
   },
 
@@ -313,31 +325,31 @@ module.exports = {
         .pipe(csv.parse())
         .on('data', async function (row) {
           let obj = {};
-            csvstream.pause();
-            let tmpDID = row[0] != null ? row[0].trim() : null ;
-            let tmpCarrier = row[1] != null ? row[1].trim() : null ;
+          csvstream.pause();
+          let tmpDID = row[0] != null ? row[0].trim() : null;
+          let tmpCarrier = row[1] != null ? row[1].trim() : null;
 
-            if(tmpDID!= null && tmpDID!= ""){
-              if(tmpDID.indexOf("合計") == -1){
-                DID = tmpDID;
-              }
-            } else if(tmpCarrier!= null && tmpCarrier !=""){
-              if(tmpCarrier.indexOf("合計") == -1){
-                carrier = tmpCarrier;
-              }
-            }else{
-              if(row[3] != null && row[3].trim()!= ""){
-                obj['did'] = DID;
-                obj['carrier'] = carrier;
-                obj['service_name'] = row[2];
-                obj['amount'] = row[3].trim().replaceAll(",","");
-                obj['taxclassification'] = row[4];
-                obj['date_added'] =  `${billingYear}-${billingMonth}-01`;
-                obj['dailydisplay'] = row[5].trim();        
-                csvData.push(obj);
-              }
-            }            
-            csvstream.resume();          
+          if (tmpDID != null && tmpDID != "") {
+            if (tmpDID.indexOf("合計") == -1) {
+              DID = tmpDID;
+            }
+          } else if (tmpCarrier != null && tmpCarrier != "") {
+            if (tmpCarrier.indexOf("合計") == -1) {
+              carrier = tmpCarrier;
+            }
+          } else {
+            if (row[3] != null && row[3].trim() != "") {
+              obj['did'] = DID;
+              obj['carrier'] = carrier;
+              obj['service_name'] = row[2];
+              obj['amount'] = row[3].trim().replaceAll(",", "");
+              obj['taxclassification'] = row[4];
+              obj['date_added'] = `${billingYear}-${billingMonth}-01`;
+              obj['dailydisplay'] = row[5].trim();
+              csvData.push(obj);
+            }
+          }
+          csvstream.resume();
         })
         .on('end', function () {
           insertByBatches(csvData, 'ntt_koteihi', billingYear, billingMonth);
@@ -345,31 +357,32 @@ module.exports = {
         .on('error', function (error) {
           console.log("Error" + error.message);
         });
-    //  return csvData;
+      //  return csvData;
     } catch (error) {
       console.log("Error" + error.message);
       return error;
     }
   },
 
-  insertKDDIRAWData: async function (filesPathtest, billingYear, billingMonth) {
+  insertNTTRAWData: async function (filesPathtest, billingYear, billingMonth) {
 
     let files = [];
-    let filesPath = path.join(__dirname, '../RAWCDR/202204');
+    let filesPath = path.join(__dirname, '../ntt/CDR/202204');
     files = await readFilesName(filesPath);
     //console.log("actual path and name =" + (files));
 
     let resData = [];
+    let excludedNumberList = ['0366317486', '0366317496', '0366317497', '0366317498', '67067608'];
 
     try {
 
       for (let i = 0; i < files.length; i++) {
 
-        let csvData = [], fileName = '';
+        let csvDataInbound = [], csvDataOutbound = [], fileName = '';
         console.log("file name ..." + files[i]);
 
-        if (path.extname(files[i]).toLowerCase() == ".csv") {
-          fileName = path.join(__dirname, `../RAWCDR/202204/${files[i]}`)
+        if (path.extname(files[i]).toLowerCase() == ".txt") {
+          fileName = path.join(__dirname, `../ntt/CDR/202204/${files[i]}`)
 
           await new Promise(resolve => setTimeout(resolve, 10000));
           let csvstream = fs.createReadStream(fileName)
@@ -378,30 +391,85 @@ module.exports = {
 
             .on('data', function (row) {
               let obj = {};
-              obj['did'] = row[0];
-              obj['freedialnum'] = '';
-              obj['calldate'] = row[1];
-              obj['calltime'] = row[2];
-              obj['cld'] = row[3];
-              obj['source'] = '';
-              obj['destination'] = row[4];
-              obj['callduration'] = row[5];
-              obj['callclassi'] = row[6];
-              obj['calltype'] = row[7];
-              obj['callcharge'] = row[8];
-              obj['customercode'] = '';
-              csvData.push(obj);
-              csvstream.resume();
+              let obj1 = {};
+
+              if (row[0].trim() != ("組織計") && row[0].trim() != ("合計") && row[1].trim() != ("電話番号計")) {
+
+                let recordType = row[2].trim();
+                let parentDID = row[1].trim();
+                let cdrChargeStr = row[8].replace("\\", "").replaceAll(",", "")
+                parentDID = parentDID.replace("(", "").replace(")", "").replaceAll("-", "");
+
+
+                if (recordType == 'フリーダイヤル') {
+                  let terminaltype = row[15].trim();
+                  if (parentDID == '0354913704' || parentDID == '0337002845' || parentDID == '0337008029' || parentDID == '0354912091'
+                    || parentDID == '0354912097' || parentDID == '05038511863') {
+                    terminaltype = 'その他';
+                  }
+
+                  obj['customername'] = row[0].trim();
+                  obj['did'] = parentDID;
+                  obj['calldate'] = `${billingYear}-${billingMonth}-01`;
+                  obj['calltime'] = row[4].trim();
+                  obj['callduration'] = row[7].trim();
+                  obj['callcharge'] = cdrChargeStr;
+                  obj['callcount104'] = row[9].trim();
+                  obj['freedialnum'] = row[14].trim();
+                  obj['terminaltype'] = terminaltype;
+                  obj['source'] = row[18].trim();
+                  obj['division'] = row[19].trim();
+
+
+                  csvDataInbound.push(obj);
+                  csvstream.resume();
+                } else {
+                  let DID = ''
+                  let tempRecord = row[13].trim().replaceAll("-", "");
+
+                  if ((excludedNumberList.includes(tempRecord) && recordType == 'INS') || (recordType == 'VoIP' && excludedNumberList.includes(parentDID))) {
+                    // csvstream.resume(); nothing to do
+                  } else {
+                    if (recordType == 'VoIP') {
+                      DID = parentDID;
+                    } else {
+                      let prefix = parentDID.substring(parentDID.indexOf("(") + 1, parentDID.lastIndexOf(")"));
+                      parentDID = parentDID.replace("(", "").replace(")", "").replaceAll("-", "");
+                      if (recordType == "国際") {
+                        DID = tempRecord;
+                      } else {
+                        DID = prefix + tempRecord;
+                      }
+                    }
+                    obj1['customername'] = row[0];
+                    obj1['parentdid'] = parentDID;
+                    obj1['calltype'] = recordType;
+                    obj1['calldate'] = `${billingYear}-${billingMonth}-01`;;
+                    obj1['calltime'] = row[4];
+                    obj1['cld'] = row[5];
+                    obj1['destination'] = row[6];
+                    obj1['callduration'] = row[7];
+                    obj1['callcharge'] = cdrChargeStr;
+                    obj1['callcount104'] = row[9];
+                    obj1['did'] = DID;
+                    csvDataOutbound.push(obj1);
+                  }
+
+                  csvstream.resume();
+                }
+              }
             })
             .on('end', function () {
-              csvData.shift();
-              const res = insertByBatches(csvData, 'RAWCDR', billingYear, billingMonth);
+              csvDataInbound.shift();
+              csvDataOutbound.shift();
+              const res = insertByBatches(csvDataInbound, 'RAWCDR_INB', billingYear, billingMonth);
+              const resOut = insertByBatches(csvDataOutbound, 'RAWCDR_OUT', billingYear, billingMonth);
               resData.push(res);
             })
           console.log("res.." + resData.length);
         }
       }
-      
+
     } catch (error) {
       console.log("Error" + error.message);
       return error;
@@ -431,12 +499,19 @@ async function insertByBatches(records, type, billingYear, billingMonth) {
     } else if (type === 'ntt_koteihi_charge') {
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTKoteihiCDR, tableNameNTTKoteihiCDR);
 
-    } else if (type === 'RAWCDR') {
-      
-      let tableNameKDDIRAW = { table: `byokakin_kddi_raw_cdr_${billingYear}${billingMonth}` };
-      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetKDDIRAW, tableNameKDDIRAW);
-      
-    } else if (type == 'ntt_koteihi_cdr_bill') {
+    } else if (type === 'RAWCDR_INB') {
+
+      let tableNameNTTRAWInb = { table: `byokakin_ntt_rawcdr_inbound_${billingYear}${billingMonth}` };
+      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTInbound, tableNameNTTRAWInb);
+
+    } else if (type === 'RAWCDR_OUT') {
+
+      let tableNameNTTRAWOut = { table: `byokakin_ntt_rawcdr_outbound_${billingYear}${billingMonth}` };
+      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTOutbound, tableNameNTTRAWOut);
+
+    }
+
+    else if (type == 'ntt_koteihi_cdr_bill') {
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTKoteihiCDRBILL, tableNameNTTKoteihiCDRBILL);
     }
     else {
@@ -464,8 +539,8 @@ async function getCompanyCodeByAccount(companyCodeList, callToNum) {
       }
     }
 
-    if(res =='99999999'){
-      console.log("callToNum.."+ callToNum.toLowerCase() , "and length.."+callToNum.length);
+    if (res == '99999999') {
+      console.log("callToNum.." + callToNum.toLowerCase(), "and length.." + callToNum.length);
     }
 
     return res;

@@ -21,3 +21,18 @@ create table ntt_koteihi_cdr_bill (id serial, cdrid bigint, BILL_CODE varchar,  
 BILL_COUNT int, SORT_ORDER int,  KaisenBango varchar, 
 RiyouGaisya varchar, SeikyuuUchiwake varchar, Kingaku int, ZeiKubun varchar, HiwariHyouji varchar,  
 datebill timestamp without time zone)
+
+
+create table byokakin_ntt_rawcdr_inbound_202204 (cdrid bigint, customername varchar, did varchar(30), calldate timestamp without time zone,
+ calltime varchar, callduration varchar(30), callcharge numeric(16,5), callcount104 int, freedialnum varchar(30), 
+ source varchar, division varchar,  terminaltype varchar);
+
+create table byokakin_ntt_rawcdr_outbound_202204 (cdrid bigint, customername varchar, parentdid varchar(30), calltype varchar,
+ calldate timestamp without time zone, calltime varchar, cld varchar, destination varchar,  callduration varchar(30), callcharge numeric(16,5),
+  callcount104 int, did varchar(30) );
+
+
+create table byokakin_ntt_processedcdr_202204 (cdrid bigint, cdrclassification varchar(10), customercode varchar(10), terminaltype varchar(10),
+freedialnumber varchar(30), callingnumber varchar(30), calldate varchar(15), calltime varchar(15), callduration varchar(15), cld varchar(30),
+ sourcearea varchar, destinationarea varchar, cdrcallcharge numeric(16,5), callrate  numeric(16,5),finalcallcharge numeric(16,5), 
+ vendorcallcharge numeric(16,5) , callcount104 int, carriertype varchar );
