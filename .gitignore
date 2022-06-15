@@ -3,6 +3,7 @@ public/vendor
 temp
 *.csv
 *.CSV
+*.txt
 *.pdf
 .vscode/
 -
