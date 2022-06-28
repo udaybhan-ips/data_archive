@@ -5,8 +5,11 @@ module.exports = {
     try {
       const billingMonth = "03";
       const billingYear ="2022";
+      
+      const carrier = 'NTT';
+
       console.log("here")
-      const resNTTKotehiData = await ArchiveNTT.insertNTTKotehiData("filePath", "fileName", billingYear, billingMonth);
+      const resNTTKotehiData = await ArchiveNTT.insertNTTKotehiData("filePath", "fileName", billingYear, billingMonth, carrier);
       console.log("Done ...")
       // return res.status(200).json({
       //   message: 'success! data inserted sucessfully',
@@ -42,12 +45,13 @@ module.exports = {
     try {
       const billingMonth = "04";
       const billingYear ="2022";
+      const carrier = 'NTTORIX';
       //const deleteTargetDateData = await ArchiveNTT.deleteTargetDateCDR(billingMonth, serviceType, callType);
       //const resNTTFreeDialNumList = await ArchiveNTT.getNTTFreeDialNumList();
       //const resNTTFreeAccountNumList = await ArchiveNTT.getNTTFreeAccountNumList();
       //const resNTTCustomerList = await ArchiveNTT.getNTTCustomerList();
 
-      const resNTTRAWData = await ArchiveNTT.insertNTTRAWData("",billingYear, billingMonth);
+      const resNTTRAWData = await ArchiveNTT.insertNTTRAWData("",billingYear, billingMonth, carrier);
       //console.log("data");
       //console.log(JSON.stringify(resNTTKotehiData));
 

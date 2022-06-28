@@ -13,10 +13,10 @@ let tableNameNTTKoteihiCDRBILL = { table: 'ntt_koteihi_cdr_bill' };
 
 
 let ColumnSetNTTInbound = ['customername', 'did', 'calldate', 'calltime', 'callduration', 'callcharge', 'callcount104',
-  'freedialnum', 'source', 'division', 'terminaltype'];
+  'freedialnum', 'source', 'division', 'terminaltype', 'carriertype'];
 
 let ColumnSetNTTOutbound = ['customername', 'parentdid', 'calltype', 'calldate', 'calltime', 'cld', 'destination', 'callduration',
-  'callcharge', 'callcount104', 'did'];
+  'callcharge', 'callcount104', 'did','carriertype'];
 
 
 
@@ -364,11 +364,13 @@ module.exports = {
     }
   },
 
-  insertNTTRAWData: async function (filesPathtest, billingYear, billingMonth) {
+  insertNTTRAWData: async function (filesPathtest, billingYear, billingMonth, carrier) {
 
     let files = [];
-    let filesPath = path.join(__dirname, '../ntt/CDR/202204');
+    let filesPath = path.join(__dirname, `../ntt/CDR/${carrier}/202204`);
     files = await readFilesName(filesPath);
+    let fileType = carrier=='NTT'? '.txt' : '.csv' ;
+
     //console.log("actual path and name =" + (files));
 
     let resData = [];
@@ -381,8 +383,8 @@ module.exports = {
         let csvDataInbound = [], csvDataOutbound = [], fileName = '';
         console.log("file name ..." + files[i]);
 
-        if (path.extname(files[i]).toLowerCase() == ".txt") {
-          fileName = path.join(__dirname, `../ntt/CDR/202204/${files[i]}`)
+        if (path.extname(files[i]).toLowerCase() == fileType ) {
+          fileName = path.join(__dirname, `../ntt/CDR/${carrier}/202204/${files[i]}`)
 
           await new Promise(resolve => setTimeout(resolve, 10000));
           let csvstream = fs.createReadStream(fileName)
@@ -392,13 +394,23 @@ module.exports = {
             .on('data', function (row) {
               let obj = {};
               let obj1 = {};
+              
 
-              if (row[0].trim() != ("組織計") && row[0].trim() != ("合計") && row[1].trim() != ("電話番号計")) {
+              if (row[0].trim() != "組織計" && row[0].trim() != "合計" && row[1].trim() != "電話番号計" ) {
 
                 let recordType = row[2].trim();
                 let parentDID = row[1].trim();
+                let cdrDate = null; 
                 let cdrChargeStr = row[8].replace("\\", "").replaceAll(",", "")
                 parentDID = parentDID.replace("(", "").replace(")", "").replaceAll("-", "");
+
+                let tempDate = row[3].trim();
+	        			if(carrier == 'NTTORIX') {
+	        				tempDate = tempDate.replace("月", "/").replace("日", "/");
+	        			}
+	        			
+	        			// Format CDR date
+	        			cdrDate = `${billingYear}/${tempDate}`;
 
 
                 if (recordType == 'フリーダイヤル') {
@@ -410,7 +422,7 @@ module.exports = {
 
                   obj['customername'] = row[0].trim();
                   obj['did'] = parentDID;
-                  obj['calldate'] = `${billingYear}-${billingMonth}-01`;
+                  obj['calldate'] = cdrDate;
                   obj['calltime'] = row[4].trim();
                   obj['callduration'] = row[7].trim();
                   obj['callcharge'] = cdrChargeStr;
@@ -419,6 +431,8 @@ module.exports = {
                   obj['terminaltype'] = terminaltype;
                   obj['source'] = row[18].trim();
                   obj['division'] = row[19].trim();
+                  obj['carriertype'] = carrier;
+                
 
 
                   csvDataInbound.push(obj);
@@ -427,7 +441,8 @@ module.exports = {
                   let DID = ''
                   let tempRecord = row[13].trim().replaceAll("-", "");
 
-                  if ((excludedNumberList.includes(tempRecord) && recordType == 'INS') || (recordType == 'VoIP' && excludedNumberList.includes(parentDID))) {
+                  if ((excludedNumberList.includes(tempRecord) && recordType == 'INS') || 
+                  (recordType == 'VoIP' && excludedNumberList.includes(parentDID))) {
                     // csvstream.resume(); nothing to do
                   } else {
                     if (recordType == 'VoIP') {
@@ -444,7 +459,7 @@ module.exports = {
                     obj1['customername'] = row[0];
                     obj1['parentdid'] = parentDID;
                     obj1['calltype'] = recordType;
-                    obj1['calldate'] = `${billingYear}-${billingMonth}-01`;;
+                    obj1['calldate'] = cdrDate;
                     obj1['calltime'] = row[4];
                     obj1['cld'] = row[5];
                     obj1['destination'] = row[6];
@@ -452,18 +467,21 @@ module.exports = {
                     obj1['callcharge'] = cdrChargeStr;
                     obj1['callcount104'] = row[9];
                     obj1['did'] = DID;
+                    obj1['carriertype'] = carrier;
                     csvDataOutbound.push(obj1);
                   }
 
                   csvstream.resume();
                 }
+              }else{
+              //  console.log("Invalid data"+JSON.stringify(row))
               }
             })
             .on('end', function () {
-              csvDataInbound.shift();
+              //csvDataInbound.shift();
               csvDataOutbound.shift();
               const res = insertByBatches(csvDataInbound, 'RAWCDR_INB', billingYear, billingMonth);
-              const resOut = insertByBatches(csvDataOutbound, 'RAWCDR_OUT', billingYear, billingMonth);
+             const resOut = insertByBatches(csvDataOutbound, 'RAWCDR_OUT', billingYear, billingMonth);
               resData.push(res);
             })
           console.log("res.." + resData.length);

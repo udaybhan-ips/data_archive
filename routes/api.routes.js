@@ -40,6 +40,11 @@ router.use('/v1', require('./apiv1/byokakin/kddi/summary.routes'));
 router.use('/v1', require('./apiv1/byokakin/ntt/kotehi.routes'));
 router.use('/v1', require('./apiv1/byokakin/ntt/summary.routes'));
 
+/**** NTT ORIX *****/
+
+router.use('/v1', require('./apiv1/byokakin/ntt_orix/kotehi.routes'));
+router.use('/v1', require('./apiv1/byokakin/ntt_orix/summary.routes'));
+
 
 /** 03 numbers  details **/
 

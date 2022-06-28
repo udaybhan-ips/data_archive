@@ -1,11 +1,12 @@
 var db = require('./../../../config/database');
-const BATCH_SIZE = 1000000;
+const BATCH_SIZE = 100000;
 var PDFDocument = require("pdfkit");
 var utility = require('../../../public/javascripts/utility');
 var fs = require("fs");
 
-let ColumnSetKDDIProcessedData = ['cdrid', 'cdrclassification', 'customercode', 'terminaltype', 'freedialnumber', 'callingnumber', 'calldate',
-  'calltime', 'callduration', 'cld', 'sourcearea', 'destinationarea', 'cdrcallcharge', 'callrate', 'finalcallcharge', 'vendorcallcharge'];
+let ColumnSetNTTProcessedData = ['cdrid', 'cdrclassification', 'customercode', 'terminaltype', 'freedialnumber', 'callingnumber', 'calldate',
+  'calltime', 'callduration', 'cld', 'sourcearea', 'destinationarea', 'cdrcallcharge', 'callrate', 'finalcallcharge', 'vendorcallcharge',
+  'callcount104', 'carriertype'];
 
 
 
@@ -14,7 +15,7 @@ module.exports = {
   getRates: async function (customer_id) {
     try {
       const query = `select  * from ntt_kddi_charge_c where customercode__c::int ='${customer_id}'  and edat_fini__c::date >  now()::date 
-       and serv_name__c ='KDDI' and dist_rang_from__c='0' and dist_rang_to__c ='0' `;
+       and serv_name__c ='NTT' and dist_rang_from__c='0' and dist_rang_to__c ='0' `;
 
       const ratesRes = await db.queryByokakin(query, []);
       if (ratesRes.rows) {
@@ -30,7 +31,7 @@ module.exports = {
   getInboundRates: async function (customer_id) {
     try {
       const query = `select  * from ntt_kddi_charge_inbound_c where customercode__c::int ='${customer_id}'  and edat_fini__c::date >  now()::date 
-       and serv_name__c ='KDDI' and dist_rang_from__c='0' and dist_rang_to__c ='0' `;
+       and serv_name__c ='NTT' and dist_rang_from__c='0' and dist_rang_to__c ='0' `;
 
       const ratesRes = await db.queryByokakin(query, []);
       if (ratesRes.rows) {
@@ -45,7 +46,9 @@ module.exports = {
 
   getDidDetails: async function (customer_id) {
     try {
-      const query = `select id, cust_code__c, free_numb__c from ntt_kddi_freedial_c where cust_code__c::int = '${customer_id}'  and carr_comp__c='KDDI' `;
+      const query = `select id, cust_code__c, free_numb__c from ntt_kddi_freedial_c 
+      where cust_code__c::int = '${customer_id}'  and carr_comp__c='NTT' and 
+      (stop_date__c is null or stop_date__c!='1800-01-01 00:00:00.000' ) `;
       const getDidRes = await db.queryByokakin(query, []);
       if (getDidRes.rows) {
         return (getDidRes.rows);
@@ -58,15 +61,19 @@ module.exports = {
   },
 
 
-  getKDDICompList: async function () {
+  getNTTCompList: async function () {
 
     try {
-      const query = `select id, customer_code from kddi_customer where customer_code::int in (select  distinct(substring(split_part(bill_numb__c, '-',2),4))::int  as comp_code  from  kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY') ='04-2022') and deleted = false  order by customer_code::int `;
-     // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
-      const getKDDICompListRes = await db.queryByokakin(query, []);
+      const query = `select   m_cus.id  as id , m_cus.customer_cd as customer_code, m_cus.customer_name as customer_name from 
+      (select id, customer_cd, customer_name, address, staff_name from  m_customer where is_deleted=false)
+      as m_cus join (select * from ntt_customer where deleted=false) 
+      as ntt_cus on ( m_cus.customer_cd::int = ntt_cus.customer_code::int) 
+      and m_cus.customer_cd ='00000901' order by m_cus.customer_cd desc   `;
+      // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
+      const getNTTCompListRes = await db.query(query, [], true);
 
-      if (getKDDICompListRes.rows) {
-        return (getKDDICompListRes.rows);
+      if (getNTTCompListRes.rows) {
+        return (getNTTCompListRes.rows);
       }
       return { err: 'not found' };
     } catch (error) {
@@ -74,19 +81,22 @@ module.exports = {
       return error;
     }
   },
-  getKDDIOutboundRAWData: async function (billingYear, billingMonth, customer_code) {
+  getNTTOutboundRAWData: async function (billingYear, billingMonth, customer_code, carrier) {
 
     try {
 
-      const query = `select  raw_cdr.* from byokakin_kddi_raw_cdr_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
+      const query = `select  raw_cdr.*, 0 as callcount104 from 
+      byokakin_ntt_rawcdr_outbound_${billingYear}${billingMonth}  raw_cdr join ntt_kddi_freedial_c free_dial on 
       (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g') = free_dial.free_numb__c 
       and free_dial.cust_code__c::int = '${customer_code}' and 
-      (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')  and  free_dial.carr_comp__c='KDDI' ) `;
+      (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')  
+      and  free_dial.carr_comp__c='NTT' ) where (raw_cdr.callcharge > 0 and '${customer_code}' !='1166' 
+       ) `;
 
-      const getKDDIRAWDataRes = await db.queryByokakin(query, []);
+      const getNTTRAWDataRes = await db.queryByokakin(query, []);
 
-      if (getKDDIRAWDataRes.rows) {
-        return (getKDDIRAWDataRes.rows);
+      if (getNTTRAWDataRes.rows) {
+        return (getNTTRAWDataRes.rows);
       }
       return { err: 'not found' };
     } catch (error) {
@@ -95,20 +105,21 @@ module.exports = {
     }
   },
 
-  getKDDIRAWInboundData: async function (billingYear, billingMonth, customer_code) {
+  getNTTRAWInboundData: async function (billingYear, billingMonth, customer_code, carrier) {
 
     try {
 
-      const query = `select  raw_cdr.* from byokakin_kddi_infinidata_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
+      const query = `select  raw_cdr.*,  0 as callcount104 from 
+      byokakin_ntt_rawcdr_inbound_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
       (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g')=free_dial.free_numb__c  and 
       (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')
-      and free_dial.cust_code__c::int = '${customer_code}' and  free_dial.carr_comp__c='KDDI')`;
+      and free_dial.cust_code__c::int = '${customer_code}' and  free_dial.carr_comp__c='NTT'  )  `;
 
 
-      const getKDDIRAWInboundDataRes = await db.queryByokakin(query, []);
+      const getNTTRAWInboundDataRes = await db.queryByokakin(query, []);
 
-      if (getKDDIRAWInboundDataRes.rows) {
-        return (getKDDIRAWInboundDataRes.rows);
+      if (getNTTRAWInboundDataRes.rows) {
+        return (getNTTRAWInboundDataRes.rows);
       }
       return { err: 'not found' };
     } catch (error) {
@@ -121,11 +132,11 @@ module.exports = {
     try {
 
       const query = `select customercode, cdr_amount::int as cdr_amount, kotei_amount  from ( select customercode,
-         sum (finalcallcharge) as cdr_amount  from  byokakin_kddi_processedcdr_${year}${month} 
-       where customercode='${customerId}' group by customercode) as bkpc join 
-       (select sum(amount) kotei_amount, substring(split_part(bill_numb__c, '-',2),4) as comp_code 
-       from kddi_kotei_bill_details where bill_start__c::date ='${year}-${month}-01' and bill_numb__c ilike '%${customerId}%' 
-       group by substring(split_part(bill_numb__c, '-',2),4)) as kkbd on (bkpc.customercode::int= kkbd.comp_code::int)`;
+         sum (finalcallcharge) as cdr_amount  from  byokakin_ntt_processedcdr_${year}${month} 
+       where customercode='${customerId}' group by customercode) as bkpc left join 
+       (select sum(kingaku) kotei_amount, comp_acco__c 
+       from ntt_koteihi_cdr_bill where datebill::date ='${year}-${month}-01' and comp_acco__c = '${customerId}' 
+       group by comp_acco__c) as nkcb on (bkpc.customercode= nkcb.comp_acco__c)`;
 
       const summaryRes = await db.queryByokakin(query, []);
       if (!summaryRes) {
@@ -142,18 +153,21 @@ module.exports = {
 
     try {
 
-      let tax = 0, subtotal = 0, total = 0;
+      let tax = 0, subtotal = 0, total = 0, subTotalCDR = 0, totalCDR = 0, taxCDR = 0;
       if (data && data.length === 0) {
         throw new Error('there is no data');
       }
       subtotal = parseInt(data[0]['cdr_amount'], 10) + parseInt(data[0]['kotei_amount'], 10);
       tax = (subtotal * .1);
       total = subtotal + tax;
+      subTotalCDR = parseInt(data[0]['cdr_amount'], 10);
+      taxCDR = (subTotalCDR * .1);
+      totalCDR = subTotalCDR + taxCDR;
 
       let query = `insert into byokakin_billing_history (bill_no , customercode , carrier , cdrmonth , billtype , count , fixed_cost_subtotal ,
-        cdr_cost_subtotal , subtotal , tax , total , remarks , date_insert , name_insert , date_update , name_update )
-         VALUES('1', '${customer_id}', 'KDDI', '${year}-${month}-1', 'R' , 1, '${data[0]['kotei_amount']}', '${data[0]['cdr_amount']}',
-            '${subtotal}' , '${tax}','${total}','kddi billing by system','now()','System','now()','System' )`;
+        cdr_cost_subtotal , subtotal , tax , total , remarks , date_insert , name_insert , date_update , name_update, cdr_cost_total, cdr_cost_tax )
+         VALUES('1', '${customer_id}', 'NTT', '${year}-${month}-1', 'R' , 1, '${data[0]['kotei_amount']}', '${data[0]['cdr_amount']}',
+            '${subtotal}' , '${tax}','${total}','ntt billing by system','now()','System','now()','System', '${totalCDR}', '${taxCDR}' )`;
       console.log("query==" + query);
       await db.queryByokakin(query, []);
 
@@ -171,12 +185,12 @@ module.exports = {
 
     try {
       chunkArray = chunk(records, BATCH_SIZE);
-      let tableName = `byokakin_kddi_processedcdr_${billingYear}${billingMonth}`;
-      let tableNameKDDIProcessedData = { table: tableName };
+      let tableName = `byokakin_ntt_processedcdr_${billingYear}${billingMonth}`;
+      let tableNameNTTProcessedData = { table: tableName };
 
       for (let i = 0; i < chunkArray.length; i++) {
         const data = await getNextInsertBatch(callType, chunkArray[i], rates, customerId, billingYear, billingMonth);
-        res = await db.queryBatchInsertByokakin(data, ColumnSetKDDIProcessedData, tableNameKDDIProcessedData);
+        res = await db.queryBatchInsertByokakin(data, ColumnSetNTTProcessedData, tableNameNTTProcessedData);
         resArr.push(res);
       }
     } catch (err) {
@@ -189,7 +203,7 @@ module.exports = {
 
   },
 
-  genrateInvoice: async function (company_code, billingYear, billingMonth) {
+  genrateInvoice: async function (company_code, customer_name, billingYear, billingMonth, carrier) {
     try {
 
       let path = __dirname + `\\Invoice\\${company_code}${billingYear}${billingMonth}.pdf`;
@@ -204,10 +218,10 @@ module.exports = {
         cdrAmount = cdrAmount + parseFloat(obj.cdr_amount);
       });
 
-      cdrAmount = parseInt(cdrAmount,10);
-      koteiAmount = parseInt(koteiAmount,10);
+      cdrAmount = parseInt(cdrAmount, 10);
+      koteiAmount = parseInt(koteiAmount, 10);
 
-      await createInvoice(company_code, customerAddress, billingYear, billingMonth, invoiceData, path, koteiAmount, cdrAmount);
+      await createInvoice(company_code, customer_name, customerAddress, billingYear, billingMonth, invoiceData, path, koteiAmount, cdrAmount);
       console.log("Done...")
     } catch (err) {
       console.log("error...." + err.message);
@@ -216,7 +230,7 @@ module.exports = {
 }
 
 
-async function createInvoice(company_code, address, billingYear, billingMonth, invoice, path, koteiAmount, cdrAmount) {
+async function createInvoice(company_code, customer_name, address, billingYear, billingMonth, invoice, path, koteiAmount, cdrAmount) {
 
   const subTotal = parseInt(koteiAmount + cdrAmount);
   const tax = parseInt(subTotal * .1);
@@ -231,7 +245,7 @@ async function createInvoice(company_code, address, billingYear, billingMonth, i
   //drawLine(doc, 198);
   console.log("y=--" + y);
   drawLine(doc, y + 25);
-  basciInfo(doc, y + 25, company_code, billingYear, billingMonth)
+  basciInfo(doc, y + 25, company_code, customer_name, billingYear, billingMonth)
   drawLine(doc, y + 75);
 
   y = generateCustomerInformation(doc, invoice, y + 175, koteiAmount, cdrAmount, subTotal, tax, totalAmount);
@@ -277,19 +291,19 @@ function generateCustomerInformation(doc, invoice, y, koteiAmount, cdrAmount, su
   return y + 35;
 }
 
-function basciInfo(doc, y, company_code, billingYear, billingMonth) {
+function basciInfo(doc, y, company_code, customer_name, billingYear, billingMonth) {
   doc
     .fontSize(8)
     .text(`明細番号`, 50, y + 10, { width: 100, align: "left" })
     .text(`会社 `, 50, y + 25, { width: 100, align: "left" })
-    .text(`1000000${company_code}_KDDI_${billingYear}${billingMonth}_01`, 125, y + 10, { width: 250, align: "left" })
-    .text(`現代通信株式会社 `, 125, y + 25, { width: 100, align: "left" })
+    .text(`1000000${company_code}_NTT_${billingYear}${billingMonth}_01`, 125, y + 10, { width: 250, align: "left" })
+    .text(`${customer_name}`, 125, y + 25, { width: 300, align: "left" })
 
     .text(`ご利用月`, 50, y + 65, { width: 100, align: "left" })
     .text(`請求日 `, 50, y + 80, { width: 100, align: "left" })
 
-    .text(`2022-03-01 ～ 2022-03-31`, 125, y + 65, { width: 250, align: "left" })
-    .text(`2022-04-14`, 125, y + 80, { width: 100, align: "left" })
+    .text(`${billingYear}-${billingMonth}-01 ～ ${billingYear}-${billingMonth}-30`, 125, y + 65, { width: 250, align: "left" })
+    .text(`${billingYear}-05-14`, 125, y + 80, { width: 100, align: "left" })
 
     .moveDown()
   return y + 35;
@@ -308,15 +322,15 @@ function addTableHeader(doc, y) {
 
   doc
     .fontSize(12)
-    .text(`課金番号`, 50, y+5, { width: 75, align: "center" })
-    .text(`統合明細科目名称`, 125, y+5, { width: 100, align: "center" })
-    .text(`品 目 `, 225, y+5, { width: 200, align: "center" })
-    .text(`課税対象`, 425, y+5, { width: 50, align: "center" })
-    .text(`統合明細金額`, 475, y+5, { width: 85, align: "center" })
+    .text(`課金番号`, 50, y + 5, { width: 75, align: "center" })
+    .text(`統合明細科目名称`, 125, y + 5, { width: 125, align: "center" })
+    .text(`品 目 `, 250, y + 5, { width: 175, align: "center" })
+    .text(`課税対象`, 425, y + 5, { width: 50, align: "center" })
+    .text(`統合明細金額`, 475, y + 5, { width: 85, align: "center" })
 
   doc.rect(50, y - 5, 75, 30).stroke()
-  doc.rect(125, y - 5, 100, 30).stroke()
-  doc.rect(225, y - 5, 200, 30).stroke()
+  doc.rect(125, y - 5, 125, 30).stroke()
+  doc.rect(250, y - 5, 175, 30).stroke()
   doc.rect(425, y - 5, 50, 30).stroke()
   doc.rect(475, y - 5, 85, 30).stroke()
 
@@ -332,8 +346,8 @@ function customTable(doc, y, data, MAXY) {
   for (let i = 0; i < data.length; i++) {
     height = height + 20;
     textInRowFirst(doc, data[i].account, 50, height, "center", 75);
-    textInRowFirst(doc, data[i].servicename, 125, height, "center", 100);
-    textInRowFirst(doc, data[i].productname, 225, height, "center", 200);
+    textInRowFirst(doc, data[i].servicename, 125, height, "center", 125);
+    textInRowFirst(doc, data[i].productname, 250, height, "center", 175);
     textInRowFirst(doc, data[i].taxinclude, 425, height, "center", 50);
     textInRowFirst(doc, '¥' + utility.numberWithCommas(parseFloat(data[i].amount).toFixed(2)), 475, height, "right", 85);
 
@@ -424,21 +438,22 @@ async function getCustomerInfo(company_code) {
 
 async function getInvoiceData(company_code, year, month) {
   try {
-    const query = `select * from (select (amount) amount, 0 as cdr_amount, (amount) kotei_amount , 
-    substring(split_part(bill_numb__c, '-',2),4) as comp_code, cdrid, servicename, productname, taxinclude, account
-     from kddi_kotei_bill_details where bill_start__c::date ='2022-03-01' and bill_numb__c ilike '%${company_code}%' 
+    const query = `select * from (select (kingaku) amount, 0 as cdr_amount, (kingaku) kotei_amount , 
+    comp_acco__c as comp_code, cdrid, riyougaisya as servicename, seikyuuuchiwake as productname,
+     zeikubun as taxinclude, kaisenbango as account
+     from ntt_koteihi_cdr_bill where datebill::date = '${year}-${month}-01' and comp_acco__c = '${company_code}' 
       UNION ALL
        select   sum( case when terminaltype!='その他' then finalcallcharge else 0 end) as amount ,
        sum( case when terminaltype!='その他' then finalcallcharge else 0 end) as amount, 0 as kotei_amount ,
-        '' as  comp_code, 0 as cdrid, 'ダイヤル通話料' as servicename, '' as productname,'' as taxinclude, 
-        replace(freedialnumber,'-','') as account   from  byokakin_kddi_processedcdr_${year}${month} 
-          where customercode='${company_code}' and ( case when terminaltype!='その他' then finalcallcharge else 0 end) > 0 group by  freedialnumber 
+        '' as  comp_code, 0 as cdrid, 'ＮＴＴコミュニケーションズ' as servicename, 'ダイヤル通話料' as productname, '合算10％' as taxinclude, 
+        replace(callingnumber,'-','') as account   from  byokakin_ntt_processedcdr_${year}${month} 
+          where customercode='${company_code}' and ( case when terminaltype!='その他' then finalcallcharge else 0 end) > 0 group by  callingnumber 
           UNION ALL
           select   sum( case when terminaltype='その他' then finalcallcharge else 0 end) as amount, 
           sum( case when terminaltype='その他' then finalcallcharge else 0 end) as amount, 0 as kotei_amount ,
-          '' as  comp_code, 0 as cdrid, 'その他通話料' as servicename, '' as productname,'' as taxinclude, 
-          replace(freedialnumber,'-','') as account   from  byokakin_kddi_processedcdr_${year}${month} 
-            where customercode='${company_code}' and ( case when terminaltype='その他' then finalcallcharge else 0 end) > 0 group by  freedialnumber              
+          '' as  comp_code, 0 as cdrid, 'ＮＴＴコミュニケーションズ' as servicename, 'その他通話料' as productname, '合算10％' as taxinclude, 
+          replace(callingnumber,'-','') as account   from  byokakin_ntt_processedcdr_${year}${month} 
+            where customercode='${company_code}' and ( case when terminaltype='その他' then finalcallcharge else 0 end) > 0 group by  callingnumber              
       )as foo order by account, servicename` ;
     const ratesRes = await db.queryByokakin(query, []);
 
@@ -460,31 +475,32 @@ async function getNextInsertBatch(cdrType, data, rates, customerId, billingYear,
     for (let i = 0; i < data.length; i++) {
       let obj = {}, terminalType, freedialNumber, callingNumber, callDuration, destinationArea, chargeAmt, callDate, callTime, sourceArea, callCharge;
 
-      freedialNumber = data[i]['did'];
+
 
 
       if (cdrType === 'OUTBOUND') {
-        const terminalTypeObj = await getTerminalType(data[i]['callcharge'], data[i]['cld'], data[i]['destination'], data[i]['calltype']);
-        terminalType = terminalTypeObj.terminalType;
+        terminalType = await getTerminalType(data[i]['cld'], data[i]['destination'], data[i]['calltype']);
+        freedialNumber = data[i]['parentdid'];
         callingNumber = data[i]['did'];
         callDuration = await getCallDuration(data[i]['callduration']);
         destinationArea = await getDestinationArea(data[i]['destination']);
-        chargeAmt = await getFinalCharge(terminalTypeObj.tmpTerminalType, rates, callDuration, data[i]['callcharge'], data[i]['calltype']);
+        chargeAmt = await getFinalCharge(terminalType, rates, callDuration, data[i]['callcharge']);
         callDate = data[i]['calldate'];
         callTime = data[i]['calltime'];
-        sourceArea = '東京';
+        sourceArea = data[i]['source'];
         callCharge = data[i]['callcharge'];
 
       } else {
         terminalType = await getTerminalTypeInbound(data[i]['terminaltype']);
-        callingNumber = data[i]['usednumber'];
-        callDate = data[i]['calldate'].substr(0, 4) + '-' + data[i]['calldate'].substr(4, 2) + '-' + data[i]['calldate'].substr(6, 2);
-        callTime = await getCDRFormatTime(data[i]['calltime']);
-        callDuration = await getCallDuration(await getCDRFormatTime(data[i]['callduration']));
-        sourceArea = data[i]['source'];
-        destinationArea = data[i]['destination'];
-        callCharge = null;
-        chargeAmt = await getFinalCharge(terminalType, rates, callDuration, data[i]['callcharge'], data[i]['calltype'], 'INBOUND');
+        freedialNumber = data[i]['freedialnum'];
+        callingNumber = data[i]['did'];
+        callDate = data[i]['calldate'];
+        callTime = data[i]['calltime'];
+        callDuration = await getCallDuration(data[i]['callduration']);
+        sourceArea = terminalType == '携帯' ? '' : data[i]['division'];
+        destinationArea = '';
+        callCharge = data[i]['callcharge'];
+        chargeAmt = await getFinalCharge(terminalType, rates, callDuration, data[i]['callcharge'], data[i]['callcount104'], 'INBOUND');
       }
 
       obj['cdrid'] = data[i]['cdrid'];
@@ -501,8 +517,11 @@ async function getNextInsertBatch(cdrType, data, rates, customerId, billingYear,
       obj['destinationarea'] = destinationArea;
       obj['cdrcallcharge'] = callCharge;
       obj['callrate'] = chargeAmt.callRate;
-      obj['finalcallcharge'] = chargeAmt.resFinalCharge;
+      obj['finalcallcharge'] = await roundToFour(chargeAmt.resFinalCharge);
       obj['vendorcallcharge'] = chargeAmt.vendorCallCharge;
+      obj['callcount104'] = 0;
+      obj['carriertype'] = 'NTT';
+
       valueArray.push(obj);
     }
   } catch (err) {
@@ -521,14 +540,14 @@ async function getTerminalTypeInbound(terminalType) {
 
   //console.log("terminal type..."+terminalType);
 
-  if (terminalType.search(/L|I|S|N|U/) !== -1) {
-    result = '固定';
-  } else if (terminalType.search(/C|A/) !== -1) {
+  if (terminalType == '一般フリー／０５０' || terminalType == '一般フリー／Ｐ' || terminalType == 'その他') {
+    result = 'その他';
+  } else if (terminalType == '一般フリー／携帯' || terminalType == '受変（先課金）携帯' || terminalType == '０５０フリー／携帯') {
     result = '携帯';
-  } else if (terminalType.search(/X|^/) !== -1) {
+  } else if (terminalType == '一般ﾌﾘｰ・公衆' || terminalType == '受変（先課金）公衆' || terminalType == '０５０フリー／公衆') {
     result = '公衆';
   } else {
-    result = 'その他'
+    result = '固定'
   }
 
   return result;
@@ -545,29 +564,30 @@ async function getCDRFormatTime(time) {
 }
 
 
-async function getFinalCharge(terminalType, rates, callDuration, callCharge, callType, CDR_CLASSIFICATION) {
+async function getFinalCharge(terminalType, rates, callDuration, callCharge, CALLCOUNT104, CDR_CLASSIFICATION) {
   let resData = {};
 
-  //console.log("terminalType.."+terminalType);
- 
+  //  console.log("terminalType.."+terminalType);
+
   //console.log("callCharge.."+callCharge);
   //console.log("terminalType.."+terminalType);
   try {
 
-    let callSort = "";
+    let callSort = terminalType;
 
-    if (CDR_CLASSIFICATION == 'INBOUND') {
-      callSort = terminalType;
-    } else {
-      callSort = await getCDRCallSortOutboud(terminalType, callType);
-    }
+    // if (CDR_CLASSIFICATION == 'INBOUND') {
+    //   callSort = terminalType;
+    // } else {
+    //   callSort = await getCDRCallSortOutboud(callType, cld, destination);
+    // }
+
+
+
 
 
     let ratesData = rates.filter((obj) => (
       obj.call_sort__c === callSort ? true : false
     ))
-
-    //console.log("ratesData.."+ JSON.stringify(ratesData));
 
     if (ratesData.length > 0) {
       ratesData = ratesData[0];
@@ -585,28 +605,39 @@ async function getFinalCharge(terminalType, rates, callDuration, callCharge, cal
       return resData;
     }
 
-    if (callCharge == 0) {
+    //console.log("ratesData.."+ JSON.stringify(ratesData));
+
+
+
+
+
+
+    if (callCharge <= 0) {
       resData['resFinalCharge'] = callCharge;
       resData['vendorCallCharge'] = callCharge;
       resData['callRate'] = ratesData.amnt_conv__c;
       return resData;
     }
 
+
+
+
+
     let resFinalCharge = 0, vendorCallCharge = 0;
 
     if (ratesData.rate_per_min == 0) {
-      resFinalCharge = Math.ceil(callDuration / ratesData.kaki_valu__c) * (ratesData.amnt_conv__c);
-      vendorCallCharge = Math.ceil(callDuration / 1) * (1 * ratesData.genka_rate__c / 60)
+      resFinalCharge = parseFloat(callDuration / ratesData.kaki_valu__c) * (ratesData.amnt_conv__c).toFixed(5);
+      vendorCallCharge = parseFloat(callDuration / 1) * (1 * ratesData.genka_rate__c / 60).toFixed(5)
     } else {
-      resFinalCharge = Math.ceil(callDuration / ratesData.kaki_valu__c) * (ratesData.kaki_valu__c * ratesData.amnt_conv__c / 60)
-      vendorCallCharge = Math.ceil(callDuration / 1) * (1 * ratesData.genka_rate__c / 60)
+      resFinalCharge = parseFloat(callDuration / ratesData.kaki_valu__c) * (ratesData.kaki_valu__c * ratesData.amnt_conv__c / 60).toFixed(5)
+      vendorCallCharge = parseFloat(callDuration / 1) * (1 * ratesData.genka_rate__c / 60).toFixed(5)
     }
 
     resData['resFinalCharge'] = resFinalCharge;
     resData['vendorCallCharge'] = vendorCallCharge;
     resData['callRate'] = ratesData.amnt_conv__c;
 
-    //console.log("call rates.."+)
+    //  console.log("final rates rates.."+JSON.stringify(resData))
 
   } catch (err) {
     console.log("error in final charge ." + err.message);
@@ -626,7 +657,7 @@ function getDestinationArea(dest) {
   return res;
 }
 
-async function getTerminalType(callCharge, cld, destination, callType) {
+async function getTerminalType(cld, destination, callType) {
 
   let res = {}, terminalType = "", firstFourDigit = "", firstThreeDigit = "", firstDigit = "", copyTerminalType = '';
   try {
@@ -634,19 +665,19 @@ async function getTerminalType(callCharge, cld, destination, callType) {
     firstThreeDigit = cld.substring(0, 3);
     firstDigit = cld.substring(0, 1);
 
-    if (parseInt(callCharge, 10) == 0) {
-      terminalType = 'IP電話';
-      return { "terminalType": terminalType, "tmpTerminalType": terminalType }
-    }
+    // if (parseInt(callCharge, 10) == 0) {
+    //   terminalType = 'IP電話';
+    //   return { "terminalType": terminalType, "tmpTerminalType": terminalType }
+    // }
 
     if (firstFourDigit == '0035' || firstFourDigit == '0180' || firstFourDigit == '0570' ||
       firstFourDigit == '0990' || firstThreeDigit == '020' || cld == '104' || cld == '110' || cld == '114' ||
-      cld == '117' || cld == '188' || cld == '177' || destination == '衛星船舶') {
+      cld == '117' || cld == '188' || cld == '177' || destination == '衛星船舶' || destination == 'ＰＨＳ'
+      || destination == 'ＰＨＳ通話' || destination == 'Ｉ　Ｐ' || destination == 'ＩＰ通話' || destination == '他ＩＰ通話') {
 
       terminalType = 'その他';
 
-    } else if (firstDigit != '0' && cld != '104' && cld != '110' && cld != '114' &&
-      cld != '117' && cld != '188' && cld != '177') {
+    } else if (callType == '国際' && destination == '国際通話') {
 
       terminalType = 'その他 - Intl';
 
@@ -654,30 +685,8 @@ async function getTerminalType(callCharge, cld, destination, callType) {
 
       terminalType = "携帯";
 
-    } else if (destination == 'PHP') {
-
-      terminalType = "PHS";
-
-    } else if (destination == 'ＩＰ電話') {
-
-      terminalType = "IP電話";
-
-    } else if (destination == 'IP(有料)') {
-
-      terminalType = "IP(有料)";
-
-    } else if (destination == 'TELEGRAM') {
-
-      terminalType = "その他 - 税込み";
-
     } else {
       terminalType = "固定";
-    }
-
-    copyTerminalType = terminalType;
-
-    if (!terminalType.includes('その他')) {
-      terminalType = await getCDRCallSortOutboud(terminalType, callType);
     }
 
 
@@ -685,21 +694,37 @@ async function getTerminalType(callCharge, cld, destination, callType) {
     console.log("Error in get terminal type.." + error.message)
   }
 
-  return { "terminalType": terminalType, "tmpTerminalType": copyTerminalType };
+  return terminalType;
 }
 
 
-async function getCDRCallSortOutboud(terminalType, callType) {
+async function getCDRCallSortOutboud(cld, destination, callType) {
 
-  let tmpTerminalType = "";
-  if (terminalType == '携帯' || terminalType == 'PHS') {
-    tmpTerminalType = '携帯';
-  } else if (terminalType == 'IP(有料)' && callType == '携帯呼') {
-    tmpTerminalType = '携帯'
+  let res = {}, terminalType = "", firstFourDigit = "", firstThreeDigit = "", firstDigit = "", copyTerminalType = '';
+
+  firstFourDigit = cld.substring(0, 4);
+  firstThreeDigit = cld.substring(0, 3);
+  firstDigit = cld.substring(0, 1);
+
+
+  if (firstFourDigit == '0035' || firstFourDigit == '0180' || firstFourDigit == '0570' ||
+    firstFourDigit == '0990' || firstThreeDigit == '020' || cld == '104' || cld == '110' || cld == '114' ||
+    cld == '117' || cld == '188' || cld == '177' || destination == '衛星船舶' || destination == 'ＰＨＳ'
+    || destination == 'ＰＨＳ通話' || destination == 'Ｉ　Ｐ' || destination == 'ＩＰ通話' || destination == '他ＩＰ通話') {
+
+    terminalType = 'その他';
+
+  } else if (callType == '国際' && destination == '国際通話') {
+
+    terminalType = 'その他 - Intl';
+
+  } else if ((firstThreeDigit == '070' || firstThreeDigit == '080' || firstThreeDigit == '090') && destination != 'PHS') {
+
+    terminalType = "携帯";
+
   } else {
-    tmpTerminalType = '固定';
+    terminalType = "固定";
   }
-  return tmpTerminalType;
 
 }
 
@@ -732,4 +757,11 @@ function chunk(array, size) {
 }
 
 
-
+async function roundToFour(num) {
+  let res = 0;
+  if (num > 0)
+    res = +(Math.round(num + "e+4") + "e-4");
+  else
+    res = num;
+  return res;
+}

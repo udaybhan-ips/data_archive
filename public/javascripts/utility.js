@@ -1,5 +1,6 @@
 const fs=require('fs');
 var path = require('path');
+const iconv = require('iconv-lite');
 
  const dateVsMonths={'01':'Jan','02':'Feb','03':'March','04':'April','05':'May','06':'June','07':'July','08':'Augest','09':'Sept','10':'Oct','11':'Nov','12':'Dec'};
  
@@ -98,7 +99,10 @@ let arr=[ { StartTime: '2019-08-01T00:50:28.000Z',
 
     
 function writeArrayToCSV(data,fileName){
-    fs.writeFile(fileName, '\ufeff' + data, { encoding: 'text/csv; charset=utf-8' }, function(err) {
+
+  console.log("data.."+JSON.stringify(data))
+
+    fs.writeFile(fileName, data, function(err) {
       if(err){
         console.log(err);
       }else{
@@ -121,7 +125,9 @@ function writeArrayToCSV(data,fileName){
 
 module.exports.createCSVWithWriter=async function(fileName, header, data){
 
-  const createCsvWriter = require('csv-writer').createObjectCsvWriter({ append: true ,header,path: fileName});
+  
+
+  const createCsvWriter = require('csv-writer').createObjectCsvWriter({header, path: fileName });
 
   try{
     await writeData(data, createCsvWriter);    

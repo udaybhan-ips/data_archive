@@ -10,9 +10,7 @@ const MYSQL_WITHOUT_TIMEZONE={
   host     : (process.env.MYSQL_PORT || '10.168.11.252'),
   database : (process.env.MYSQL_DATABASE || 'epart'),
   user     : (process.env.MYSQL_USER ||'ipstwo'),
-  password : (process.env.MYSQL_PASSWORD || 'ipstwo0032'),
-  
-  
+  password : (process.env.MYSQL_PASSWORD || 'ipstwo0032'),  
 }
 
 const MSSQLServer = {

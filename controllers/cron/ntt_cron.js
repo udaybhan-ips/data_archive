@@ -1,7 +1,7 @@
 var CronJob = require("cron").CronJob;
 var archiveController = require('../byokakin/ntt/archive.controller');
 var billingController = require('../byokakin/ntt/billing.controller');
-// var CDRsController = require('../byokakin/ntt/cdr.controller');
+var CDRsController = require('../byokakin/ntt/cdr.controller');
 // var EmailController = require('../byokakin/emailNotification.controller');
 
 // var archiverJob = new CronJob ('26 9 * * *',function(){
@@ -16,7 +16,7 @@ var billingController = require('../byokakin/ntt/billing.controller');
 //     console.log('This is byokakin NTT archiver End');  
 // },null, true, 'Asia/Tokyo');
 
-// var billingControllerJob = new CronJob ('51 14 * * *',function(){
+// var billingControllerJob = new CronJob ('52 16 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.getData();
 //     console.log('This is byokakin email notification end');
@@ -24,26 +24,26 @@ var billingController = require('../byokakin/ntt/billing.controller');
 // },null, true, 'Asia/Tokyo');
 
  
-// var archiverJob = new CronJob ('12 16 * * *',function(){
+// var archiverJob = new CronJob ('43 15 * * *',function(){
 //     console.log('This is byokakin archiver start');
 //     archiveController.uploadNTTRAW();
 //     console.log('This is byokakin archiver End');  
 // },null, true, 'Asia/Tokyo');
 
 
-// var emailNotificationJob = new CronJob ('30 17 * * *',function(){
+// var emailNotificationJob = new CronJob ('47 15 * * *',function(){
 //     console.log('This is byokakin email notification start');
 //     EmailController.sendEmail();
 //     console.log('This is byokakin email notification end');
 
 // },null, true, 'Asia/Tokyo');
 
-// var CDRsControllerJob = new CronJob ('31 11 * * *',function(){
-//     console.log('This is byokakin email notification start');
-//     CDRsController.createCDR();
-//     console.log('This is byokakin email notification end');
+var CDRsControllerJob = new CronJob ('1 12 * * *',function(){
+    console.log('This is byokakin email notification start');
+    CDRsController.createCDR();
+    console.log('This is byokakin email notification end');
 
-// },null, true, 'Asia/Tokyo');
+},null, true, 'Asia/Tokyo');
 
 
 

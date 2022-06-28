@@ -430,13 +430,13 @@ async function getInvoiceData(company_code, year, month) {
       UNION ALL
        select   sum( case when terminaltype!='その他' then finalcallcharge else 0 end) as amount ,
        sum( case when terminaltype!='その他' then finalcallcharge else 0 end) as amount, 0 as kotei_amount ,
-        '' as  comp_code, 0 as cdrid, 'ダイヤル通話料' as servicename, '' as productname,'' as taxinclude, 
+        '' as  comp_code, 0 as cdrid, 'ダイヤル通話料' as productname, '' as servicename,'' as taxinclude, 
         replace(freedialnumber,'-','') as account   from  byokakin_kddi_processedcdr_${year}${month} 
           where customercode='${company_code}' and ( case when terminaltype!='その他' then finalcallcharge else 0 end) > 0 group by  freedialnumber 
           UNION ALL
           select   sum( case when terminaltype='その他' then finalcallcharge else 0 end) as amount, 
           sum( case when terminaltype='その他' then finalcallcharge else 0 end) as amount, 0 as kotei_amount ,
-          '' as  comp_code, 0 as cdrid, 'その他通話料' as servicename, '' as productname,'' as taxinclude, 
+          '' as  comp_code, 0 as cdrid, 'その他通話料' as productname, '' as servicename,'' as taxinclude, 
           replace(freedialnumber,'-','') as account   from  byokakin_kddi_processedcdr_${year}${month} 
             where customercode='${company_code}' and ( case when terminaltype='その他' then finalcallcharge else 0 end) > 0 group by  freedialnumber              
       )as foo order by account, servicename` ;
@@ -458,7 +458,8 @@ async function getNextInsertBatch(cdrType, data, rates, customerId, billingYear,
 
   try {
     for (let i = 0; i < data.length; i++) {
-      let obj = {}, terminalType, freedialNumber, callingNumber, callDuration, destinationArea, chargeAmt, callDate, callTime, sourceArea, callCharge;
+      let obj = {}, terminalType, freedialNumber, callingNumber, callDuration, 
+      destinationArea, chargeAmt, callDate, callTime, sourceArea, callCharge;
 
       freedialNumber = data[i]['did'];
 
@@ -501,7 +502,7 @@ async function getNextInsertBatch(cdrType, data, rates, customerId, billingYear,
       obj['destinationarea'] = destinationArea;
       obj['cdrcallcharge'] = callCharge;
       obj['callrate'] = chargeAmt.callRate;
-      obj['finalcallcharge'] = chargeAmt.resFinalCharge;
+      obj['finalcallcharge'] = (chargeAmt.resFinalCharge);
       obj['vendorcallcharge'] = chargeAmt.vendorCallCharge;
       valueArray.push(obj);
     }
@@ -595,11 +596,11 @@ async function getFinalCharge(terminalType, rates, callDuration, callCharge, cal
     let resFinalCharge = 0, vendorCallCharge = 0;
 
     if (ratesData.rate_per_min == 0) {
-      resFinalCharge = Math.ceil(callDuration / ratesData.kaki_valu__c) * (ratesData.amnt_conv__c);
-      vendorCallCharge = Math.ceil(callDuration / 1) * (1 * ratesData.genka_rate__c / 60)
+      resFinalCharge = parseFloat(callDuration / ratesData.kaki_valu__c) * (ratesData.amnt_conv__c).toFixed(5);
+      vendorCallCharge = parseFloat(callDuration / 1) * (1 * ratesData.genka_rate__c / 60).toFixed(5)
     } else {
-      resFinalCharge = Math.ceil(callDuration / ratesData.kaki_valu__c) * (ratesData.kaki_valu__c * ratesData.amnt_conv__c / 60)
-      vendorCallCharge = Math.ceil(callDuration / 1) * (1 * ratesData.genka_rate__c / 60)
+      resFinalCharge = parseFloat(callDuration / ratesData.kaki_valu__c) * (ratesData.kaki_valu__c * ratesData.amnt_conv__c / 60).toFixed(5)
+      vendorCallCharge = parseFloat(callDuration / 1) * (1 * ratesData.genka_rate__c / 60).toFixed(5)
     }
 
     resData['resFinalCharge'] = resFinalCharge;
@@ -733,3 +734,11 @@ function chunk(array, size) {
 
 
 
+async function roundToFour(num) {
+  let res = 0;
+  if (num > 0)
+    res = +(Math.round(num + "e+4") + "e-4");
+  else
+    res = num;
+  return res;
+}

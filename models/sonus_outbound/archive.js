@@ -140,7 +140,8 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
       }else{
         let trunkPorts = customerInfo.trunk_port;
 
-        where=`WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY)  AND INGRPSTNTRUNKNAME in ('${trunkPorts}') AND RECORDTYPEID = 3 order by STARTTIME `;
+        where=`WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) 
+         AND INGRPSTNTRUNKNAME in ('${trunkPorts}') AND RECORDTYPEID = 3 order by STARTTIME `;
       }
 
       //console.log("where="+where);
