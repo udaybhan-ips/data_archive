@@ -38,12 +38,12 @@ var CDRsController = require('../byokakin/ntt/cdr.controller');
 
 // },null, true, 'Asia/Tokyo');
 
-var CDRsControllerJob = new CronJob ('1 12 * * *',function(){
-    console.log('This is byokakin email notification start');
-    CDRsController.createCDR();
-    console.log('This is byokakin email notification end');
+// var CDRsControllerJob = new CronJob ('1 12 * * *',function(){
+//     console.log('This is byokakin email notification start');
+//     CDRsController.createCDR();
+//     console.log('This is byokakin email notification end');
 
-},null, true, 'Asia/Tokyo');
+// },null, true, 'Asia/Tokyo');
 
 
 

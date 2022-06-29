@@ -2,10 +2,17 @@ var db = require('../../config/database');
 
 
 module.exports = {
-  findAll: async function() {
+  findAll: async function({comp_code}) {
       try {
-        
-          const query="SELECT * FROM _03numbers order by _03_numbers asc limit 10";
+
+        //console.log("data..."+JSON.stringify(data))
+
+        let query = "";
+        if(comp_code){
+          query=`SELECT * FROM _03numbers where customer_cd='${comp_code}' order by _03_numbers asc`;
+        }
+
+          
           const rateListRes= await db.queryIBS(query,[]);
           return rateListRes.rows;
       } catch (error) {

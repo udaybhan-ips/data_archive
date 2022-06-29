@@ -49,7 +49,7 @@ module.exports = {
         m_customer where is_deleted=false)as m_cus join (select * from kddi_customer where deleted=false) 
         as kddi_cus on ( m_cus.customer_cd::int = kddi_cus.customer_code::int) order by m_cus.customer_cd desc`;
       const KDDICustomerListRes = await db.query(query, [], true);
-      // console.log(targetDateRes);
+      
       if (KDDICustomerListRes.rows) {
         return KDDICustomerListRes.rows
       }

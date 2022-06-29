@@ -1,7 +1,7 @@
 var router = require('express').Router();
 var _03numbersController = require('../../../controllers/_03numbers/_03numbers.controller');
 
-router.get('/number',  _03numbersController.listNumbers);
+router.post('/number',  _03numbersController.listNumbers);
 router.post('/_03numbers/addnumber', _03numbersController.addNumber);
 // router.get('/users/me',  usersController.getSelfUser);
 // router.get('/users/:id', usersController.getOneUser);

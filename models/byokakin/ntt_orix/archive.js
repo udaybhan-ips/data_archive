@@ -5,7 +5,7 @@ const utility = require("../../../public/javascripts/utility")
 
 
 let ColumnSetNTTORIXKoteihi = ['did', 'carrier', 'service_name', 'amount', 'taxclassification', 'dailydisplay', 'date_added', 'carrier_name'];
-let tableNameNTTORIXKoteihi = { table: 'byokakin_ntt_koteihi_202204' };
+let tableNameNTTORIXKoteihi = { table: 'byokakin_ntt_koteihi_202203' };
 let ColumnSetNTTORIXKoteihiCDR = ['companyname', 'comp_acco__c', 'kaisenbango', 
 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'hiwarihyouji', 'datebill', 'linkedcdrid','carrier'];
 let tableNameNTTORIXKoteihiCDR = { table: 'ntt_koteihi_cdr' };
@@ -49,7 +49,9 @@ module.exports = {
 
   getNTTORIXCustomer: async function () {
     try {
-      const query = `select m_cus.* from (select id, customer_cd, customer_name, address, staff_name from  m_customer where is_deleted=false)as m_cus join (select * from ntt_customer where deleted=false) as ntt_cus on ( m_cus.customer_cd::int = ntt_cus.customer_code::int) order by m_cus.customer_cd desc`;
+      const query = `select m_cus.* from (select id, customer_cd, customer_name, address, staff_name from  m_customer 
+        where is_deleted=false)as m_cus join (select * from ntt_orix_customer) as ntt_cus on 
+        ( m_cus.customer_cd::int = ntt_cus.customer_code::int) order by m_cus.customer_cd desc`;
       const NTTORIXCustomerListRes = await db.query(query, [], true);
       // console.log(targetDateRes);
       if (NTTORIXCustomerListRes.rows) {
@@ -98,7 +100,8 @@ module.exports = {
   },
   getNTTORIXKotehiData: async function ({ year, month, comCode }) {
     try {
-      const query = `select row_number() over() as id, * from ntt_koteihi_cdr where  to_char(datebill::date, 'MM-YYYY')='${month}-${year}' `;
+      const query = `select row_number() over() as id, * from ntt_koteihi_cdr 
+      where  to_char(datebill::date, 'MM-YYYY')='${month}-${year}' and carrier='NTT_ORIX' `;
       const getNTTORIXKotehiDataRes = await db.queryByokakin(query, []);
       return getNTTORIXKotehiDataRes.rows;
     } catch (e) {
@@ -115,7 +118,8 @@ module.exports = {
 
       const lastYear = lastMonthDate.year;
       const lastMonth = lastMonthDate.month;
-      const query = ` select row_number() over() as id, * from ntt_koteihi_cdr where  to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}'`;
+      const query = ` select row_number() over() as id, * from ntt_koteihi_cdr 
+      where  to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}' and carrier='NTT_ORIX'`;
       const getLastMonthNTTORIXKotehiDataRes = await db.queryByokakin(query, []);
       return getLastMonthNTTORIXKotehiDataRes.rows;
     } catch (e) {
@@ -135,14 +139,16 @@ module.exports = {
       console.log("year, month, com code.." + year, month, comp_code);
 
       if (comp_code && year && month) {
-        where = ` where to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}' and substring(split_part(bill_code, '-',2),4) as comp_code ='${comCode}'`;
+        where = ` where to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}' and 
+        substring(split_part(bill_code, '-',2),4) as comp_code ='${comCode}' `;
       } else if (!comp_code && year && month) {
-        where = `where to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}'`;
+        where = `where to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}' `;
       } else {
         throw new Error('please select billing year and month');
       }
 
-      const query = ` select row_number() over() as id, *, substring(split_part(bill_code, '-',2),4) as comp_code from ntt_koteihi_cdr_bill ${where}`;
+      const query = ` select row_number() over() as id, *, substring(split_part(bill_code, '-',2),4) as comp_code from 
+      ntt_koteihi_cdr_bill ${where}` ;
 
       console.log("query...." + query)
 
@@ -157,7 +163,9 @@ module.exports = {
   getNTTORIXKotehiProcessedData: async function ({ year, month }) {
     try {
       console.log("year, month .." + year, month);
-      const query = ` select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  sum (kingaku) as amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_code, '-',2),4) `;
+      const query = ` select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  
+      sum (kingaku) as amount from ntt_koteihi_cdr_bill
+       where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_code, '-',2),4) `;
       const getNTTORIXKotehiProcessedDataRes = await db.queryByokakin(query, []);
       return getNTTORIXKotehiProcessedDataRes.rows;
     } catch (e) {
@@ -232,8 +240,6 @@ module.exports = {
           tmpObj['carrier'] = 'NTT_ORIX';
           tmpData.push(tmpObj);
         }
-
-
         const insertKotehiDataRes = await insertByBatches(tmpData, 'ntt_koteihi_cdr_bill');
 
         console.log("insertKotehiDataRes.." + JSON.stringify(insertKotehiDataRes));
