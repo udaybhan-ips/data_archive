@@ -92,9 +92,8 @@ module.exports = {
    
     let mailOption={
         from: 'ips_tech@sysmail.ipsism.co.jp',
-        to: 'uday@ipsism.co.jp',
-        cc:'y_ito@ipsism.co.jp',
-  
+        to: 'uday@ipspro.co.jp',
+        cc:'y_ito@ipspro.co.jp',
         subject:'LEAFNET CDR CHECK',
         html
     }
@@ -121,16 +120,13 @@ function tableCreate(rawData, processData) {
 
     for(let i=0;i<rawData.length;i++){
         let diff=rawData[i]['total']-processData[i]['total'];
-  
         let rawValue = utility.numberWithCommas(rawData[i]['total']);
         let processValue = utility.numberWithCommas(processData[i]['total']);
-
         tableRows+='<tr>';
         tableRows+=`<td class="day">${utility.formatDate(rawData[i]['day'])}</td>`;
         tableRows+=`<td style="text-align:right" class="Raw Data">${rawValue}</td>`;
         tableRows+=`<td style="text-align:right" class="Processed Data">${processValue}</td>`;
         tableRows+=`<td style="text-align:right" class="Difference">${diff}</td>`;
-
         tableRows=tableRows+'</tr>'
     }
     let html='';

@@ -111,7 +111,7 @@ module.exports = {
   getKickCompList: async function () {
 
     try {
-      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable `;
+      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable  order by  customer_id     `;
       const getKickCompListRes = await db.queryIBS(query, []);
 
       if (getKickCompListRes.rows) {

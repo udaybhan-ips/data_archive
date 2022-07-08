@@ -5,7 +5,7 @@ var BillingController = require('../mvno/billing.controller');
 var CDRController = require('../mvno/cdr.controller');
 
 
-// var archiverJobSonusOut = new CronJob ('58 11 * * *',function(){
+// var archiverJobSonusOut = new CronJob ('10 17 * * *',function(){
 //     console.log('You will see this message every second');
 //     archiveController.getData();
 //     console.log('You will see this message every second');
@@ -52,7 +52,7 @@ var CDRController = require('../mvno/cdr.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var BillingControllerJob = new CronJob ('6 12 * * *',function(){
+// var BillingControllerJob = new CronJob ('15 12 * * *',function(){
 //     console.log('You will see this message every second');
 //     BillingController.getData();
 //     console.log('You will see this message every second');

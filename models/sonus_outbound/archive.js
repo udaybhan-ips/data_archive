@@ -101,12 +101,12 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo, trunkPortsVal
           wherePart = wherePart.substring(0, wherePart.length - 2);
         }
 
-        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
+        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 30 DAY) AND
         (${wherePart}) AND RECORDTYPEID = 3  `;
 
       }else{
       
-        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
+        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 30 DAY) AND
         INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND  RECORDTYPEID = 3        `;
       
       }

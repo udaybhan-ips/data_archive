@@ -97,14 +97,7 @@ module.exports = {
             '00000409','00000564','00000565','88888888') and to_char(traffic_date, 'MM-YYYY') = '${month}-${year}'
              order by customer_cd`;
             //const query = ` select * from kickback_cdr_carrier where email_type='multiple' order by customer_cd`;
-
-
-
-
-
-            
             const kickCompRes = await db.queryIBS(query, []);
-
             return kickCompRes.rows;
 
         } catch (error) {
@@ -481,14 +474,10 @@ module.exports = {
     },
 
     getSummaryDataByDayTotalMysql: async function (targetDateWithTimezone) {
-
         const day = new Date(targetDateWithTimezone).getDate();
         let resData = [];
-
         try {
-
             for (let i = 0; i < day; i++) {
-
                 let startDate = new Date(targetDateWithTimezone);
                 startDate.setDate(startDate.getDate() - (day - i));
                 let year = startDate.getFullYear();
@@ -505,16 +494,10 @@ module.exports = {
                 group by cast(addtime(starttime,'09:00:00') as Date) 
                 order by cast(addtime(starttime,'09:00:00') as Date) asc`;
                 let rawData = await db.mySQLQuery(query, []);
-                // let rawData = [];
                 if (rawData.length) {
                     resData = [...resData, rawData[0]];
                 }
-                //console.log(query);
             }
-
-            //resData = [{"total":1401476,"day":"2022-01-01T00:00:00.000Z"},{"total":1353409,"day":"2022-01-02T00:00:00.000Z"},{"total":1350141,"day":"2022-01-03T00:00:00.000Z"},{"total":1150761,"day":"2022-01-04T00:00:00.000Z"},{"total":1163660,"day":"2022-01-05T00:00:00.000Z"},{"total":1159705,"day":"2022-01-06T00:00:00.000Z"},{"total":1161780,"day":"2022-01-07T00:00:00.000Z"},{"total":1371514,"day":"2022-01-08T00:00:00.000Z"},{"total":1370409,"day":"2022-01-09T00:00:00.000Z"},{"total":1368769,"day":"2022-01-10T00:00:00.000Z"},{"total":1164462,"day":"2022-01-11T00:00:00.000Z"},{"total":1156887,"day":"2022-01-12T00:00:00.000Z"},{"total":1143597,"day":"2022-01-13T00:00:00.000Z"},{"total":1154065,"day":"2022-01-14T00:00:00.000Z"},{"total":1360452,"day":"2022-01-15T00:00:00.000Z"},{"total":1367919,"day":"2022-01-16T00:00:00.000Z"},{"total":1367919,"day":"2022-01-17T00:00:00.000Z"}]
-
-            //console.log(JSON.stringify(resData));
             return (resData);
         } catch (error) {
             return error;
@@ -522,29 +505,20 @@ module.exports = {
     },
 
     createTable: async function (processData, title, customerInfo) {
-
         let proDataLen = processData.length;
         let html = '';
-        let table = '';
-
         console.log("proData=" + proDataLen);
         html = tableCreate(processData, customerInfo);
         console.log("html");
-        //console.log(html);
-
         return html;
     },
     createTableMultiple: async function (processData, title_name) {
 
         let proDataLen = processData.length;
         let html = '';
-        let table = '';
-
         console.log("proData=" + proDataLen);
         html = tableCreateMultiple(processData, title_name);
         console.log("html");
-        //console.log(html);
-
         return html;
     },
     createHTMLForAllData: async function (collect_73, sonusData, collect_73_sougo, sonusProData, sonusPro_16_31_Data, billCdrData, year, month) {
@@ -557,13 +531,9 @@ module.exports = {
         }
 
         let html = '';
-        let table = '';
-
         console.log("proData=" + proDataLen);
         html = tableCreateAllData(collect_73, sonusData, collect_73_sougo, sonusProData, sonusPro_16_31_Data, billCdrData, year, month);
         console.log("html");
-        //console.log(html);
-
         return html;
     },
 
@@ -571,16 +541,13 @@ module.exports = {
         if (!data.length) {
             return null
         }
-
         let html = '';
-
         html = tableCDRDailyTransistion(data, year, month);
         return html;
     },
     sendEmail: async function (html, customerInfo) {
         if (customerInfo) {
             let subject = `販売促進トラフィック速報 (${customerInfo['title_name']})`;
-
             let emailTO = `${customerInfo['mail_address']}`;
             let emailCC = `${customerInfo['east_link_address']}`;
 
@@ -589,7 +556,7 @@ module.exports = {
              // emailCC = 'y_ito@ipsism.co.jp';
 
             if (!emailTO) {
-                emailTO = "uday@ipsism.co.jp";
+                emailTO = "uday@ipspro.co.jp";
                 console.log("i amin ")
             }
 
@@ -601,7 +568,7 @@ module.exports = {
                 to: emailTO,
                 cc: emailCC,
                 //  cc: 'y_ito@ipsism.co.jp',
-                bcc: 'ips_tech@ipsism.co.jp,telecom@ipsism.co.jp',
+                bcc: 'uday@ipspro.co.jp,telecom@ipspro.co.jp',
 
                 subject,
                 html
@@ -612,8 +579,8 @@ module.exports = {
     sendEmailAllData: async function (html, subject) {
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
-            to: 'uday@ipsism.co.jp',
-            cc: 'y_ito@ipsism.co.jp',
+            to: 'uday@ipspro.co.jp',
+            cc: 'y_ito@ipspro.co.jp',
             subject,
             html
         }
@@ -635,10 +602,6 @@ function tableCreate(processData, customerInfo) {
     let table = '';
     try {
         for (let i = 0; i < processData.length; i++) {
-
-            // let loc = new Date(processData[i]['traffic_date']);
-            //let locArr = loc.toLocaleString().split(",");
-
             tableRows += '<tr>';
             tableRows += `<td class="day">${utility.formatDate(processData[i]['traffic_date'])}</td>`;
             tableRows += `<td style="text-align:right" class="koteiCount">${utility.numberWithCommas(processData[i]['kotei_cnt'])}</td>`;
@@ -658,8 +621,6 @@ function tableCreate(processData, customerInfo) {
             allMin = allMin + parseInt(processData[i]['all_min'], 10);
 
         }
-
-
         tableRows += '<tr>';
         tableRows += `<td class="day">合計</td>`;
         tableRows += `<td style="text-align:right" class="koteiCount">${utility.numberWithCommas(koteiCount)}</td>`;
@@ -680,8 +641,6 @@ function tableCreate(processData, customerInfo) {
         html += header;
 
         const style = `thead { text-align: left;background-color: #4CAF50; color: white; }`
-
-
         table += `<table class='some-table' border="2" style='${style}'>
              <thead> <tr> 
              <th>DATE</th> <th>固定件数</th> <th>固定分数</th> <th> 携帯件数 </th>
@@ -718,10 +677,6 @@ function tableCreateMultiple(processData, title_name) {
     let table = '';
     try {
         for (let i = 0; i < processData.length; i++) {
-
-            // let loc = new Date(processData[i]['traffic_date']);
-            //let locArr = loc.toLocaleString().split(",");
-
             tableRows += '<tr>';
             tableRows += `<td class="day">${utility.formatDate(processData[i]['traffic_date'])}</td>`;
             tableRows += `<td style="text-align:right" class="koteiCount">${utility.numberWithCommas(processData[i]['kotei_cnt'])}</td>`;
@@ -741,8 +696,6 @@ function tableCreateMultiple(processData, title_name) {
             allMin = allMin + parseInt(processData[i]['all_min'], 10);
 
         }
-
-
         tableRows += '<tr>';
         tableRows += `<td class="day">合計</td>`;
         tableRows += `<td style="text-align:right" class="koteiCount">${utility.numberWithCommas(koteiCount)}</td>`;
@@ -751,15 +704,9 @@ function tableCreateMultiple(processData, title_name) {
         tableRows += `<td style="text-align:right" class="keitaiMin">${utility.numberWithCommas(keitaiMin)}</td>`;
         tableRows += `<td style="text-align:right" class="allCnt">${utility.numberWithCommas(allCnt)}</td>`;
         tableRows += `<td style="text-align:right" class="allMin">${utility.numberWithCommas(allMin)}</td>`;
-
-
         const style = `thead { text-align: left;background-color: #4CAF50; color: white; }`
-
         let header = `<div style="style="margin: auto;width: 100%;padding: 10px;"><p style="text-align:left">(${title_name})</p></div> `;
         html += header;
-
-
-
         table += `<table class='some-table' border="2" style='${style}'>
              <thead> <tr> 
              <th>DATE</th> <th>固定件数</th> <th>固定分数</th> <th> 携帯件数 </th>
@@ -776,9 +723,6 @@ function tableCreateMultiple(processData, title_name) {
     }
     let div = `<div style="margin: auto;width: 100%;">${table}</div>`;
     html += div;
-
-    // console.log("sdfsdf"+html);
-
     return html;
 }
 

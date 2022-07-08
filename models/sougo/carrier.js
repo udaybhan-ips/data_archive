@@ -36,10 +36,10 @@ module.exports = {
     try {
       //  if(validatecarrierData()){
           // create history   
-            const query=`INSERT INTO carrier_history (carrier_code,carrier_name, company_code, carrier_name_hikari, date_update,  term_use ,date_start
+            const query=`INSERT INTO carrier_history (carrier_code,carrier_name, company_code, carrier_name_hikari, date_update,modified_by,  term_use ,date_start
               ,date_expired,rate_setup,  rate_second, rate_trunk_port) 
             VALUES ($1, $2, $3, $4, $5,  $6, $7, $8, $9,$10, $11) returning id`;
-            const value= [data.carrier_code, data.carrier_name, data.company_code, data.carrier_name_hikari,'now()',  data.term_use, 
+            const value= [data.carrier_code, data.carrier_name, data.company_code, data.carrier_name_hikari,'now()', data.modified_by,  data.term_use, 
             data.date_start, data.date_expired, data.rate_setup, data.rate_second, data.rate_trunk_port];
             const res = await db.queryIBS(query,value);
 
@@ -51,7 +51,7 @@ module.exports = {
             updateData = updateData + 'deleted='+`'${data.deleted}'`+',';
            
             updateData = updateData + 'carrier_name_hikari='+`'${data.carrier_name_hikari}'`+',';
-           // updateData = updateData + 'modified_by='+`'${data.modified_by}'`+',';
+            updateData = updateData + 'modified_by='+`'${data.modified_by}'`+',';
           //  updateData = updateData + 'valid_flag='+data.valid_flag+',';
            // updateData = updateData + 'carrier_code2='+`'${data.carrier_code2}'`+',';
             updateData = updateData + 'term_use='+`'${data.term_use}'`+',';

@@ -68,20 +68,16 @@ create table byokakin_kddi_processedcdr_202203 (cdrid bigint, cdrclassification 
 create table byokakin_kddi_raw_cdr_202203 (cdrid serial, did varchar(30), freedialnum varchar(30),   cld varchar(30), calldate timestamp without time zone, calltime varchar(15), callduration varchar(15), source varchar, destination varchar, callclassi varchar, calltype varchar, callcharge numeric(16,5), customercode varchar(10));
 
 
-update ntt_kddi_freedial_c set free_numb__c=RIGHT(free_numb__c, 10) where length(free_numb__c) =12
-update ntt_kddi_freedial_c set free_numb__c=LEFT(free_numb__c, 10) where length(free_numb__c) =12 and id not in (52458, 52514, 52458)
-update ntt_kddi_freedial_c set free_numb__c=LEFT(free_numb__c, 10) where length(free_numb__c) =13
-update ntt_kddi_freedial_c set free_numb__c= LEFT(free_numb__c, 10) where length(free_numb__c) =14 and id !=9198
+
 update ntt_kddi_freedial_c set free_numb__c ='0120984958' where length(free_numb__c) =14
-update ntt_kddi_freedial_c set free_numb__c= LEFT(free_numb__c, 10)    where   length(free_numb__c) =15 and id=52604
-update ntt_kddi_freedial_c set free_numb__c= '036361094'    where   length(free_numb__c) =15 and id=53386;
+update ntt_kddi_freedial_c set free_numb__c= '036361094'    where   length(free_numb__c) =15;
  update ntt_kddi_freedial_c set free_numb__c=RIGHT(free_numb__c, 10)  where   length(free_numb__c) =16;
- update ntt_kddi_freedial_c set free_numb__c= LEFT(free_numb__c, 10) where   length(free_numb__c) =17 and id != 62543
- update ntt_kddi_freedial_c set free_numb__c='0120500778'  where    id = 62543;
+ update ntt_kddi_freedial_c set free_numb__c= LEFT(free_numb__c, 10) where   length(free_numb__c) =17 and  data_idno !='58253'
+ update ntt_kddi_freedial_c set free_numb__c='0120500778'  where   data_idno ='58253';
 
 
 
- CREATE TABLE IF NOT EXISTS "cdr_202206" ("cdr_id" BIGSERIAL, "date_bill" TIMESTAMP WITHout TIME ZONE not null , orig_ani VARCHAR , term_ani VARCHAR,
+ CREATE TABLE IF NOT EXISTS "cdr_202207" ("cdr_id" BIGSERIAL, "date_bill" TIMESTAMP WITHout TIME ZONE not null , orig_ani VARCHAR , term_ani VARCHAR,
  "start_time" TIMESTAMP WITHout TIME ZONE not null , "stop_time" TIMESTAMP WITHout TIME ZONE not null
   ,"duration" VARCHAR(255), "duration_use" VARCHAR(255),
   "dom_int_call" VARCHAR(255), "orig_carrier_id" VARCHAR(255),

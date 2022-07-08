@@ -51,7 +51,7 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main where company_code in ('1011000006','1011000039')
+      const query = `select distinct(company_code) as company_code from billcdr_main 
        order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
@@ -398,10 +398,15 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
   let lastMonthDay  = new Date(currentYear, currentMonthValue, 0).getDate();
   
     if (tmpPaymentDate == 'yearly') {
-      if (parseInt(billingMonth) > 4)
-        paymentDueDate = `${billingYear + 1}/06/01`;
-      else
-        paymentDueDate = `${currentYear +1 }/06/01`;
+      if (parseInt(billingMonth) > 4){
+        console.log("IF")
+        paymentDueDate = `${billingYear + 1}/05/01`;
+      }        
+      else{
+        console.log("ELSE")
+        paymentDueDate = `${currentYear +1 }/05/01`;
+      }
+        
     } else if (tmpPaymentDate == 'half_yearly') {
       if (parseInt(billingMonth) > 10 && parseInt(billingMonth) <=3 )
         paymentDueDate = `${billingYear }/10/31`;
@@ -409,7 +414,7 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
         paymentDueDate = `${currentYear}/10/31`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
-      paymentDueDate = `${currentYear}/06/30`;
+      paymentDueDate = `${currentYear}/08/01`;
     }
 
   await generateHeader(address, doc, totalCallAmount);

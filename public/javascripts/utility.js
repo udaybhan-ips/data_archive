@@ -123,19 +123,43 @@ function writeArrayToCSV(data,fileName){
 // }
 
 
-module.exports.createCSVWithWriter=async function(fileName, header, data){
+// module.exports.createCSVWithWriter=async function(fileName, header, data){
 
   
 
-  const createCsvWriter = require('csv-writer').createObjectCsvWriter({header, path: fileName });
+//   const createCsvWriter = require('csv-writer').createObjectCsvWriter({header, path: fileName });
+
+//   try{
+//     await writeData(data, createCsvWriter);    
+//   }catch(err){
+//     console.log("Err=="+err.message);
+//   }
+  
+  
+// }
+
+
+// async function writeData(records, csvWriter){
+//   try{
+//     await csvWriter.writeRecords(records)
+//   }catch(erorr){
+//     console.log("Error == "+error.message);
+//   }
+// }
+
+
+
+module.exports.createCSVWithWriter=async function(fileName, header, data){
+
+  const createCsvWriter = require('csv-writer').createObjectCsvWriter({ append: true ,header,path: fileName});
 
   try{
-    await writeData(data, createCsvWriter);    
+    await writeData(data, createCsvWriter);
   }catch(err){
     console.log("Err=="+err.message);
   }
-  
-  
+
+
 }
 
 
@@ -143,9 +167,10 @@ async function writeData(records, csvWriter){
   try{
     await csvWriter.writeRecords(records)
   }catch(erorr){
-    console.log("Error == "+error.message);
+    console.log("Error== "+error.message);
   }
 }
+
 
 
 

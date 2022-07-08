@@ -10,7 +10,7 @@ module.exports = {
 
       //console.log("req.."+JSON.stringify(req));
 
-      const billingMonth = "05";
+      const billingMonth = "04";
       const billingYear ="2022";
       const serviceType = "Kotehi";
       const callType = ['free_number','d_number'];
@@ -22,7 +22,8 @@ module.exports = {
       const resKDDIFreeAccountNumList = await ArchiveKDDI.getKDDIFreeAccountNumList();
       const resKDDICustomerList = await ArchiveKDDI.getKDDICustomerList();
 
-      const resKDDIKotehiData = await ArchiveKDDI.insertKDDIKotehiData(filePath, fileName, resKDDICustomerList, resKDDIFreeDialNumList,resKDDIFreeAccountNumList,billingYear, billingMonth);
+      const resKDDIKotehiData = await ArchiveKDDI.insertKDDIKotehiData(filePath, fileName, 
+        resKDDICustomerList, resKDDIFreeDialNumList,resKDDIFreeAccountNumList,billingYear, billingMonth);
       //console.log("data");
      // console.log(JSON.stringify(resKDDIKotehiData));
 

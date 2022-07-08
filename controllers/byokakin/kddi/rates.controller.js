@@ -1,4 +1,4 @@
-var Rate = require('../../models/kickback/rate');
+var Rate = require('../../../models/byokakin/kddi/rate');
 
 module.exports = {
   addRates: async function(req, res) {

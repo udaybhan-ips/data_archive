@@ -1,23 +1,29 @@
-var config = require('./../../config/config');
-var db = require('./../../config/database');
+var config = require('./../../../config/config');
+var db = require('./../../../config/database');
 
 module.exports = {
   findAll: async function() {
       try {
-        console.log("in rate_kickback");
-          const query="SELECT * FROM rate_kickback where deleted =false order by company_code asc";
-          const rate_kickbackListRes= await db.queryIBS(query,[]);
-          return rate_kickbackListRes.rows;
+        console.log("in rate_ntt");
+          const query="select * from ntt_kddi_rate_outbound order by customer_code asc";
+          const nttRateList= await db.queryByokakin(query,[]);
+          if(nttRateList && nttRateList.rows){
+            return nttRateList.rows;
+          }            
+          else  {
+            throw new Error(nttRateList)
+          }
+            
       } catch (error) {
-          return error;
+        throw new Error(error.message);          
       }
   },
 
   create: async function(data) {
     console.log(data);
     try {
-      //  if(validaterate_kickbackData()){
-            const query=`INSERT INTO rate_kickback (company_code,  date_start, date_expired, rate_setup, rate_second,
+      //  if(validaterate_nttData()){
+            const query=`INSERT INTO rate_ntt (company_code,  date_start, date_expired, rate_setup, rate_second,
                rate_trunk_port, date_update, updated_by  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning company_code`;
             const value= [data.company_code, data.date_start, data.date_expired, data.rate_setup, data.rate_second, data.rate_trunk_port ,'now()', data.updated_by];
             const res = await db.queryIBS(query,value);
@@ -33,7 +39,7 @@ module.exports = {
     try {
       //  if(validateRateData()){
           // create history   
-            const query=`INSERT INTO rate_kickback_history (company_code, date_start, date_expired, rate_setup, rate_second, 
+            const query=`INSERT INTO rate_ntt_history (company_code, date_start, date_expired, rate_setup, rate_second, 
               rate_trunk_port, date_update, updated_by ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning company_code`;
             const value= [ data.company_code, data.date_start, data.date_expired, data.rate_setup, 
               data.rate_second, data.rate_trunk_port, 'now()', data.updated_by];
@@ -82,7 +88,7 @@ module.exports = {
               updateData = updateData.substring(0, updateData.length - 1);
             }
 
-            const queryUpdate= `update rate_kickback set ${updateData} where  company_code='${data.company_code}'`;
+            const queryUpdate= `update rate_ntt set ${updateData} where  company_code='${data.company_code}'`;
             const resUpdate = await db.queryIBS(queryUpdate,[]);
 
             return resUpdate.rows[0];

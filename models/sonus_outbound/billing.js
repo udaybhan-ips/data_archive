@@ -17,7 +17,7 @@ module.exports = {
   },
   getAllSonusOutboundCustomer: async function() {
     try {
-          const query=`select  customer_name, customer_id   from sonus_outbound_customer  where deleted=false and customer_name ilike '%wiz%' group by customer_name, customer_id order by customer_id`;
+          const query=`select  customer_name, customer_id   from sonus_outbound_customer  where deleted=false group by customer_name, customer_id order by customer_id`;
           
           const getAllSonusOutboundCustRes= await db.query(query,[], true);
           if(getAllSonusOutboundCustRes.rows){

@@ -34,6 +34,7 @@ router.use('/v1', require('./apiv1/customer/customers.routes'));
 
 router.use('/v1', require('./apiv1/byokakin/kddi/kotehi.routes'));
 router.use('/v1', require('./apiv1/byokakin/kddi/summary.routes'));
+router.use('/v1', require('./apiv1/byokakin/kddi/rates.routes'));
 
 /**** NTT *****/
 
