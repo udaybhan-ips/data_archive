@@ -2,101 +2,128 @@ var config = require('./../../../config/config');
 var db = require('./../../../config/database');
 
 module.exports = {
-  findAll: async function() {
-      try {
-        console.log("in rate_ntt");
-          const query="select * from ntt_kddi_rate_outbound order by customer_code asc";
-          const nttRateList= await db.queryByokakin(query,[]);
-          if(nttRateList && nttRateList.rows){
-            return nttRateList.rows;
-          }            
-          else  {
-            throw new Error(nttRateList)
-          }
-            
-      } catch (error) {
-        throw new Error(error.message);          
+  findAll: async function () {
+    try {
+      console.log("in rate_KDDI");
+      const query = "select * from ntt_kddi_rate where serv_name='KDDI' order by customer_code, rate_type asc";
+      const nttRateList = await db.queryByokakin(query, []);
+      if (nttRateList && nttRateList.rows) {
+        return nttRateList.rows;
       }
-  },
+      else {
+        throw new Error(nttRateList)
+      }
 
-  create: async function(data) {
-    console.log(data);
-    try {
-      //  if(validaterate_nttData()){
-            const query=`INSERT INTO rate_ntt (company_code,  date_start, date_expired, rate_setup, rate_second,
-               rate_trunk_port, date_update, updated_by  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning company_code`;
-            const value= [data.company_code, data.date_start, data.date_expired, data.rate_setup, data.rate_second, data.rate_trunk_port ,'now()', data.updated_by];
-            const res = await db.queryIBS(query,value);
-            return res.rows[0];
-      //  }
     } catch (error) {
-        return error;
-    }
-  },
-  updateRates: async function(data) {
-    console.log(data);
-    let updateData='';
-    try {
-      //  if(validateRateData()){
-          // create history   
-            const query=`INSERT INTO rate_ntt_history (company_code, date_start, date_expired, rate_setup, rate_second, 
-              rate_trunk_port, date_update, updated_by ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning company_code`;
-            const value= [ data.company_code, data.date_start, data.date_expired, data.rate_setup, 
-              data.rate_second, data.rate_trunk_port, 'now()', data.updated_by];
-            const res = await db.queryIBS(query,value);
-
-            // if(data.carrier_code){
-            //   updateData = 'carrier_code='+data.carrier_code+',';
-            // }
-            // if(data.carrier_name){
-            //   updateData = updateData +'carrier_name='+data.carrier_name+',';
-            // }
-
-            // if(data.call_sort){
-            //   updateData = updateData + 'call_sort='+data.call_sort+',';
-            // }
-
-            // if(data.date_start){
-            //   updateData = updateData + 'date_start='+data.date_start+',';
-            // }
-
-            // if(data.date_expired){
-            //   updateData = updateData + 'date_expired='+data.date_expired+',';
-            // }
-            if(data.rate_setup){
-              updateData = updateData + 'rate_setup='+data.rate_setup+',';
-            }
-            
-            if(data.rate_trunk_port){
-              updateData = updateData + 'rate_trunk_port='+data.rate_trunk_port+',';
-            }
-            
-            if(data.rate_second){
-              updateData = updateData+ 'rate_second='+data.rate_second+',';
-            }
-
-            if(data.deleted){
-              updateData = updateData +'deleted='+data.deleted+',';
-            }
-
-            if(data.updated_by){
-              updateData = updateData +'updated_by='+`'${data.updated_by}'`+',';
-            }
-
-            // remove ',' from last character
-            if(updateData.substr(updateData.length - 1)==','){
-              updateData = updateData.substring(0, updateData.length - 1);
-            }
-
-            const queryUpdate= `update rate_ntt set ${updateData} where  company_code='${data.company_code}'`;
-            const resUpdate = await db.queryIBS(queryUpdate,[]);
-
-            return resUpdate.rows[0];
-      //  }
-    } catch (error) {
-        return error;
+      throw new Error(error.message);
     }
   },
 
-  
+  create: async function (data) {
+    console.log("data is "+ JSON.stringify(data));
+    try {
+     
+      if(!data || !data.customer_cd || !data.rate_type || !data.serv_name){
+        throw new Error('invalid data');
+      }
+
+      const validateDataQuery = `select * from ntt_kddi_rate 
+      where customer_code ='${data.customer_cd}' and  serv_name ='${data.serv_name}' and rate_type = '${data.rate_type}'` ;
+      const validateDataQueryRes = await db.queryByokakin(validateDataQuery, []);
+
+      if(validateDataQueryRes && validateDataQueryRes.rows && validateDataQueryRes.rows.length> 0){
+        throw new Error('customer already registed..');
+      }
+
+      const query = `INSERT INTO ntt_kddi_rate (customer_code, serv_name, fixed_rate, mobile_rate, public_rate, 
+              ips_fixed_rate, ips_mobile_rate, ips_public_rate, start_date, end_date, fixed_billing_type, mobile_billing_type, public_billing_type,
+              date_added, date_modified,  added_by, modified_by, rate_type ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
+                $10, $11, $12, $13, $14, $15, $16 ,$17, $18  ) returning customer_code`;
+      const value = [data.customer_cd, data.serv_name, data.fixed_rate, data.mobile_rate,
+      data.public_rate, data.ips_fixed_rate, data.ips_mobile_rate, data.ips_public_rate, data.start_date, data.end_date,
+      data.fixed_billing_type, data.mobile_billing_type, data.public_billing_type, 'now()', 'now()', data.added_by,
+      data.modified_by, data.rate_type];
+      const res = await db.queryByokakin(query, value);
+      if (res.rows)
+        return res.rows[0];
+      else
+        throw new Error(res);
+      //  }
+    } catch (error) {
+      throw new Error(error);
+    }
+  },
+  updateRates: async function (data) {
+    console.log(data);
+    let updateData = '';
+    try {
+      const query = `INSERT INTO ntt_kddi_rate_history (customer_code, serv_name, fixed_rate, mobile_rate, public_rate, 
+              ips_fixed_rate, ips_mobile_rate, ips_public_rate, start_date, end_date, fixed_billing_type, mobile_billing_type, public_billing_type,
+              date_added, date_modified,  added_by, modified_by, rate_type ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
+                $10, $11, $12, $13, $14, $15, $16 ,$17, $18  ) returning customer_code`;
+
+      const value = [data.customer_code, data.serv_name, data.fixed_rate, data.mobile_rate,
+      data.public_rate, data.ips_fixed_rate, data.ips_mobile_rate, data.ips_public_rate, data.start_date, data.end_date,
+      data.fixed_billing_type, data.mobile_billing_type, data.public_billing_type, data.date_added, 'now()', data.added_by,
+      data.modified_by, data.rate_type];
+      const res = await db.queryByokakin(query, value);
+
+      if (data.fixed_rate) {
+        updateData = 'fixed_rate=' + data.fixed_rate + ',';
+      }
+      if (data.mobile_rate) {
+        updateData = updateData + 'mobile_rate=' + data.mobile_rate + ',';
+      }
+
+      if (data.public_rate) {
+        updateData = updateData + 'public_rate=' + data.public_rate + ',';
+      }
+
+      if (data.ips_fixed_rate) {
+        updateData = updateData + 'ips_fixed_rate=' + data.ips_fixed_rate + ',';
+      }
+
+      if (data.ips_mobile_rate) {
+        updateData = updateData + 'ips_mobile_rate=' + data.ips_mobile_rate + ',';
+
+      }
+
+      if (data.ips_public_rate) {
+        updateData = updateData + 'ips_public_rate=' + data.ips_public_rate + ',';
+      }
+
+      if (data.end_date) {
+        updateData = updateData + 'end_date=' + `'${data.end_date}'` + ',';
+      }
+
+      if (data.fixed_billing_type) {
+        updateData = updateData + 'fixed_billing_type=' + data.fixed_billing_type + ',';
+      }
+      if (data.mobile_billing_type) {
+        updateData = updateData + 'mobile_billing_type=' + data.mobile_billing_type + ',';
+      }
+      if (data.public_billing_type) {
+        updateData = updateData + 'public_billing_type=' + data.public_billing_type + ',';
+      }
+
+      if (data.modified_by) {
+        updateData = updateData + 'modified_by=' + `'${data.modified_by}'` + ',';
+      }
+
+      updateData = updateData + 'date_modified= now()';
+
+      const queryUpdate = `update ntt_kddi_rate set ${updateData} where  id='${data.id}'`;
+      const resUpdate = await db.queryByokakin(queryUpdate, []);
+      if (resUpdate.rows)
+        return resUpdate.rows[0];
+      else
+        throw new Error(resUpdate);
+      //  }
+    } catch (error) {
+      throw new Error(error);
+
+    }
+  },
+
+
 }

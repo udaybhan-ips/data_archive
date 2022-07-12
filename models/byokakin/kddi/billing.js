@@ -61,7 +61,10 @@ module.exports = {
   getKDDICompList: async function () {
 
     try {
-      const query = `select id, customer_code from kddi_customer where customer_code::int in (select  distinct(substring(split_part(bill_numb__c, '-',2),4))::int  as comp_code  from  kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY') ='04-2022') and deleted = false  order by customer_code::int `;
+      const query = `select id, customer_code from kddi_customer where customer_code::int in 
+      (select  distinct(substring(split_part(bill_numb__c, '-',2),4))::int  as comp_code  
+      from  kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY') ='04-2022') 
+      and deleted = false  order by customer_code::int `;
      // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getKDDICompListRes = await db.queryByokakin(query, []);
 

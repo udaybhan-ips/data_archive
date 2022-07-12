@@ -40,6 +40,7 @@ router.use('/v1', require('./apiv1/byokakin/kddi/rates.routes'));
 
 router.use('/v1', require('./apiv1/byokakin/ntt/kotehi.routes'));
 router.use('/v1', require('./apiv1/byokakin/ntt/summary.routes'));
+router.use('/v1', require('./apiv1/byokakin/ntt/rates.routes'));
 
 /**** NTT ORIX *****/
 

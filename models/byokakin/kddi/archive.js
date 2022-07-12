@@ -10,7 +10,7 @@ let ColumnSetContents = ['comp_acco__c', 'companyname', 'recordtype', 'account',
 let tableNameContents = { table: 'kddi_kotei_cdr_contents' };
 
 let ColumnSetInfini = ['servicecode', 'did', 'usednumber', 'cld', 'calldate', 'calltime', 'callduration', 'source', 'destination', 'terminaltype'];
-let tableNameInfini = { table: 'byokakin_kddi_infinidata_202204' };
+
 
 let ColumnSetKDDIRAW = ['did', 'freedialnum', 'cld', 'calldate', 'calltime', 'callduration', 'source', 'destination', 'callclassi', 'calltype', 'callcharge', 'customercode'];
 let tableNameKDDIRAW = { table: 'byokakin_kddi_raw_cdr_202204' };
@@ -67,11 +67,8 @@ module.exports = {
       const query = `select customer_name, customer_cd, id from m_customer `
       const getKDDICustomerList = await db.query(query, [], true);
       if(getKDDICustomerList && getKDDICustomerList.rows){
-        console.log("IF")
-        return getKDDICustomerList.rows;
-        
+        return getKDDICustomerList.rows;        
       }else{
-        console.log("ELSE")
         return 'Not found'
       }
       
@@ -355,6 +352,7 @@ module.exports = {
           const fileName = path.join(__dirname, `../kddi/CDR/${billingYear}${billingMonth}/Kotehi/${files[i]}`)
 
           let csvstream = fs.createReadStream(fileName)
+            .pipe(iconv.decodeStream("Shift_JIS"))
             .pipe(csv.parse())
             .on('data', async function (row) {
 
@@ -433,8 +431,8 @@ module.exports = {
             })
             .on('end', function () {
               insertByBatches(csvData);
-              //insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
-              //insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
+              insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
+              insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
             })
             .on('error', function (error) {
               console.log("Error" + error.message);
@@ -450,7 +448,7 @@ module.exports = {
   insertKDDIRAWData: async function (filesPathtest, billingYear, billingMonth) {
 
     let files = [];
-    let filesPath = path.join(__dirname, '../RAWCDR/202204');
+    let filesPath = path.join(__dirname, `../RAWCDR/${billingYear}${billingMonth}`);
     files = await readFilesName(filesPath);
     //console.log("actual path and name =" + (files));
 
@@ -464,7 +462,7 @@ module.exports = {
         console.log("file name ..." + files[i]);
 
         if (path.extname(files[i]).toLowerCase() == ".csv") {
-          fileName = path.join(__dirname, `../RAWCDR/202204/${files[i]}`)
+          fileName = path.join(__dirname, `../RAWCDR/${billingYear}${billingMonth}/${files[i]}`)
 
           await new Promise(resolve => setTimeout(resolve, 10000));
           let csvstream = fs.createReadStream(fileName)
