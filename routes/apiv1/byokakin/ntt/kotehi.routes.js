@@ -14,6 +14,9 @@ router.get('/byokakin/ntt/aServiceData',  NTTKotehiController.getNTTKotehiServic
 //router.get('/byokakin/ntt/aBasicCodeData',  NTTKotehiController.getNTTKotehiABasciData);
 router.get('/byokakin/ntt/freeAccountNumber',  NTTKotehiController.getNTTFreeAccountNumListDetails);
 router.get('/byokakin/ntt/freeDailNumber',  NTTKotehiController.getNTTFreeDialNumListDetails);
+
+router.get('/byokakin/ntt/NNumberList',  NTTKotehiController.getNTT_N_NumList);
+
 //router.get('/byokakin/ntt/a',  NTTKotehiController.getNTTKotehiABasciServiceData);
 router.get('/byokakin/ntt/customerList',  NTTKotehiController.getNTTCustomer);
 router.post('/byokakin/ntt/processedData',  NTTKotehiController.getNTTKotehiProcessedData);

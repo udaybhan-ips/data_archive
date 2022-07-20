@@ -51,7 +51,7 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main 
+      const query = `select distinct(company_code) as company_code from billcdr_main
        order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;

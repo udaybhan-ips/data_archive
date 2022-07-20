@@ -71,7 +71,9 @@ create table byokakin_kddi_raw_cdr_202203 (cdrid serial, did varchar(30), freedi
 
 update ntt_kddi_freedial_c set free_numb__c ='0120984958' where length(free_numb__c) =14
 update ntt_kddi_freedial_c set free_numb__c= '036361094'    where   length(free_numb__c) =15;
- update ntt_kddi_freedial_c set free_numb__c=RIGHT(free_numb__c, 10)  where   length(free_numb__c) =16;
+ update ntt_kddi_freedial_c set free_numb__c=RIGHT(free_numb__c, 10)  where   length(free_numb__c) =16 and data_idno not in ('55325', '56467', '56471', '57095', '59927');
+ update ntt_kddi_freedial_c set free_numb__c= LEFT(free_numb__c, 10)  where   length(free_numb__c) =16 ;
+ 
  update ntt_kddi_freedial_c set free_numb__c= LEFT(free_numb__c, 10) where   length(free_numb__c) =17 and  data_idno !='58253'
  update ntt_kddi_freedial_c set free_numb__c='0120500778'  where   data_idno ='58253';
 

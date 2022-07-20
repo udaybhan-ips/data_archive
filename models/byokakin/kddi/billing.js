@@ -195,7 +195,8 @@ module.exports = {
   genrateInvoice: async function (company_code, billingYear, billingMonth) {
     try {
 
-      let path = __dirname + `\\Invoice\\${company_code}${billingYear}${billingMonth}.pdf`;
+    //  let path = __dirname + `\\Invoice\\${company_code}${billingYear}${billingMonth}.pdf`;
+      let path = path.join(__dirname, `../kddi/data/${billingYear}${billingMonth}/Invoice/${company_code}${billingYear}${billingMonth}.pdf`);
 
       const invoiceData = await getInvoiceData(company_code, billingYear, billingMonth);
       const customerAddress = await getCustomerInfo(company_code);

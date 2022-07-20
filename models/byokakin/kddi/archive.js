@@ -340,7 +340,7 @@ module.exports = {
     console.log("111" + __dirname);
 
     let files = [];
-    let filesPath = path.join(__dirname, `../kddi/CDR/${billingYear}${billingMonth}/Kotehi`);
+    let filesPath = path.join(__dirname, `../kddi/data/${billingYear}${billingMonth}/Kotehi`);
     files = await readFilesName(filesPath);
     try {
       for (let i = 0; i < files.length; i++) {
@@ -349,7 +349,7 @@ module.exports = {
         let csvInfiniData = [];
 
         if (path.extname(files[i]).toLowerCase() == ".csv") {
-          const fileName = path.join(__dirname, `../kddi/CDR/${billingYear}${billingMonth}/Kotehi/${files[i]}`)
+          const fileName = path.join(__dirname, `../kddi/data/${billingYear}${billingMonth}/Kotehi/${files[i]}`)
 
           let csvstream = fs.createReadStream(fileName)
             .pipe(iconv.decodeStream("Shift_JIS"))
@@ -448,7 +448,7 @@ module.exports = {
   insertKDDIRAWData: async function (filesPathtest, billingYear, billingMonth) {
 
     let files = [];
-    let filesPath = path.join(__dirname, `../RAWCDR/${billingYear}${billingMonth}`);
+    let filesPath = path.join(__dirname, `../kddi/data/${billingYear}${billingMonth}/RAW_CDR`);
     files = await readFilesName(filesPath);
     //console.log("actual path and name =" + (files));
 
@@ -462,7 +462,7 @@ module.exports = {
         console.log("file name ..." + files[i]);
 
         if (path.extname(files[i]).toLowerCase() == ".csv") {
-          fileName = path.join(__dirname, `../RAWCDR/${billingYear}${billingMonth}/${files[i]}`)
+          fileName = path.join(__dirname, `../kddi/data/${billingYear}${billingMonth}/RAW_CDR/${files[i]}`)
 
           await new Promise(resolve => setTimeout(resolve, 10000));
           let csvstream = fs.createReadStream(fileName)

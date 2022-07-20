@@ -47,6 +47,11 @@ router.use('/v1', require('./apiv1/byokakin/ntt/rates.routes'));
 router.use('/v1', require('./apiv1/byokakin/ntt_orix/kotehi.routes'));
 router.use('/v1', require('./apiv1/byokakin/ntt_orix/summary.routes'));
 
+/**** Free Dail Number *****/
+
+router.use('/v1', require('./apiv1/byokakin/free_dial/freeNumber.routes'));
+
+
 
 /** 03 numbers  details **/
 

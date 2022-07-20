@@ -5,18 +5,14 @@ const utility = require("../../../public/javascripts/utility")
 
 
 let ColumnSetNTTKoteihi = ['did', 'carrier', 'service_name', 'amount', 'taxclassification', 'dailydisplay', 'date_added'];
-let tableNameNTTKoteihi = { table: 'byokakin_ntt_koteihi_202203' };
-let ColumnSetNTTKoteihiCDR = ['companyname', 'comp_acco__c', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'hiwarihyouji', 'datebill', 'linkedcdrid'];
-let tableNameNTTKoteihiCDR = { table: 'ntt_koteihi_cdr' };
-let ColumnSetNTTKoteihiCDRBILL = ['cdrid', 'bill_code', 'comp_acco__c', 'bill_count', 'companyname', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'datebill'];
-let tableNameNTTKoteihiCDRBILL = { table: 'ntt_koteihi_cdr_bill' };
-
-
+let ColumnSetNTTKoteihiCDR = ['companyname', 'comp_acco__c', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 
+'hiwarihyouji', 'datebill', 'linkedcdrid'];
+let ColumnSetNTTKoteihiCDRBILL = ['cdrid', 'bill_code', 'comp_acco__c', 'bill_count', 'companyname', 'kaisenbango', 'riyougaisya',
+ 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'datebill'];
 let ColumnSetNTTInbound = ['customername', 'did', 'calldate', 'calltime', 'callduration', 'callcharge', 'callcount104',
   'freedialnum', 'source', 'division', 'terminaltype', 'carriertype'];
-
 let ColumnSetNTTOutbound = ['customername', 'parentdid', 'calltype', 'calldate', 'calltime', 'cld', 'destination', 'callduration',
-  'callcharge', 'callcount104', 'did','carriertype'];
+  'callcharge', 'callcount104', 'did', 'carriertype'];
 
 
 
@@ -65,7 +61,7 @@ module.exports = {
   getCustomerList: async function () {
     try {
       const query = `select customer_name, customer_cd, id from m_customer order by customer_cd `
-      const getCustomerList = await db.queryIBS(query, []);
+      const getCustomerList = await db.query(query, [], true);
       return getCustomerList.rows;
     } catch (e) {
       console.log("err in get kddi company list=" + e.message);
@@ -81,6 +77,21 @@ module.exports = {
     } catch (e) {
       console.log("err in get ntt free dial number list=" + e.message);
       return e;
+    }
+  },
+
+  getNTT_N_NumList: async function () {
+    try {
+      const query = `select id as data_idno, n_number as free_numb__c from ntt_n_number`
+      const getNTT_N_NumListRes = await db.queryByokakin(query, []);
+      if(getNTT_N_NumListRes.rows)
+        return getNTT_N_NumListRes.rows;
+      else 
+        throw new Error(getNTT_N_NumListRes);
+    } catch (e) {
+      console.log("err in get ntt free dial number list=" + e.message);
+      throw new Error(e.message)
+      
     }
   },
 
@@ -121,8 +132,6 @@ module.exports = {
       return e;
     }
   },
-
-
   getNTTKotehiLastMonthProcessedData: async function ({ year, month, comp_code }) {
     try {
 
@@ -313,50 +322,60 @@ module.exports = {
     }
   },
 
-  insertNTTKotehiData: async function (filePath, fileName, billingYear, billingMonth) {
+  insertNTTKotehiData: async function (filePath1, fileName1, billingYear, billingMonth, carrierName) {
 
     try {
 
-      let csvData = [];
-      let DID = null;
-      let carrier = null;
-      let csvstream = fs.createReadStream('000145702_回線番号別内訳料金_202204_1.csv')
-        .pipe(iconv.decodeStream("Shift_JIS"))
-        .pipe(csv.parse())
-        .on('data', async function (row) {
-          let obj = {};
-          csvstream.pause();
-          let tmpDID = row[0] != null ? row[0].trim() : null;
-          let tmpCarrier = row[1] != null ? row[1].trim() : null;
+      let files = [];
+      let filesPath = path.join(__dirname, `../ntt/data/${carrierName}/${billingYear}${billingMonth}/Kotehi`);
+      files = await readFilesName(filesPath);
 
-          if (tmpDID != null && tmpDID != "") {
-            if (tmpDID.indexOf("合計") == -1) {
-              DID = tmpDID;
+      for (let i = 0; i < files.length; i++) {
+
+        let csvData = [];
+        let DID = null;
+        let carrier = null;
+        let fileName = path.join(__dirname, `../ntt/data/${carrierName}/${billingYear}${billingMonth}/Kotehi/${files[i]}`)
+
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        let csvstream = fs.createReadStream(fileName)
+          .pipe(iconv.decodeStream("Shift_JIS"))
+          .pipe(csv.parse())
+          .on('data', async function (row) {
+            let obj = {};
+            csvstream.pause();
+            let tmpDID = row[0] != null ? row[0].trim() : null;
+            let tmpCarrier = row[1] != null ? row[1].trim() : null;
+
+            if (tmpDID != null && tmpDID != "") {
+              if (tmpDID.indexOf("合計") == -1) {
+                DID = tmpDID;
+              }
+            } else if (tmpCarrier != null && tmpCarrier != "") {
+              if (tmpCarrier.indexOf("合計") == -1) {
+                carrier = tmpCarrier;
+              }
+            } else {
+              if (row[3] != null && row[3].trim() != "") {
+                obj['did'] = DID;
+                obj['carrier'] = carrier;
+                obj['service_name'] = row[2];
+                obj['amount'] = row[3].trim().replaceAll(",", "");
+                obj['taxclassification'] = row[4];
+                obj['date_added'] = `${billingYear}-${billingMonth}-01`;
+                obj['dailydisplay'] = row[5].trim();
+                csvData.push(obj);
+              }
             }
-          } else if (tmpCarrier != null && tmpCarrier != "") {
-            if (tmpCarrier.indexOf("合計") == -1) {
-              carrier = tmpCarrier;
-            }
-          } else {
-            if (row[3] != null && row[3].trim() != "") {
-              obj['did'] = DID;
-              obj['carrier'] = carrier;
-              obj['service_name'] = row[2];
-              obj['amount'] = row[3].trim().replaceAll(",", "");
-              obj['taxclassification'] = row[4];
-              obj['date_added'] = `${billingYear}-${billingMonth}-01`;
-              obj['dailydisplay'] = row[5].trim();
-              csvData.push(obj);
-            }
-          }
-          csvstream.resume();
-        })
-        .on('end', function () {
-          insertByBatches(csvData, 'ntt_koteihi', billingYear, billingMonth);
-        })
-        .on('error', function (error) {
-          console.log("Error" + error.message);
-        });
+            csvstream.resume();
+          })
+          .on('end', function () {
+            insertByBatches(csvData, 'ntt_koteihi', billingYear, billingMonth);
+          })
+          .on('error', function (error) {
+            console.log("Error" + error.message);
+          });
+      }
       //  return csvData;
     } catch (error) {
       console.log("Error" + error.message);
@@ -367,9 +386,9 @@ module.exports = {
   insertNTTRAWData: async function (filesPathtest, billingYear, billingMonth, carrier) {
 
     let files = [];
-    let filesPath = path.join(__dirname, `../ntt/CDR/${carrier}/202204`);
+    let filesPath = path.join(__dirname, `../ntt/data/${carrier}/${billingYear}${billingMonth}/RAWCDR`);
     files = await readFilesName(filesPath);
-    let fileType = carrier=='NTT'? '.txt' : '.csv' ;
+    let fileType = carrier == 'NTT' ? '.txt' : '.csv';
 
     //console.log("actual path and name =" + (files));
 
@@ -383,8 +402,8 @@ module.exports = {
         let csvDataInbound = [], csvDataOutbound = [], fileName = '';
         console.log("file name ..." + files[i]);
 
-        if (path.extname(files[i]).toLowerCase() == fileType ) {
-          fileName = path.join(__dirname, `../ntt/CDR/${carrier}/202204/${files[i]}`)
+        if (path.extname(files[i]).toLowerCase() == fileType) {
+          fileName = path.join(__dirname, `../ntt/data/${carrier}/${billingYear}${billingMonth}/RAW_CDR/${files[i]}`)
 
           await new Promise(resolve => setTimeout(resolve, 10000));
           let csvstream = fs.createReadStream(fileName)
@@ -394,23 +413,23 @@ module.exports = {
             .on('data', function (row) {
               let obj = {};
               let obj1 = {};
-              
 
-              if (row[0].trim() != "組織計" && row[0].trim() != "合計" && row[1].trim() != "電話番号計" ) {
+
+              if (row[0].trim() != "組織計" && row[0].trim() != "合計" && row[1].trim() != "電話番号計") {
 
                 let recordType = row[2].trim();
                 let parentDID = row[1].trim();
-                let cdrDate = null; 
+                let cdrDate = null;
                 let cdrChargeStr = row[8].replace("\\", "").replaceAll(",", "")
                 parentDID = parentDID.replace("(", "").replace(")", "").replaceAll("-", "");
 
                 let tempDate = row[3].trim();
-	        			if(carrier == 'NTTORIX') {
-	        				tempDate = tempDate.replace("月", "/").replace("日", "/");
-	        			}
-	        			
-	        			// Format CDR date
-	        			cdrDate = `${billingYear}/${tempDate}`;
+                if (carrier == 'NTTORIX') {
+                  tempDate = tempDate.replace("月", "/").replace("日", "/");
+                }
+
+                // Format CDR date
+                cdrDate = `${billingYear}/${tempDate}`;
 
 
                 if (recordType == 'フリーダイヤル') {
@@ -419,7 +438,6 @@ module.exports = {
                     || parentDID == '0354912097' || parentDID == '05038511863') {
                     terminaltype = 'その他';
                   }
-
                   obj['customername'] = row[0].trim();
                   obj['did'] = parentDID;
                   obj['calldate'] = cdrDate;
@@ -432,17 +450,14 @@ module.exports = {
                   obj['source'] = row[18].trim();
                   obj['division'] = row[19].trim();
                   obj['carriertype'] = carrier;
-                
-
-
                   csvDataInbound.push(obj);
                   csvstream.resume();
                 } else {
                   let DID = ''
                   let tempRecord = row[13].trim().replaceAll("-", "");
 
-                  if ((excludedNumberList.includes(tempRecord) && recordType == 'INS') || 
-                  (recordType == 'VoIP' && excludedNumberList.includes(parentDID))) {
+                  if ((excludedNumberList.includes(tempRecord) && recordType == 'INS') ||
+                    (recordType == 'VoIP' && excludedNumberList.includes(parentDID))) {
                     // csvstream.resume(); nothing to do
                   } else {
                     if (recordType == 'VoIP') {
@@ -473,15 +488,15 @@ module.exports = {
 
                   csvstream.resume();
                 }
-              }else{
-              //  console.log("Invalid data"+JSON.stringify(row))
+              } else {
+                //  console.log("Invalid data"+JSON.stringify(row))
               }
             })
             .on('end', function () {
               //csvDataInbound.shift();
               csvDataOutbound.shift();
               const res = insertByBatches(csvDataInbound, 'RAWCDR_INB', billingYear, billingMonth);
-             const resOut = insertByBatches(csvDataOutbound, 'RAWCDR_OUT', billingYear, billingMonth);
+              const resOut = insertByBatches(csvDataOutbound, 'RAWCDR_OUT', billingYear, billingMonth);
               resData.push(res);
             })
           console.log("res.." + resData.length);
@@ -513,8 +528,10 @@ async function insertByBatches(records, type, billingYear, billingMonth) {
 
   for (let i = 0; i < chunkArray.length; i++) {
     if (type === 'ntt_koteihi') {
+      let tableNameNTTKoteihi = { table: `byokakin_ntt_koteihi_${billingYear}${billingMonth}` };
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTKoteihi, tableNameNTTKoteihi);
     } else if (type === 'ntt_koteihi_charge') {
+      let tableNameNTTKoteihiCDR = { table: 'ntt_koteihi_cdr' };
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTKoteihiCDR, tableNameNTTKoteihiCDR);
 
     } else if (type === 'RAWCDR_INB') {
@@ -530,6 +547,7 @@ async function insertByBatches(records, type, billingYear, billingMonth) {
     }
 
     else if (type == 'ntt_koteihi_cdr_bill') {
+      let tableNameNTTKoteihiCDRBILL = { table: 'ntt_koteihi_cdr_bill' };
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTKoteihiCDRBILL, tableNameNTTKoteihiCDRBILL);
     }
     else {

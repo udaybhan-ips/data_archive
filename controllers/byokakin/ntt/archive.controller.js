@@ -3,7 +3,7 @@ module.exports = {
 
   uploadKotehiNTT: async function (req, res) {
     try {
-      const billingMonth = "03";
+      const billingMonth = "06";
       const billingYear ="2022";
       
       const carrier = 'NTT';
@@ -23,7 +23,7 @@ module.exports = {
   NTTKotehiCharge: async function(req, res){
 
     try{
-      const billingMonth = "04";
+      const billingMonth = "06";
       const billingYear ="2022";
       
       const resNTTFreeDialNumList = await ArchiveNTT.getNTTFreeDialNumList();
@@ -34,8 +34,7 @@ module.exports = {
       console.log("NTT Kotehi Charge Done ...")
 
     }catch(err){
-      console.log("Error is "+err);
-      
+      console.log("Error is "+err);      
     }
 
   },
@@ -80,6 +79,26 @@ module.exports = {
       });
     }
   },
+  
+
+  async getNTT_N_NumList(req, res) {
+    try {
+      const [getNTT_N_NumListRes, getNTT_N_NumListErr] = await handleError(ArchiveNTT.getNTT_N_NumList(req.body));
+      if (getNTT_N_NumListErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: getNTT_N_NumListErr.message
+        });
+      }
+      return res.status(200).json(getNTT_N_NumListRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
 
   async getNTTFreeDialNumListDetails(req, res) {
     try {
