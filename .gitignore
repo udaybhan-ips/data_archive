@@ -5,5 +5,7 @@ temp
 *.CSV
 *.txt
 *.pdf
+*.ttf
+*.otf
 .vscode/
 -
