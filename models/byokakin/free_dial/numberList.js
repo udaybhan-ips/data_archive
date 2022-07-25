@@ -18,8 +18,20 @@ module.exports = {
          }
 
          if(free_dial_numbers){
-            where += ` free_numb__c = '${free_dial_numbers}'`;
+
+            let freeDialNumberArr = free_dial_numbers.split(",");
+            let freeDialNumbers = "";
+            let length = freeDialNumberArr.length -1 ;
+            freeDialNumberArr.forEach((e, index)=>{
+                if(length == index ){
+                    freeDialNumbers += `'${e.trim()}'`; 
+                }else{
+                    freeDialNumbers += `'${e.trim()}',`; 
+                }            
+            })
+            where += ` free_numb__c in  (${freeDialNumbers}) `;
          }
+
 
 
          let lastThree = where.slice(where.length - 3);
@@ -30,7 +42,7 @@ module.exports = {
          
           const query=`select * from ntt_kddi_freedial_c_tmp ${where} `;
 
-          console.log("query.."+query)
+        //  console.log("query.."+query)
 
           const summaryRes= await db.queryByokakin(query,[]);
           
@@ -68,22 +80,53 @@ module.exports = {
   }
 },
 
-addFreeDialNumberList: async function({data}) {
+addFreeDialNumberList: async function(data) {
 
     try {
-        //console.log("data.."+ JSON.stringify(data))
-        if(param.customer_cd == undefined || param.customer_cd == '' || ids.length <=0 ){
+        console.log("data.."+ JSON.stringify(data))
+        if(data.comp_code == undefined || data.comp_code == '' || data.free_dial_numbers == undefined || data.free_dial_numbers == ''){
             return new Error('Invalid request');
         }
 
-      const query=`update ntt_kddi_freedial_c_tmp set cust_code__c='${param.customer_cd}', upda_name__c='${updatedBy}', 
-      used_star__c='${param.modified_date}', date_upda__c=now() , rema_info__c='${remark}' where id in (${ids.toString()}) `;
-      const summaryRes= await db.queryByokakin(query,[]);
-      
-      if(summaryRes.rows){
-          return (summaryRes.rows);              
-      }
-      throw new Error('not found')
+        let freeDialNumberArr = data.free_dial_numbers.split(",");
+        let freeDialNumbers = "";
+        let length = freeDialNumberArr.length -1 ;
+        freeDialNumberArr.forEach((e, index)=>{
+            if(length == index ){
+                freeDialNumbers += `'${e.trim()}'`; 
+            }else{
+                freeDialNumbers += `'${e.trim()}',`; 
+            }            
+        })
+
+
+        const searchQuery = `select * from ntt_kddi_freedial_c_tmp where cust_code__c='${data.comp_code}' AND 
+        free_numb__c in (${freeDialNumbers}) and carr_comp__c='${data.carrier}' `;
+        console.log("searchQuery.."+ (searchQuery))
+
+        const searchRes = await db.queryByokakin(searchQuery);
+        if(searchRes && searchRes.rows && searchRes.rows.length >0){
+            throw  new Error("This number number already there... Please go search page!")
+        }
+
+
+        let insertQuery = "";
+        let res = [];
+
+        for(let i= 0; i< freeDialNumberArr.length; i++){
+            insertQuery = `insert into ntt_kddi_freedial_c_tmp (cust_code__c, carr_comp__c, free_numb__c, regi_name__c, 
+                 cust_code, used_star__c, rema_info__c, date_regi__c) Values 
+                ('${data.comp_code}','${data.carrier}','${freeDialNumberArr[i]}', '${data.updatedBy}','${parseInt(data.comp_code)}'
+                ,'${data.start_date}','${data.remark}',now()) returning id`;
+            
+            const insertRes = await db.queryByokakin(insertQuery,[]);      
+              
+            if(insertRes && insertRes.rows && insertRes.rows.length>0){
+               res.push(insertRes.rows[0].id)
+            }                
+        }
+
+        return res;
 
   } catch (error) {
         console.log("error in getting free dial number list"+error.message)

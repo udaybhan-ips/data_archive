@@ -43,7 +43,6 @@ module.exports = {
     try {
         const [freeNumListRes,freeNumListErr] = await handleError(NumberListByokakin.addFreeDialNumberList(req.body));
         if(freeNumListErr) {
-
              return res.status(500).json({
               message: freeNumListErr.message
             });  
