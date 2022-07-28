@@ -65,6 +65,8 @@ module.exports = {
             return new Error('Invalid request');
         }
 
+        
+
       const query=`update ntt_kddi_freedial_c_tmp set cust_code__c='${param.customer_cd}', upda_name__c='${updatedBy}', 
       used_star__c='${param.modified_date}', date_upda__c=now() , rema_info__c='${remark}' where id in (${ids.toString()}) `;
       const summaryRes= await db.queryByokakin(query,[]);
@@ -100,7 +102,7 @@ addFreeDialNumberList: async function(data) {
         })
 
 
-        const searchQuery = `select * from ntt_kddi_freedial_c_tmp where cust_code__c='${data.comp_code}' AND 
+        const searchQuery = `select * from ntt_kddi_freedial_c_tmp where 
         free_numb__c in (${freeDialNumbers}) and carr_comp__c='${data.carrier}' `;
         console.log("searchQuery.."+ (searchQuery))
 

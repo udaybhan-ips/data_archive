@@ -51,6 +51,10 @@ router.use('/v1', require('./apiv1/byokakin/ntt_orix/summary.routes'));
 
 router.use('/v1', require('./apiv1/byokakin/free_dial/freeNumber.routes'));
 
+/**** manage customer list *****/
+
+router.use('/v1', require('./apiv1/byokakin/byokakin_customer/manageCustomer.routes'));
+
 
 
 /** 03 numbers  details **/

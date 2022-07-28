@@ -5,7 +5,7 @@ var db = require('./../../config/database');
 module.exports = {
   findAll: function() {
     return new Promise(function(resolve, reject) {
-      db.query('select id, customer_cd, customer_name, address, staff_name from  m_customer where is_deleted=false order by customer_cd desc ', [],ipsPortal=true)
+      db.query(`select id, customer_cd, customer_name, address, staff_name, service_type ->> 'kddi_customer' as kddi_customer,  service_type ->> 'ntt_customer' as ntt_customer, service_type ->> 'ntt_orix_customer' as ntt_orix_customer  from  m_customer where is_deleted=false order by customer_cd desc `, [],ipsPortal=true)
         .then(function(results) {
           resolve(results.rows);
         })
