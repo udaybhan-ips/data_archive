@@ -51,10 +51,15 @@ router.use('/v1', require('./apiv1/byokakin/ntt_orix/summary.routes'));
 
 router.use('/v1', require('./apiv1/byokakin/free_dial/freeNumber.routes'));
 
+/********** Additional Kotehi configuration */
+
+router.use('/v1', require('./apiv1/byokakin/addi_kotehi_info/addiKotehiInfo.routes'));
+
 /**** manage customer list *****/
 
 router.use('/v1', require('./apiv1/byokakin/byokakin_customer/manageCustomer.routes'));
 
+/**** Byokakin End ******/
 
 
 /** 03 numbers  details **/

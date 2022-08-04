@@ -44,13 +44,21 @@ module.exports = {
     console.log("summary");
   
     try {
+
+        let landLineRate = '0.06';
+        let mobileRate = '0.115';
+
+        if(customer_id == '00001226'){
+           landLineRate = '0.0005';
+           mobileRate = '0.0015';
+        }
         
         const getSummaryData=`select sum( case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then 1 else 0 end) as mobile_count,
         sum( case when ( left(sonus_egcallednumber,2)='70' OR  left(sonus_egcallednumber,2)='80' OR left(sonus_egcallednumber,2)='90' ) then 0 else 1 end) as landline_count,
         sum( case when ( left(sonus_egcallednumber,2)='70' OR  left(sonus_egcallednumber,2)='80' OR left(sonus_egcallednumber,2)='90' ) then duration else 0 end) as mobile_duration,
         sum( case when ( left(sonus_egcallednumber,2)='70' OR  left(sonus_egcallednumber,2)='80' OR left(sonus_egcallednumber,2)='90' ) then 0 else duration end) as landline_duration,
-        sum( case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then duration*0.115 else 0 end) as mob_amount,
-        sum( case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then 0 else duration*0.06 end) as landline_amount,
+        sum( case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then duration*${mobileRate} else 0 end) as mob_amount,
+        sum( case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then 0 else duration*${landLineRate} end) as landline_amount,
         billing_comp_code, billing_comp_name from cdr_sonus_outbound
         where to_char(start_time, 'MM-YYYY') = '${month}-${year}' and billing_comp_code='${customer_id}' and billing_comp_name='${customer_name}'
          group by billing_comp_code,billing_comp_name` ;

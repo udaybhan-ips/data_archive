@@ -551,9 +551,9 @@ module.exports = {
             let emailTO = `${customerInfo['mail_address']}`;
             let emailCC = `${customerInfo['east_link_address']}`;
 
-             // emailTO = 'uday@ipsism.co.jp';
+          //    emailTO = 'uday@ipspro.co.jp';
              // emailCC = 'uday@ipsism.co.jp';
-             // emailCC = 'y_ito@ipsism.co.jp';
+            //  emailCC = 'y_ito@ipspro.co.jp';
 
             if (!emailTO) {
                 emailTO = "uday@ipspro.co.jp";

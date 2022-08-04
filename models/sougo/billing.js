@@ -414,7 +414,7 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
         paymentDueDate = `${currentYear}/10/31`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
-      paymentDueDate = `${currentYear}/08/01`;
+      paymentDueDate = `${currentYear}/08/31`;
     }
 
   await generateHeader(address, doc, totalCallAmount);
@@ -475,7 +475,7 @@ function genrateAccountInfo(doc, y) {
     .moveDown()
     .text("普通預金　0019761")
     .moveDown()
-    .text("株式会社アイピーエス")
+    .text("株式会社アイ・ピー・エス・プロ")
     .moveDown()
     .moveDown()
     .moveDown()
@@ -511,9 +511,9 @@ async function generateHeader(customerDetails, doc, totalCallAmount) {
     .text(`${person_incharge}`, 65, 65)
     .text(`${person_incharge_1}`, 65, 78)
 
-    .text("株式会社アイ・ピー・エス", 10, 110, { align: "right" })
-    .text("〒104－0045", 10, 123, { align: "right" })
-    .text("東京都中央区築地4-1-1東劇ビル8階", 10, 136, { align: "right" })
+    .text("株式会社アイ・ピー・エス・プロ", 10, 110, { align: "right" })
+    .text("〒104-0061", 10, 123, { align: "right" })
+    .text("東京都中央区銀座4-12-15 歌舞伎座タワー8F", 10, 136, { align: "right" })
     .text("TEL : 03-3549-7626", 10, 149, { align: "right" })
     .text("FAX : 03-3545-7331", 10, 162, { align: "right" })
 

@@ -43,7 +43,8 @@ module.exports = {
 
   getNTTCustomer: async function () {
     try {
-      const query = `select m_cus.* from (select id, customer_cd, customer_name, address, staff_name from  m_customer where is_deleted=false)as m_cus join (select * from ntt_customer where deleted=false) as ntt_cus on ( m_cus.customer_cd::int = ntt_cus.customer_code::int) order by m_cus.customer_cd desc`;
+      const query = `select id, customer_cd, customer_name, address, staff_name from  m_customer 
+      where is_deleted=false and service_type ->> 'ntt_customer' ='true' order by customer_cd desc`;
       const NTTCustomerListRes = await db.query(query, [], true);
       // console.log(targetDateRes);
       if (NTTCustomerListRes.rows) {
