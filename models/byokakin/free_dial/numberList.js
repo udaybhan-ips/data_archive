@@ -62,7 +62,7 @@ module.exports = {
     try {
         //console.log("data.."+ JSON.stringify(data))
         if(param.customer_cd == undefined || param.customer_cd == '' || ids.length <=0 ){
-            return new Error('Invalid request');
+            throw new Error('Invalid request');
         }
 
         
@@ -87,7 +87,7 @@ addFreeDialNumberList: async function(data) {
     try {
         console.log("data.."+ JSON.stringify(data))
         if(data.comp_code == undefined || data.comp_code == '' || data.free_dial_numbers == undefined || data.free_dial_numbers == ''){
-            return new Error('Invalid request');
+            throw new Error('Invalid request');
         }
 
         let freeDialNumberArr = data.free_dial_numbers.split(",");

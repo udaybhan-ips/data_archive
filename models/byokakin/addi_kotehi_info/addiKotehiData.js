@@ -1,46 +1,10 @@
 var db = require('../../../config/database');
 
 module.exports = {
-    getAddiKotehiInfo: async function({free_dial_numbers, carrier, comp_code}) {
+    getAddiKotehiInfo: async function() {
 
         try {
-         let where  = " WHERE ";
-          if((comp_code =='' || comp_code ==undefined ) && (carrier =='' || carrier == undefined) &&  (free_dial_numbers =='' || free_dial_numbers == undefined)) {
-            throw new Error ('Invalid serach request');
-         }
-
-         if(comp_code){
-            where += `cust_code__c = '${comp_code}' AND`;
-         }
-
-         if(carrier){
-            where += ` carr_comp__c = '${carrier}' AND`;
-         }
-
-         if(free_dial_numbers){
-
-            let freeDialNumberArr = free_dial_numbers.split(",");
-            let freeDialNumbers = "";
-            let length = freeDialNumberArr.length -1 ;
-            freeDialNumberArr.forEach((e, index)=>{
-                if(length == index ){
-                    freeDialNumbers += `'${e.trim()}'`; 
-                }else{
-                    freeDialNumbers += `'${e.trim()}',`; 
-                }            
-            })
-            where += ` free_numb__c in  (${freeDialNumbers}) `;
-         }
-
-
-
-         let lastThree = where.slice(where.length - 3);
-
-         if(lastThree === 'AND') {
-            where = where.substring(0, where.length-3)
-         }
-         
-          const query=`select * from ntt_kddi_freedial_c_tmp ${where} `;
+          const query=`select * from ntt_kddi_additional_kotehi_detail where deleted=false `;
 
         //  console.log("query.."+query)
 
@@ -52,23 +16,27 @@ module.exports = {
           throw new Error('not found')
 
       } catch (error) {
-            console.log("error in getting free dial number list"+error.message)
+            console.log("error in getting ntt kddi additional kotehi configuration!"+error.message)
             throw new Error(error.message)
       }
   },
 
-  updateAddiKotehiInfo: async function({param, ids, updatedBy, remark}) {
+  updateAddiKotehiInfo: async function(param) {
 
     try {
-        //console.log("data.."+ JSON.stringify(data))
-        if(param.customer_cd == undefined || param.customer_cd == '' || ids.length <=0 ){
-            return new Error('Invalid request');
+        console.log("data.."+ JSON.stringify(param))
+        let carrier_amount =0 , ips_amount = 0 ; 
+        if(param.carrier_amount !==null && param.carrier_amount !== undefined && param.carrier_amount !=='' ){
+            carrier_amount = param.carrier_amount;
         }
-
         
+        if(param.ips_amount !== null && param.ips_amount !== undefined && param.ips_amount !==''){
+            ips_amount = param.ips_amount;
+        }
+        
+      const query=`update ntt_kddi_additional_kotehi_detail set carrier_amount='${carrier_amount}', ips_amount='${ips_amount}', 
+      modified_by='${param.updatedBy}', modified_date=now() , deleted=${param.deleted} where id = ${param.id} `;
 
-      const query=`update ntt_kddi_freedial_c_tmp set cust_code__c='${param.customer_cd}', upda_name__c='${updatedBy}', 
-      used_star__c='${param.modified_date}', date_upda__c=now() , rema_info__c='${remark}' where id in (${ids.toString()}) `;
       const summaryRes= await db.queryByokakin(query,[]);
       
       if(summaryRes.rows){
@@ -77,7 +45,7 @@ module.exports = {
       throw new Error('not found')
 
   } catch (error) {
-        console.log("error in getting free dial number list"+error.message)
+        console.log("error in getting adding updating kotehi info.."+error.message)
         throw new Error(error.message)
   }
 },
@@ -85,44 +53,45 @@ module.exports = {
 addAddiKotehiInfo: async function(data) {
 
     try {
-        console.log("data.."+ JSON.stringify(data))
-        if(data.comp_code == undefined || data.comp_code == '' || data.free_dial_numbers == undefined || data.free_dial_numbers == ''){
-            return new Error('Invalid request');
+
+    
+        console.log("data here.."+ JSON.stringify(data))
+        if(data.comp_code == undefined || data.comp_code == '' || data.d_fd_n_number == undefined || data.d_fd_n_number == '' || data.carrier == '' || data.carrier == undefined){
+            throw new Error('Invalid request');
         }
 
-        let addAddiKotehiNumber = addAddiKotehiNumber.trim();
+        let d_fd_n_number = data.d_fd_n_number.trim();
+        let carrier_amount =0 , ips_amount = 0 ; 
         
+        if(data.carrier_amount !==null && data.carrier_amount !== undefined && data.carrier_amount !=='' ){
+            carrier_amount = data.carrier_amount;
+        }
+        
+        if(data.ips_amount !== null && data.ips_amount !== undefined && data.ips_amount !==''){
+            ips_amount = data.ips_amount;
+        }
 
-        const searchQuery = `select * from ntt_kddi_freedial_c_tmp where 
-        free_numb__c in (${freeDialNumbers}) and carr_comp__c='${data.carrier}' `;
+        const searchQuery = `select * from ntt_kddi_additional_kotehi_detail where 
+        d_fd_n_number = '${d_fd_n_number}'  and carrier='${data.carrier}' and customer_cd= '${data.comp_code}' and deleted = false`;
         console.log("searchQuery.."+ (searchQuery))
 
         const searchRes = await db.queryByokakin(searchQuery);
         if(searchRes && searchRes.rows && searchRes.rows.length >0){
-            throw  new Error("This number number already there... Please go search page!")
+            throw  new Error("This number number already there, so you can update that number!!")
         }
 
 
-        let insertQuery = "";
-        let res = [];
-
-        for(let i= 0; i< freeDialNumberArr.length; i++){
-            insertQuery = `insert into ntt_kddi_freedial_c_tmp (cust_code__c, carr_comp__c, free_numb__c, regi_name__c, 
-                 cust_code, used_star__c, rema_info__c, date_regi__c) Values 
-                ('${data.comp_code}','${data.carrier}','${freeDialNumberArr[i]}', '${data.updatedBy}','${parseInt(data.comp_code)}'
-                ,'${data.start_date}','${data.remark}',now()) returning id`;
+        const insertQuery = `insert into ntt_kddi_additional_kotehi_detail (customer_cd, customer_name, carrier, d_fd_n_number, 
+                 stop_date, added_by, date_added, modified_by, modified_date, product_name, carrier_amount, ips_amount) Values 
+                ('${data.comp_code}','${data.compName}','${data.carrier}','${d_fd_n_number}', 
+                '3000-01-01','${data.added_by}',now(), '${data.modified_by}', now(), '${data.product_name.trim()}', ${carrier_amount}, ${ips_amount} ) returning id`;
             
-            const insertRes = await db.queryByokakin(insertQuery,[]);      
-              
-            if(insertRes && insertRes.rows && insertRes.rows.length>0){
-               res.push(insertRes.rows[0].id)
-            }                
-        }
-
-        return res;
+        const insertRes = await db.queryByokakin(insertQuery,[]);      
+    
+        return insertRes.rowCount;
 
   } catch (error) {
-        console.log("error in getting free dial number list"+error.message)
+        console.log("error in getting adding additional kotehi info..."+error.message)
         throw new Error(error.message)
   }
 },

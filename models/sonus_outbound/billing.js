@@ -49,8 +49,8 @@ module.exports = {
         let mobileRate = '0.115';
 
         if(customer_id == '00001226'){
-           landLineRate = '0.0005';
-           mobileRate = '0.0015';
+           landLineRate = '0.05';
+           mobileRate = '0.15';
         }
         
         const getSummaryData=`select sum( case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then 1 else 0 end) as mobile_count,
