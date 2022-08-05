@@ -1,10 +1,16 @@
 var db = require('../../../config/database');
 
 module.exports = {
-    getAddiKotehiInfo: async function() {
+    getAddiKotehiInfo: async function(data) {
 
         try {
-          const query=`select * from ntt_kddi_additional_kotehi_detail where deleted=false `;
+
+            let carrierWhere = "";
+            if(data.carrier!=='' && data.carrier!==undefined && data.carrier!==null){
+              carrierWhere = `and carrier = '${data.carrier}'`;
+            }
+
+          const query=`select * from ntt_kddi_additional_kotehi_detail where deleted=false ${carrierWhere}`;
 
         //  console.log("query.."+query)
 

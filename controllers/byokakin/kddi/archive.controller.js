@@ -263,6 +263,25 @@ module.exports = {
     }
   },
 
+  async getAdditionalKotehiData(req, res) {
+    try {
+      const [getAdditionalKotehiDataRes, getAdditionalKotehiDataErr] = await handleError(ArchiveKDDI.getAdditionalKotehiData(req.body));
+      if (getAdditionalKotehiDataErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: getAdditionalKotehiDataErr.message
+        });
+      }
+      return res.status(200).json(getAdditionalKotehiDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+  
+
   async getKDDICustomer(req, res) {
     try {
       const [getKDDICustomerRes, getKDDICustomerErr] = await handleError(ArchiveKDDI.getKDDICustomer(req.body));

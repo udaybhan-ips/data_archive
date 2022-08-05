@@ -129,6 +129,25 @@ module.exports = {
       return e;
     }
   },
+
+  getAdditionalKotehiData: async function (data) {
+    try {
+      let carrierWhere = "";
+      if(data.carrier!=='' && data.carrier!==undefined && data.carrier!==null){
+        carrierWhere = `and carrier = '${data.carrier}'`;
+      }
+      const query = ` SELECT * from ntt_kddi_additional_kotehi_detail where deleted = false ${carrierWhere} `;
+      const getAdditionalKotehiDataRes = await db.queryByokakin(query, []);
+      if(getAdditionalKotehiDataRes && getAdditionalKotehiDataRes.rows)
+      return getAdditionalKotehiDataRes.rows;
+      else
+        throw new Error(getAdditionalKotehiDataRes);
+    } catch (e) {
+      console.log("err in get kddi free account number list=" + e.message);
+      throw new Error(e.message);
+    }
+  },
+
   getKDDIKotehiData: async function ({ year, month, comCode }) {
     try {
       let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
