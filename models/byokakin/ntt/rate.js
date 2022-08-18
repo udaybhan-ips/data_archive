@@ -23,12 +23,12 @@ module.exports = {
     console.log("data is "+ JSON.stringify(data));
     try {
      
-      if(!data || !data.customer_cd || !data.rate_type || !data.serv_name){
+      if(!data || !data.customer_cd  || !data.serv_name){
         throw new Error('invalid data');
       }
 
       const validateDataQuery = `select * from ntt_kddi_rate 
-      where customer_code ='${data.customer_cd}' and  serv_name ='${data.serv_name}' and rate_type = '${data.rate_type}'` ;
+      where customer_code ='${data.customer_cd}' and  serv_name ='${data.serv_name}' ` ;
       const validateDataQueryRes = await db.queryByokakin(validateDataQuery, []);
 
       if(validateDataQueryRes && validateDataQueryRes.rows && validateDataQueryRes.rows.length> 0){
@@ -37,12 +37,12 @@ module.exports = {
 
       const query = `INSERT INTO ntt_kddi_rate (customer_code, serv_name, fixed_rate, mobile_rate, public_rate, 
               ips_fixed_rate, ips_mobile_rate, ips_public_rate, start_date, end_date, fixed_billing_type, mobile_billing_type, public_billing_type,
-              date_added, date_modified,  added_by, modified_by, rate_type ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
-                $10, $11, $12, $13, $14, $15, $16 ,$17, $18  ) returning customer_code`;
+              date_added, date_modified,  added_by, modified_by ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
+                $10, $11, $12, $13, $14, $15, $16 ,$17  ) returning customer_code`;
       const value = [data.customer_cd, data.serv_name, data.fixed_rate, data.mobile_rate,
       data.public_rate, data.ips_fixed_rate, data.ips_mobile_rate, data.ips_public_rate, data.start_date, data.end_date,
       data.fixed_billing_type, data.mobile_billing_type, data.public_billing_type, 'now()', 'now()', data.added_by,
-      data.modified_by, data.rate_type];
+      data.modified_by];
       const res = await db.queryByokakin(query, value);
       if (res.rows)
         return res.rows[0];

@@ -4,7 +4,7 @@ const iconv = require('iconv-lite');
 const utility = require("../../../public/javascripts/utility")
 
 
-let ColumnSetNTTKoteihi = ['did', 'carrier', 'service_name', 'amount', 'taxclassification', 'dailydisplay', 'date_added'];
+let ColumnSetNTTKoteihi = ['did', 'carrier','carrier_name', 'service_name', 'amount', 'taxclassification', 'dailydisplay', 'date_added'];
 let ColumnSetNTTKoteihiCDR = ['companyname', 'comp_acco__c', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 
 'hiwarihyouji', 'datebill', 'linkedcdrid'];
 let ColumnSetNTTKoteihiCDRBILL = ['cdrid', 'bill_code', 'comp_acco__c', 'bill_count', 'companyname', 'kaisenbango', 'riyougaisya',
@@ -166,6 +166,9 @@ module.exports = {
     try {
       console.log("year, month .." + year, month);
       const query = ` select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  sum (kingaku) as amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_code, '-',2),4) `;
+
+      console.log("query..."+query)
+
       const getNTTKotehiProcessedDataRes = await db.queryByokakin(query, []);
       return getNTTKotehiProcessedDataRes.rows;
     } catch (e) {
@@ -360,6 +363,7 @@ module.exports = {
               if (row[3] != null && row[3].trim() != "") {
                 obj['did'] = DID;
                 obj['carrier'] = carrier;
+                obj['carrier_name'] = carrierName;
                 obj['service_name'] = row[2];
                 obj['amount'] = row[3].trim().replaceAll(",", "");
                 obj['taxclassification'] = row[4];

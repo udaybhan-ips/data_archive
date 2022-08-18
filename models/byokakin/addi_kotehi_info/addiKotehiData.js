@@ -10,7 +10,10 @@ module.exports = {
               carrierWhere = `and carrier = '${data.carrier}'`;
             }
 
-          const query=`select * from ntt_kddi_additional_kotehi_detail where deleted=false ${carrierWhere}`;
+          const query=`select id, customer_cd, customer_name, carrier, d_fd_n_number, start_date, stop_date , added_by, date_added, 
+          case when modified_by='undefined' then '' else modified_by end  as modified_by , modified_date, 
+          ips_amount, carrier_amount, product_name from  ntt_kddi_additional_kotehi_detail 
+          where deleted=false ${carrierWhere} order by  customer_cd` ;
 
         //  console.log("query.."+query)
 
@@ -62,7 +65,8 @@ addAddiKotehiInfo: async function(data) {
 
     
         console.log("data here.."+ JSON.stringify(data))
-        if(data.comp_code == undefined || data.comp_code == '' || data.d_fd_n_number == undefined || data.d_fd_n_number == '' || data.carrier == '' || data.carrier == undefined){
+
+        if(data.comp_code == undefined || data.comp_code == '' ||  data.carrier == '' || data.carrier == undefined){
             throw new Error('Invalid request');
         }
 
@@ -78,7 +82,8 @@ addAddiKotehiInfo: async function(data) {
         }
 
         const searchQuery = `select * from ntt_kddi_additional_kotehi_detail where 
-        d_fd_n_number = '${d_fd_n_number}'  and carrier='${data.carrier}' and customer_cd= '${data.comp_code}' and deleted = false`;
+        d_fd_n_number = '${d_fd_n_number}' and product_name='${data.product_name.trim()}' 
+        and carrier='${data.carrier}' and customer_cd= '${data.comp_code}' and deleted = false`;
         console.log("searchQuery.."+ (searchQuery))
 
         const searchRes = await db.queryByokakin(searchQuery);

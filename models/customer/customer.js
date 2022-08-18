@@ -1,222 +1,167 @@
-const e = require('express');
-var Promise = require('promise');
+var config = require('./../../config/config');
 var db = require('./../../config/database');
+var KDDIRate = require('../byokakin/kddi/rate');
+var NTTIRate = require('../byokakin/ntt/rate');
 
 module.exports = {
-  findAll: function() {
-    return new Promise(function(resolve, reject) {
-      db.query(`select id, customer_cd, customer_name, address, staff_name, service_type ->> 'kddi_customer' as kddi_customer,  service_type ->> 'ntt_customer' as ntt_customer, service_type ->> 'ntt_orix_customer' as ntt_orix_customer  from  m_customer where is_deleted=false order by customer_cd desc `, [],ipsPortal=true)
-        .then(function(results) {
-          resolve(results.rows);
-        })
-        .catch(function(err) {
-          reject(err);
-        });
-    });
-  },
+  findAll: async function () {
+    try {
+      
+      const query = `select id, customer_cd, customer_name, post_number, email, tel_number,upd_id, upd_date, address, staff_name, 
+      service_type ->> 'kddi_customer' as kddi_customer,  service_type ->> 'ntt_customer' as ntt_customer, 
+      service_type ->> 'ntt_orix_customer' as ntt_orix_customer, service_type  from  m_customer_tmp 
+      where is_deleted=false order by customer_cd desc`;
 
-  findOne: function(data) {
-    return new Promise(function(resolve, reject) {
-      if (!data.id && !data.customer_code) {
-        reject('error: must provide id or customer code')
+      const companyList = await db.query(query, [], true);
+      if (companyList && companyList.rows) {
+        return companyList.rows;
       }
       else {
-        if (data.id) {
-          findOneById(data.id)
-            .then(function(result) {
-              resolve(result);
-            })
-            .catch(function(err) {
-              reject(err);
-            });
-        }
-        else if (data.customer_code) {
-          findOneByCustomerCode(data.customer_code)
-            .then(function(result) {
-              resolve(result);
-            })
-            .catch(function(err) {
-              reject(err);
-            });
-        }
+        throw new Error(companyList)
       }
-    });
-  },
 
-  create: function(data) {
-    //console.log(data);
-    return new Promise(function(resolve, reject) {
-      
-      validateUserData(data)
-        .then(function(hash) {      
-          genrateCustomerCode()
-          .then(function(customer_cd){
-            if(!customer_cd){
-              reject('error while generating customer code');
-            }
-            let insertQuery = 'INSERT INTO m_customer (customer_cd, customer_name, address, tel_number, email, staff_name, logo, upd_date, post_number, fax_number) VALUES ($1, $2, $3,$4, $5, $6,$7, $8, $9,$10) returning id';
-            let dataArr = [customer_cd, data.customer_name, data.address, data.tel_number, data.email, data.staff_name, data.logo, 'now()' , data.post_number, data.fax_number];
-            insertNewCustomer(insertQuery, dataArr, data)
-            .then(function(data){
-                if(data){
-                  console.log(JSON.stringify(data));
-                  return db.query('INSERT INTO sonus_outbound_rates (customer_id, landline, mobile, date_added, updated_by) VALUES ($1, $2, $3,$4, $5) returning id',
-                  [customer_cd, data.landline_rate, data.mobile_rate, 'now()', data.updated_by],ipsPortal=true)
-                }
-                resolve('addded 1');
-          })        
-          resolve('addded 2');
-        }) 
-          resolve('addded3');
-        })
-        
-        .catch(function(err) {
-          reject(err);
-        });
-    });
-  },
-
-  delete: function(data) {
-
-    //console.log("date="+JSON.stringify(data));
-
-    return new Promise(function(resolve, reject) {
-      db.query('update m_customer set is_deleted = true WHERE id = $1 returning id', [data.id],ipsPortal=true)
-        .then(function(result) {
-          resolve(result.rows[0]);
-        })
-        .catch(function(err) {
-          reject(err);
-        });
-    });
-  },
-
-  listUsers: function() {
-
-    //console.log("date="+JSON.stringify(data));
-
-    return new Promise(function(resolve, reject) {
-      db.query('select id, name, email_id from users order by email_id', [],ipsPortal=true)
-        .then(function(result) {
-          resolve(result.rows);
-        })
-        .catch(function(err) {
-          reject(err);
-        });
-    });
-  },
-
-  
-  updateCustomerInfo: function(data) {
-    return new Promise(function(resolve, reject) {
-      if (!data.id || !data.customer_code) {
-        reject('error: id and/or customer code missing')
-      }
-      else {
-        db.query('UPDATE users SET name = $2 WHERE id = $1 returning name', [data.id, data.name])
-          .then(function(result) {
-            resolve(result.rows[0]);
-          })
-          .catch(function(err) {
-            reject(err);
-          });
-      }
-    });
-  },
-
- };
-
-function findOneById(id) {
-  return new Promise(function(resolve, reject) {
-    db.query('SELECT * FROM m_customer WHERE id = $1 and is_deleted=false', [id], ipsPortal=true)
-      .then(function(result) {
-        if (result.rows[0]) {
-          resolve(result.rows[0]);
-        }
-        else {
-          reject('no customer found')
-        }
-      })
-      .catch(function(err) {
-        reject(err);
-      });
-  });
-}
-
-function findOneByCustomerCode(customer_code) {
-  return new Promise(function(resolve, reject) {
-    db.query('SELECT * FROM m_customer WHERE customer_cd = $1 and is_deleted=false', [customer_code],ipsPortal=true)
-      .then(function(result) {
-        if (result.rows[0]) {
-          resolve(result.rows[0]);
-        }
-        else {
-          reject('no customer found')
-        }
-      })
-      .catch(function(err) {
-        reject(err);
-      });
-  });
-}
-
-
-function validateUserData(data) {
- 
-  console.log("add customer");
-  console.log(data);
-
-  return new Promise(function(resolve, reject) {
-
-    if ( !data.customer_name || !data.address || !data.service_type) {     
-      if(data.service_type=='sonus_outbound'){
-        if(!data.trunk_port || !data.mobile_rate || !data.landline_rate){
-          reject('trunk port and/or mobile rate and/or landline rate missing');  
-        }else{
-          resolve();
-        }
-      }else{
-        reject('customer code and/or customer name and/or service type  and/or address missing');
-      } 
-      
+    } catch (error) {
+      throw new Error(error.message);
     }
-    else {
-      resolve();
-    }    
-  });
-}
+  },
 
-function insertNewCustomer(query, dataArr,data){
-  return new Promise(function(resolve, reject) {
-    return db.query(query,dataArr,ipsPortal=true)
-      .then(function(result) {
-        if (result.rows[0]) {
-          resolve(data);        
+  create: async function (data) {
+    console.log("data is "+ JSON.stringify(data));
+    try {
+     
+      if(!data || !data.customer_name ){
+        throw new Error('invalid data');
+      }
+
+       let getLastCustomerCodeQuery = `SELECT customer_cd FROM m_customer_tmp order by customer_cd desc limit 1` ;
+       let getLastCustomerCodeRes = await db.query(getLastCustomerCodeQuery,[], true);
+
+       if(getLastCustomerCodeRes.rows.length <=0 ){
+        throw new Error('Error while genrateing customer code');
+       }
+
+       let customer_cd = getLastCustomerCodeRes.rows[0]['customer_cd'];
+       customer_cd = parseInt(customer_cd,10) + 1 ;
+       customer_cd = customer_cd.toString().padStart(8,'0');
+              
+              
+      const query = `INSERT INTO m_customer_tmp (customer_cd, customer_name, address, tel_number, email, staff_name, 
+        logo, upd_id, upd_date, post_number, fax_number, pay_type, 
+         service_type ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
+                $10, $11, $12, $13 ) returning customer_cd`;
+      const value = [customer_cd, data.customer_name, data.address, data.tel_number,
+      data.email, data.staff_name, data.logo, data.upd_id, 'now()' , data.post_number,
+      data.fax_number, data.pay_type, JSON.stringify(data.service_type)];
+      const res = await db.query(query, value, true);
+      if (res.rows){
+        if(data.service_type && data.service_type.kddi_customer == true){
+          const rateData = {...data.kddi_customer, customer_cd, serv_name:'KDDI'};
+         const res = await KDDIRate.create(rateData);
+         if(!res.rows){
+          throw new Error(res);
+         }         
         }
-      })
-      .catch(function(err) {
-        reject(err);
-      });
-  });
-}
+        
+        if(data.service_type && data.service_type.ntt_customer == true){
+          const rateData = {...data.kddi_customer, customer_cd, serv_name:'NTT'};
+         const res = await NTTRate.create(rateData);
+         if(!res.rows){
+          throw new Error(res);
+         }         
+        }
+        return res.rows[0];
+      }
+      else
+        throw new Error(res);
+      //  }
+    } catch (error) {
+      throw new Error(error);
+    }
+  },
 
+  updateCustomerInfo: async function (data) {
+    console.log(data);
+    let updateData = '';
+    try {
+      const query = `INSERT INTO m_customer_history (customer_cd, customer_name, address, tel_number, email, staff_name, 
+        logo, upd_id, upd_date, post_number, fax_number, pay_type, 
+        is_deleted, service_type ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
+                $10, $11, $12, $13, $14, $15 ) returning customer_cd`;
 
-function genrateCustomerCode() {
-  return new Promise(function(resolve, reject) {
-    db.query('SELECT customer_cd FROM m_customer order by id desc limit 1',[],ipsPortal=true)
-      .then(function(result) {
-        if (result.rows[0]) {
-          let customer_cd = result.rows[0]['customer_cd'];
-          customer_cd = parseInt(customer_cd,10);
-          customer_cd = customer_cd+1;
-          customer_cd = customer_cd.toString().padStart(8,'0');
-          resolve(customer_cd);
-        }else{
-          reject('error in genrating customer code');
-        }                        
-      })
-      .catch(function(err) {
-        reject(err);
-      });
-  });
+                const value = [data.customer_cd, data.customer_name, data.address, data.tel_number,
+                  data.email, data.staff_name, data.logo, data.upd_id, 'now()' , data.post_number,
+                  data.fax_number, data.pay_type, data.is_deleted, JSON.stringify(data.service_type)];
+
+      const res = await db.query(query, value, true);
+
+      if (data.customer_name) {
+        updateData = `customer_name= '${data.customer_name }',`;
+      }
+      if (data.address) {
+        updateData = updateData + `address= '${data.address}',`;
+      }
+
+      if (data.tel_number) {
+        updateData = updateData + `tel_number= '${data.tel_number}',`;
+      }
+
+      if (data.email) {
+        updateData = updateData + `email= '${data.email}',`;
+      }
+
+      if (data.staff_name) {
+        updateData = updateData + `staff_name= '${data.staff_name}',`;
+
+      }
+
+      if (data.upd_id) {
+        updateData = updateData + `upd_id= '${data.upd_id}',`;
+      }
+
+      if (data.post_number) {
+        updateData = updateData + `post_number= '${data.post_number}',`;
+      }
+
+      if (data.fax_number) {
+        updateData = updateData + `fax_number= '${data.fax_number}',`;
+      }
+      if (data.is_deleted) {
+        updateData = updateData + 'is_deleted=' + data.is_deleted + ',';
+      }
+      if (data.service_type) {
+        updateData = updateData + `service_type ='${JSON.stringify(data.service_type)}',`;
+      }
+
+      updateData = updateData + 'upd_date= now()';
+
+      const queryUpdate = `update m_customer_tmp set ${updateData} where  id='${data.id}'`;
+
+      console.log("queryUpdate..."+queryUpdate)
+
+      const resUpdate = await db.query(queryUpdate, [], true);
+      if (resUpdate.rows)
+        return resUpdate.rows[0];
+      else
+        throw new Error(resUpdate);
+      //  }
+    } catch (error) {
+      throw new Error(error);
+
+    }
+  },
+  listUsers: async function() {
+    try{
+      let query = `select id, name, email_id from users order by email_id`;
+      let res = await db.query(query, [], true);
+
+      if(res && res.rows && res.rows.length > 0){
+        return res.rows;
+      }
+      throw new Error(res);
+    }catch(error){
+      console.log("Error in getting user list..."+error.message);
+      throw new Error(error.message);
+    }
+  },
+
 }

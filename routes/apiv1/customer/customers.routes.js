@@ -9,7 +9,7 @@ router.post('/customer/addCustomer', customerController.createUser);
 // router.put('/users/:id/password', usersController.changePassword);
 // router.put('/users/:id/email', usersController.changeEmail);
 router.post('/customer/deleteCustomer', customerController.deleteUser);
-
+router.post('/customer/updateCustomerInfo', customerController.udpateCustomerInfo);
 router.get('/customer/users_list',  customerController.listUsers);
 
 

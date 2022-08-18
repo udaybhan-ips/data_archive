@@ -13,7 +13,7 @@ let ColumnSetInfini = ['servicecode', 'did', 'usednumber', 'cld', 'calldate', 'c
 
 
 let ColumnSetKDDIRAW = ['did', 'freedialnum', 'cld', 'calldate', 'calltime', 'callduration', 'source', 'destination', 'callclassi', 'calltype', 'callcharge', 'customercode'];
-let tableNameKDDIRAW = { table: 'byokakin_kddi_raw_cdr_202204' };
+let tableNameKDDIRAW = { table: 'byokakin_kddi_raw_cdr_202207' };
 
 let ColumnSetKDDIBillDetail = ['bill_numb__c', 'bill_start__c', 'cdrtype', 'cdrid', 'cdrcnt', 'account', 'servicename', 'productname', 'taxinclude', 'amount', 'comp_acco__c'];
 let tableNameKDDIBillDetail = { table: 'kddi_kotei_bill_details' };
@@ -450,7 +450,7 @@ module.exports = {
             .on('end', function () {
               insertByBatches(csvData);
               insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
-              insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
+              //insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
             })
             .on('error', function (error) {
               console.log("Error" + error.message);

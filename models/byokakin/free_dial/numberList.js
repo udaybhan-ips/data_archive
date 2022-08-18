@@ -40,7 +40,7 @@ module.exports = {
             where = where.substring(0, where.length-3)
          }
          
-          const query=`select * from ntt_kddi_freedial_c_tmp ${where} `;
+          const query=`select * from ntt_kddi_freedial_c ${where} `;
 
         //  console.log("query.."+query)
 
@@ -67,7 +67,7 @@ module.exports = {
 
         
 
-      const query=`update ntt_kddi_freedial_c_tmp set cust_code__c='${param.customer_cd}', upda_name__c='${updatedBy}', 
+      const query=`update ntt_kddi_freedial_c set cust_code__c='${param.customer_cd}', upda_name__c='${updatedBy}', 
       used_star__c='${param.modified_date}', date_upda__c=now() , rema_info__c='${remark}' where id in (${ids.toString()}) `;
       const summaryRes= await db.queryByokakin(query,[]);
       
@@ -102,7 +102,7 @@ addFreeDialNumberList: async function(data) {
         })
 
 
-        const searchQuery = `select * from ntt_kddi_freedial_c_tmp where 
+        const searchQuery = `select * from ntt_kddi_freedial_c where 
         free_numb__c in (${freeDialNumbers}) and carr_comp__c='${data.carrier}' `;
         console.log("searchQuery.."+ (searchQuery))
 
@@ -116,7 +116,7 @@ addFreeDialNumberList: async function(data) {
         let res = [];
 
         for(let i= 0; i< freeDialNumberArr.length; i++){
-            insertQuery = `insert into ntt_kddi_freedial_c_tmp (cust_code__c, carr_comp__c, free_numb__c, regi_name__c, 
+            insertQuery = `insert into ntt_kddi_freedial_c (cust_code__c, carr_comp__c, free_numb__c, regi_name__c, 
                  cust_code, used_star__c, rema_info__c, date_regi__c) Values 
                 ('${data.comp_code}','${data.carrier}','${freeDialNumberArr[i]}', '${data.updatedBy}','${parseInt(data.comp_code)}'
                 ,'${data.start_date}','${data.remark}',now()) returning id`;

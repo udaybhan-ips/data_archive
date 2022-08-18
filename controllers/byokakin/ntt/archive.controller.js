@@ -3,11 +3,9 @@ module.exports = {
 
   uploadKotehiNTT: async function (req, res) {
     try {
-      const billingMonth = "06";
+      const billingMonth = "07";
       const billingYear ="2022";
-      
       const carrier = 'NTT';
-
       console.log("here")
       const resNTTKotehiData = await ArchiveNTT.insertNTTKotehiData("filePath", "fileName", billingYear, billingMonth, carrier);
       console.log("Done ...")
@@ -23,7 +21,7 @@ module.exports = {
   NTTKotehiCharge: async function(req, res){
 
     try{
-      const billingMonth = "06";
+      const billingMonth = "07";
       const billingYear ="2022";
       
       const resNTTFreeDialNumList = await ArchiveNTT.getNTTFreeDialNumList();
