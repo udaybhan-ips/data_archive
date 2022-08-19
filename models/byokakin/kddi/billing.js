@@ -13,8 +13,7 @@ module.exports = {
 
   getRates: async function (customer_id) {
     try {
-      const query = `select  * from ntt_kddi_charge_c where customercode__c::int ='${customer_id}'  and edat_fini__c::date >  now()::date 
-       and serv_name__c ='KDDI' and dist_rang_from__c='0' and dist_rang_to__c ='0' `;
+      const query = `select  * from ntt_kddi_rate where customer_code ='${customer_id}'  and end_date::date >  now()::date and serv_name ='KDDI' limit 1`;
 
       const ratesRes = await db.queryByokakin(query, []);
       if (ratesRes.rows) {
@@ -61,12 +60,10 @@ module.exports = {
   getKDDICompList: async function () {
 
     try {
-      const query = `select id, customer_code from kddi_customer where customer_code::int in 
-      (select  distinct(substring(split_part(bill_numb__c, '-',2),4))::int  as comp_code  
-      from  kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY') ='04-2022') 
-      and deleted = false  order by customer_code::int `;
+      const query = `select id, customer_cd as customer_code from m_customer 
+      where is_deleted = false and service_type ->> 'kddi_customer'  = 'true' order by customer_code`;
      // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
-      const getKDDICompListRes = await db.queryByokakin(query, []);
+      const getKDDICompListRes = await db.query(query, [], true);
 
       if (getKDDICompListRes.rows) {
         return (getKDDICompListRes.rows);

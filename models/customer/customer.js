@@ -1,12 +1,12 @@
 var config = require('./../../config/config');
 var db = require('./../../config/database');
 var KDDIRate = require('../byokakin/kddi/rate');
-var NTTIRate = require('../byokakin/ntt/rate');
+var NTTRate = require('../byokakin/ntt/rate');
 
 module.exports = {
   findAll: async function () {
     try {
-      
+
       const query = `select id, customer_cd, customer_name, post_number, email, tel_number,upd_id, upd_date, address, staff_name, 
       service_type ->> 'kddi_customer' as kddi_customer,  service_type ->> 'ntt_customer' as ntt_customer, 
       service_type ->> 'ntt_orix_customer' as ntt_orix_customer, service_type  from  m_customer_tmp 
@@ -26,50 +26,53 @@ module.exports = {
   },
 
   create: async function (data) {
-    console.log("data is "+ JSON.stringify(data));
+    console.log("data is " + JSON.stringify(data));
     try {
-     
-      if(!data || !data.customer_name ){
+
+      if (!data || !data.customer_name) {
         throw new Error('invalid data');
       }
 
-       let getLastCustomerCodeQuery = `SELECT customer_cd FROM m_customer_tmp order by customer_cd desc limit 1` ;
-       let getLastCustomerCodeRes = await db.query(getLastCustomerCodeQuery,[], true);
+      let getLastCustomerCodeQuery = `SELECT customer_cd FROM m_customer_tmp order by customer_cd desc limit 1`;
+      let getLastCustomerCodeRes = await db.query(getLastCustomerCodeQuery, [], true);
 
-       if(getLastCustomerCodeRes.rows.length <=0 ){
+      if (getLastCustomerCodeRes.rows.length <= 0) {
         throw new Error('Error while genrateing customer code');
-       }
+      }
 
-       let customer_cd = getLastCustomerCodeRes.rows[0]['customer_cd'];
-       customer_cd = parseInt(customer_cd,10) + 1 ;
-       customer_cd = customer_cd.toString().padStart(8,'0');
-              
-              
+      let customer_cd = getLastCustomerCodeRes.rows[0]['customer_cd'];
+      customer_cd = parseInt(customer_cd, 10) + 1;
+      customer_cd = customer_cd.toString().padStart(8, '0');
+
+
       const query = `INSERT INTO m_customer_tmp (customer_cd, customer_name, address, tel_number, email, staff_name, 
         logo, upd_id, upd_date, post_number, fax_number, pay_type, 
          service_type ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
                 $10, $11, $12, $13 ) returning customer_cd`;
       const value = [customer_cd, data.customer_name, data.address, data.tel_number,
-      data.email, data.staff_name, data.logo, data.upd_id, 'now()' , data.post_number,
-      data.fax_number, data.pay_type, JSON.stringify(data.service_type)];
+        data.email, data.staff_name, data.logo, data.upd_id, 'now()', data.post_number,
+        data.fax_number, data.pay_type, JSON.stringify(data.service_type)];
       const res = await db.query(query, value, true);
-      if (res.rows){
-        if(data.service_type && data.service_type.kddi_customer == true){
-          const rateData = {...data.kddi_customer, customer_cd, serv_name:'KDDI'};
-         const res = await KDDIRate.create(rateData);
-         if(!res.rows){
-          throw new Error(res);
-         }         
+      if (res.rows) {
+
+        if (data.service_type && data.service_type.kddi_customer && data.service_type.kddi_customer == true) {
+          const rateData = { ...data.kddi_customer, customer_cd, serv_name: 'KDDI' };
+          const res = await KDDIRate.create(rateData);
+          if (res && res.length <=0) {
+            throw new Error(res);
+          }
         }
-        
-        if(data.service_type && data.service_type.ntt_customer == true){
-          const rateData = {...data.kddi_customer, customer_cd, serv_name:'NTT'};
-         const res = await NTTRate.create(rateData);
-         if(!res.rows){
-          throw new Error(res);
-         }         
+
+
+
+        if (data.service_type && data.service_type.ntt_customer && data.service_type.ntt_customer == true) {
+          const rateData = { ...data.ntt_customer, customer_cd, serv_name: 'NTT' };
+          const res = await NTTRate.create(rateData);
+          if (res && res.length <=0) {
+            throw new Error(res);
+          }
         }
-        return res.rows[0];
+        return {'res':'insert success'};
       }
       else
         throw new Error(res);
@@ -88,14 +91,14 @@ module.exports = {
         is_deleted, service_type ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
                 $10, $11, $12, $13, $14, $15 ) returning customer_cd`;
 
-                const value = [data.customer_cd, data.customer_name, data.address, data.tel_number,
-                  data.email, data.staff_name, data.logo, data.upd_id, 'now()' , data.post_number,
-                  data.fax_number, data.pay_type, data.is_deleted, JSON.stringify(data.service_type)];
+      const value = [data.customer_cd, data.customer_name, data.address, data.tel_number,
+      data.email, data.staff_name, data.logo, data.upd_id, 'now()', data.post_number,
+      data.fax_number, data.pay_type, data.is_deleted, JSON.stringify(data.service_type)];
 
       const res = await db.query(query, value, true);
 
       if (data.customer_name) {
-        updateData = `customer_name= '${data.customer_name }',`;
+        updateData = `customer_name= '${data.customer_name}',`;
       }
       if (data.address) {
         updateData = updateData + `address= '${data.address}',`;
@@ -136,7 +139,7 @@ module.exports = {
 
       const queryUpdate = `update m_customer_tmp set ${updateData} where  id='${data.id}'`;
 
-      console.log("queryUpdate..."+queryUpdate)
+      console.log("queryUpdate..." + queryUpdate)
 
       const resUpdate = await db.query(queryUpdate, [], true);
       if (resUpdate.rows)
@@ -149,17 +152,17 @@ module.exports = {
 
     }
   },
-  listUsers: async function() {
-    try{
+  listUsers: async function () {
+    try {
       let query = `select id, name, email_id from users order by email_id`;
       let res = await db.query(query, [], true);
 
-      if(res && res.rows && res.rows.length > 0){
+      if (res && res.rows && res.rows.length > 0) {
         return res.rows;
       }
       throw new Error(res);
-    }catch(error){
-      console.log("Error in getting user list..."+error.message);
+    } catch (error) {
+      console.log("Error in getting user list..." + error.message);
       throw new Error(error.message);
     }
   },
