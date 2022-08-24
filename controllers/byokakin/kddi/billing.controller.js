@@ -36,6 +36,11 @@ module.exports = {
           throw new Error('Could not fetch Rates details');
         }
 
+        if(ratesDetails.length <=0){
+          console.log("Rates are not defined for this company..");
+          
+        }
+
         const [getOutboundRAWCDRRes, getOutboundRAWCDRError] = await handleError(BillingByokakin.getKDDIOutboundRAWData(billingYear, billingMonth, getKDDICompListRes[i]['customer_code']));
         if (getOutboundRAWCDRError) {
           throw new Error('Could not fetch outbound RAW cdr details');
@@ -44,14 +49,11 @@ module.exports = {
         const [createDetailsRes, createDetailsErr] = await handleError(BillingByokakin.insertProcessedDataByBatches('OUTBOUND', getOutboundRAWCDRRes, ratesDetails, getKDDICompListRes[i]['customer_code'], billingYear, billingMonth ));
         if (createDetailsErr) {
           throw new Error('Error while creating summary data ' + createDetailsErr);
-        }
+       }
 
         // inbound data processing
 
-        const [ratesInbDetails, ratesInbErr] = await handleError(BillingByokakin.getInboundRates(getKDDICompListRes[i]['customer_code']));
-        if (ratesInbErr) {
-          throw new Error('Could not fetch Rates details');
-        }
+       
 
         const [getInboundRAWCDRRes, getInboundRAWCDRError] = await handleError(BillingByokakin.getKDDIRAWInboundData(billingYear, billingMonth, getKDDICompListRes[i]['customer_code']));
         if (getInboundRAWCDRError) {
@@ -59,7 +61,7 @@ module.exports = {
         }
 
 
-        const [createDetailsInboundRes, createDetailsInboundErr] = await handleError(BillingByokakin.insertProcessedDataByBatches('INBOUND', getInboundRAWCDRRes, ratesInbDetails, getKDDICompListRes[i]['customer_code'], billingYear, billingMonth));
+        const [createDetailsInboundRes, createDetailsInboundErr] = await handleError(BillingByokakin.insertProcessedDataByBatches('INBOUND', getInboundRAWCDRRes, ratesDetails, getKDDICompListRes[i]['customer_code'], billingYear, billingMonth));
         if (createDetailsInboundErr) {
           throw new Error('Error while creating summary data ' + createDetailsInboundErr);
         }
@@ -77,7 +79,7 @@ module.exports = {
           throw new Error('Error while creating summary data ' + createSummaryErr);
         }
 
-        const [createInvoiceRes, createInvoiceErr] = await handleError(BillingByokakin.genrateInvoice(getKDDICompListRes[i]['customer_code'],  billingYear, billingMonth));
+        const [createInvoiceRes, createInvoiceErr] = await handleError(BillingByokakin.genrateInvoice(getKDDICompListRes[i]['customer_code'], getKDDICompListRes[i]['customer_name'], billingYear, billingMonth));
 
         if (createInvoiceErr) {
           throw new Error('Error while creating invoice ' + createInvoiceErr.message);

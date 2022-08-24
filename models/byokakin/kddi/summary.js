@@ -4,7 +4,7 @@ module.exports = {
     getSummaryByMonth: async function({year, month}) {
 
         try {
-          const query=`select * from byokakin_billing_history where cdrmonth::date = '${year}-${month}-01' `;
+          const query=`select * from byokakin_billing_history where cdrmonth::date = '${year}-${month}-01' order by customercode `;
           const summaryRes= await db.queryByokakin(query,[]);
           
           if(summaryRes.rows){

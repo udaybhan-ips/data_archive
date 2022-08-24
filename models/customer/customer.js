@@ -54,7 +54,6 @@ module.exports = {
         data.fax_number, data.pay_type, JSON.stringify(data.service_type)];
       const res = await db.query(query, value, true);
       if (res.rows) {
-
         if (data.service_type && data.service_type.kddi_customer && data.service_type.kddi_customer == true) {
           const rateData = { ...data.kddi_customer, customer_cd, serv_name: 'KDDI' };
           const res = await KDDIRate.create(rateData);
@@ -62,9 +61,6 @@ module.exports = {
             throw new Error(res);
           }
         }
-
-
-
         if (data.service_type && data.service_type.ntt_customer && data.service_type.ntt_customer == true) {
           const rateData = { ...data.ntt_customer, customer_cd, serv_name: 'NTT' };
           const res = await NTTRate.create(rateData);

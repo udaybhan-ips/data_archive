@@ -5,7 +5,7 @@ const utility = require("../../../public/javascripts/utility")
 
 
 let ColumnSetNTTORIXKoteihi = ['did', 'carrier', 'service_name', 'amount', 'taxclassification', 'dailydisplay', 'date_added', 'carrier_name'];
-let tableNameNTTORIXKoteihi = { table: 'byokakin_ntt_koteihi_202203' };
+
 let ColumnSetNTTORIXKoteihiCDR = ['companyname', 'comp_acco__c', 'kaisenbango', 
 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'hiwarihyouji', 'datebill', 'linkedcdrid','carrier'];
 let tableNameNTTORIXKoteihiCDR = { table: 'ntt_koteihi_cdr' };
@@ -49,9 +49,8 @@ module.exports = {
 
   getNTTORIXCustomer: async function () {
     try {
-      const query = `select m_cus.* from (select id, customer_cd, customer_name, address, staff_name from  m_customer 
-        where is_deleted=false)as m_cus join (select * from ntt_orix_customer) as ntt_cus on 
-        ( m_cus.customer_cd::int = ntt_cus.customer_code::int) order by m_cus.customer_cd desc`;
+      const query = `select id, customer_cd, customer_name, address, staff_name from  m_customer 
+      where is_deleted=false and service_type ->> 'ntt_orix_customer' ='true' order by customer_cd desc`;
       const NTTORIXCustomerListRes = await db.query(query, [], true);
       // console.log(targetDateRes);
       if (NTTORIXCustomerListRes.rows) {
@@ -68,11 +67,12 @@ module.exports = {
 
   getCustomerList: async function () {
     try {
-      const query = `select customer_name, customer_cd, id from m_customer order by customer_cd `
-      const getCustomerList = await db.queryIBS(query, []);
+      const query = `select customer_cd, customer_name, address, staff_name from  m_customer 
+      where is_deleted=false and service_type ->> 'ntt_orix_customer' ='true' order by customer_cd desc`
+      const getCustomerList = await db.query(query, [], true);
       return getCustomerList.rows;
     } catch (e) {
-      console.log("err in get kddi company list=" + e.message);
+      console.log("err in get ntt orix company list=" + e.message);
       return e;
     }
   },
@@ -323,11 +323,11 @@ module.exports = {
     }
   },
 
-  insertNTTORIXKotehiData: async function (filePath, fileName, billingYear, billingMonth) {
+  insertNTTORIXKotehiData: async function (filePath, fileName, billingYear, billingMonth, carrier) {
 
     try {
 
-      let filesPath = path.join(__dirname, `../ntt_orix/CDR/${billingYear}${billingMonth}/kotehi`);
+      let filesPath = path.join(__dirname, `../ntt_orix/data/${carrier}/${billingYear}${billingMonth}/Koteihi`);
       files = await readFilesName(filesPath);
 
 
@@ -339,7 +339,7 @@ module.exports = {
         console.log("file name ..." + files[i]);
 
         if (path.extname(files[i]).toLowerCase() == '.csv') {
-          fileName = path.join(__dirname, `../ntt_orix/CDR/${billingYear}${billingMonth}/kotehi/${files[i]}`)
+          fileName = path.join(__dirname, `../ntt_orix/data/${carrier}/${billingYear}${billingMonth}/Koteihi/${files[i]}`)
 
           await new Promise(resolve => setTimeout(resolve, 10000));
           let csvstream = fs.createReadStream(fileName)
@@ -382,9 +382,9 @@ module.exports = {
   insertNTTORIXRAWData: async function (filesPathtest, billingYear, billingMonth, carrier) {
 
     let files = [];
-    let filesPath = path.join(__dirname, `../ntt/CDR/${carrier}/202204`);
+    let filesPath = path.join(__dirname, `../ntt_orix/data/${carrier}/${billingYear}${billingMonth}/RAW_CDR`);
     files = await readFilesName(filesPath);
-    let fileType = carrier == 'NTTORIX' ? '.txt' : '.csv';
+    let fileType = carrier == 'NTTORIX' ? '.csv' : '.txt';
 
     //console.log("actual path and name =" + (files));
 
@@ -399,7 +399,7 @@ module.exports = {
         console.log("file name ..." + files[i]);
 
         if (path.extname(files[i]).toLowerCase() == fileType) {
-          fileName = path.join(__dirname, `../ntt/CDR/${carrier}/202204/${files[i]}`)
+          fileName = path.join(__dirname, `../ntt_orix/data/${carrier}/${billingYear}${billingMonth}/RAW_CDR/${files[i]}`)
 
           await new Promise(resolve => setTimeout(resolve, 10000));
           let csvstream = fs.createReadStream(fileName)
@@ -528,7 +528,8 @@ async function insertByBatches(records, type, billingYear, billingMonth) {
 
   for (let i = 0; i < chunkArray.length; i++) {
     if (type === 'ntt_koteihi') {
-      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTORIXKoteihi, tableNameNTTORIXKoteihi);
+      let tableNameNTTKoteihi = { table: `byokakin_ntt_koteihi_${billingYear}${billingMonth}` };
+      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTORIXKoteihi, tableNameNTTKoteihi);
     } else if (type === 'ntt_koteihi_charge') {
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTORIXKoteihiCDR, tableNameNTTORIXKoteihiCDR);
 

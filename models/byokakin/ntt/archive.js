@@ -150,7 +150,8 @@ module.exports = {
         throw new Error('please select billing year and month');
       }
 
-      const query = ` select row_number() over() as id, *, substring(split_part(bill_code, '-',2),4) as comp_code from ntt_koteihi_cdr_bill ${where}`;
+      const query = ` select row_number() over() as id, *, substring(split_part(bill_code, '-',2),4) as comp_code from 
+      ntt_koteihi_cdr_bill ${where}`;
 
       console.log("query...." + query)
 
@@ -165,7 +166,8 @@ module.exports = {
   getNTTKotehiProcessedData: async function ({ year, month }) {
     try {
       console.log("year, month .." + year, month);
-      const query = ` select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  sum (kingaku) as amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_code, '-',2),4) `;
+      const query = ` select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  sum (kingaku) as amount 
+      from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_code, '-',2),4) `;
 
       console.log("query..."+query)
 
@@ -391,7 +393,7 @@ module.exports = {
   insertNTTRAWData: async function (filesPathtest, billingYear, billingMonth, carrier) {
 
     let files = [];
-    let filesPath = path.join(__dirname, `../ntt/data/${carrier}/${billingYear}${billingMonth}/RAWCDR`);
+    let filesPath = path.join(__dirname, `../ntt/data/${carrier}/${billingYear}${billingMonth}/RAW_CDR`);
     files = await readFilesName(filesPath);
     let fileType = carrier == 'NTT' ? '.txt' : '.csv';
 
