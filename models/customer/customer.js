@@ -85,7 +85,7 @@ module.exports = {
       const query = `INSERT INTO m_customer_history (customer_cd, customer_name, address, tel_number, email, staff_name, 
         logo, upd_id, upd_date, post_number, fax_number, pay_type, 
         is_deleted, service_type ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
-                $10, $11, $12, $13, $14, $15 ) returning customer_cd`;
+                $10, $11, $12, $13, $14 ) returning customer_cd`;
 
       const value = [data.customer_cd, data.customer_name, data.address, data.tel_number,
       data.email, data.staff_name, data.logo, data.upd_id, 'now()', data.post_number,

@@ -52,6 +52,7 @@ module.exports = {
       //const resNTTORIXCustomerList = await ArchiveNTTORIX.getNTTORIXCustomerList();
 
       const resNTTORIXRAWData = await ArchiveNTTORIX.insertNTTORIXRAWData("",billingYear, billingMonth, carrier);
+      console.log("NTTORIX RAW CDR Upload Done ...")
       //console.log("data");
       //console.log(JSON.stringify(resNTTORIXKotehiData));
 

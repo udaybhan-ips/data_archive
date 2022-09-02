@@ -49,10 +49,10 @@ module.exports = {
 
         // //inbound data processing
 
-        // const [ratesInbDetails, ratesInbErr] = await handleError(BillingByokakin.getInboundRates(getNTTCompListRes[i]['customer_code']));
-        // if (ratesInbErr) {
-        //   throw new Error('Could not fetch Rates details');
-        // }
+        const [ratesInbDetails, ratesInbErr] = await handleError(BillingByokakin.getInboundRates(getNTTCompListRes[i]['customer_code']));
+        if (ratesInbErr) {
+          throw new Error('Could not fetch Rates details');
+        }
 
         const [getInboundRAWCDRRes, getInboundRAWCDRError] = await handleError(BillingByokakin.getNTTRAWInboundData(billingYear, billingMonth, getNTTCompListRes[i]['customer_code']));
         if (getInboundRAWCDRError) {
@@ -63,7 +63,7 @@ module.exports = {
         const [createDetailsInboundRes, createDetailsInboundErr] = await handleError(BillingByokakin.insertProcessedDataByBatches('INBOUND', getInboundRAWCDRRes, ratesDetails, getNTTCompListRes[i]['customer_code'], billingYear, billingMonth));
         if (createDetailsInboundErr) {
           throw new Error('Error while creating summary data ' + createDetailsInboundErr);
-        }
+       }
 
         //finish
         /*****  create summary data for byokakin */

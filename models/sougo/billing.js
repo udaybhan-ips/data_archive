@@ -414,7 +414,7 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
         paymentDueDate = `${currentYear}/10/31`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
-      paymentDueDate = `${currentYear}/08/31`;
+      paymentDueDate = `${currentYear}/09/30`;
     }
 
   await generateHeader(address, doc, totalCallAmount);

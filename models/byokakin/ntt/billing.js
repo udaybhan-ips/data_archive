@@ -64,7 +64,7 @@ module.exports = {
 
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
-      where is_deleted = false and service_type ->> 'ntt_customer'  = 'true' and customer_cd in ('00001166') order by customer_code   `;
+      where is_deleted = false and service_type ->> 'ntt_customer'  = 'true' and customer_cd='00000436' order by customer_code   `;
       // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getNTTCompListRes = await db.query(query, [], true);
 
@@ -81,10 +81,10 @@ module.exports = {
 
     try {
 
-      let where = ""
+      let where = `where raw_cdr.carriertype ='NTT'`; 
 
       if(customer_code !=='00001166'){
-        where = `where raw_cdr.callcharge > 0`
+        where += `and raw_cdr.callcharge > 0`
       }
 
       const query = `select  raw_cdr.*, 0 as callcount104 from 
@@ -109,12 +109,12 @@ module.exports = {
   getNTTRAWInboundData: async function (billingYear, billingMonth, customer_code, carrier) {
 
     try {
-
+      let where = `where raw_cdr.carriertype ='NTT'`; 
       const query = `select  raw_cdr.*,  0 as callcount104 from 
       byokakin_ntt_rawcdr_inbound_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
       (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g')=free_dial.free_numb__c  and 
       (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')
-      and free_dial.cust_code__c::int = '${customer_code}' and  free_dial.carr_comp__c='NTT'  )  `;
+      and free_dial.cust_code__c::int = '${customer_code}' and  free_dial.carr_comp__c='NTT'  ) ${where} `;
 
 
       const getNTTRAWInboundDataRes = await db.queryByokakin(query, []);
@@ -134,7 +134,7 @@ module.exports = {
 
       const query = `select customercode, cdr_amount::int as cdr_amount, kotei_amount  from ( select customercode,
          sum (finalcallcharge) as cdr_amount  from  byokakin_ntt_processedcdr_${year}${month} 
-       where customercode='${customerId}' group by customercode) as bkpc full join 
+       where customercode='${customerId}' and carriertype ='NTT'  group by customercode) as bkpc full join 
        (select sum(kingaku) kotei_amount, comp_acco__c 
        from ntt_koteihi_cdr_bill where datebill::date ='${year}-${month}-01' and comp_acco__c = '${customerId}' 
        group by comp_acco__c) as nkcb on (bkpc.customercode= nkcb.comp_acco__c)`;
@@ -313,7 +313,7 @@ function basciInfo(doc, y, company_code, customer_name, billingYear, billingMont
     .text(`請求日 `, 50, y + 80, { width: 100, align: "left" })
 
     .text(`${billingYear}-${billingMonth}-01 ～ ${billingYear}-${billingMonth}-30`, 125, y + 65, { width: 250, align: "left" })
-    .text(`${billingYear}-05-14`, 125, y + 80, { width: 100, align: "left" })
+    .text(`${billingYear}-08-24`, 125, y + 80, { width: 100, align: "left" })
 
     .moveDown()
   return y + 35;

@@ -334,7 +334,7 @@ module.exports = {
       let connectionStringByokakin = config.DATABASE_URL_BYOKAKIN;
       const pool = await new Pool(connectionStringByokakin)
       const res = await pool.query(text, values);
-      // console.log("data==="+JSON.stringify(res));
+      //console.log("data==="+JSON.stringify(res));
       return (res);
     } catch (err) {
       console.log("Error while quering" + err.message)
@@ -387,7 +387,7 @@ module.exports = {
 function handleErrorMessages(err) {
   return new Promise(function (resolve, reject) {
     if (err.code == '23505') {
-      err = 'email already in use, please use a different one'
+      err = 'data already there!'
     }
     if (err.code == '22P02') {
       err = 'invalid user UUID'

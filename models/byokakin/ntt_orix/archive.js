@@ -420,7 +420,7 @@ module.exports = {
                 parentDID = parentDID.replace("(", "").replace(")", "").replaceAll("-", "");
 
                 let tempDate = row[3].trim();
-                if (carrier == 'NTTORIXORIX') {
+                if (carrier == 'NTTORIX') {
                   tempDate = tempDate.replace("月", "/").replace("日", "/");
                 }
 
