@@ -9,7 +9,7 @@ module.exports = {
 
       const query = `select id, customer_cd, customer_name, post_number, email, tel_number,upd_id, upd_date, address, staff_name, 
       service_type ->> 'kddi_customer' as kddi_customer,  service_type ->> 'ntt_customer' as ntt_customer, 
-      service_type ->> 'ntt_orix_customer' as ntt_orix_customer, service_type  from  m_customer_tmp 
+      service_type ->> 'ntt_orix_customer' as ntt_orix_customer, service_type  from  m_customer 
       where is_deleted=false order by customer_cd desc`;
 
       const companyList = await db.query(query, [], true);
@@ -33,7 +33,7 @@ module.exports = {
         throw new Error('invalid data');
       }
 
-      let getLastCustomerCodeQuery = `SELECT customer_cd FROM m_customer_tmp order by customer_cd desc limit 1`;
+      let getLastCustomerCodeQuery = `SELECT customer_cd FROM m_customer order by customer_cd desc limit 1`;
       let getLastCustomerCodeRes = await db.query(getLastCustomerCodeQuery, [], true);
 
       if (getLastCustomerCodeRes.rows.length <= 0) {
@@ -45,7 +45,7 @@ module.exports = {
       customer_cd = customer_cd.toString().padStart(8, '0');
 
 
-      const query = `INSERT INTO m_customer_tmp (customer_cd, customer_name, address, tel_number, email, staff_name, 
+      const query = `INSERT INTO m_customer (customer_cd, customer_name, address, tel_number, email, staff_name, 
         logo, upd_id, upd_date, post_number, fax_number, pay_type, 
          service_type ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
                 $10, $11, $12, $13 ) returning customer_cd`;
@@ -133,7 +133,7 @@ module.exports = {
 
       updateData = updateData + 'upd_date= now()';
 
-      const queryUpdate = `update m_customer_tmp set ${updateData} where  id='${data.id}'`;
+      const queryUpdate = `update m_customer set ${updateData} where  id='${data.id}'`;
 
       console.log("queryUpdate..." + queryUpdate)
 

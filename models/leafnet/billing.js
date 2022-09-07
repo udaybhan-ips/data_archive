@@ -235,7 +235,7 @@ async function getInvoiceData(year, month) {
       .text("〒104－0045", 10, 70, { align: "right" })
       .text("東京都中央区築地4-1-1東劇ビル8階", 10, 83, { align: "right" })
       .text("TEL: 03-3549-7626 FAX : 03-3545-7331", 10, 96, { align: "right" })
-      .text("担当: 大庭 猛", 10, 109, { align: "right" })
+      .text("担当: 渡辺 裕史", 10, 109, { align: "right" })
       .text("請 求 書", 0, 142,{ align: "center" })
       .text("Invoice", 0, 150, { align: "center" })
 

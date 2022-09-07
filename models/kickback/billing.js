@@ -953,8 +953,6 @@ function addTableHeader(doc, x, y, totalAmount, totalCallDuration, billingYear, 
   doc.rect(350, y - 5, 100, 30).stroke()
   doc.rect(450, y - 5, 110, 30).stroke()
 
-
-
     .text(`SERVICE ITEM`, 50, y + 10, { width: 100, align: "center" })
     .text(`COMMISSION TYPE`, 150, y + 10, { width: 100, align: "center" })
     .text(`TIME (MIN)`, 250, y + 10, { width: 100, align: "center" })

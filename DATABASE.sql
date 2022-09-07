@@ -59,9 +59,9 @@ fax_number integer, email varchar, pay_type integer, staff_name varchar, logo va
 
  create table cdr_sonus_outbound_summary (id serial, invoice_no integer, customer_name varchar, customer_id varchar, billing_month 
  varchar, billing_year varchar, billing_date timestamp without time zone , update_date timestamp without time zone default now(),
-  duration bigint, landline_amt bigint, mobile_amt bigint, total_amt bigint);
+ duration bigint, landline_amt bigint, mobile_amt bigint, total_amt bigint);
 
-  create table byokakin_kddi_infinidata_202203 (cdrid bigint, servicecode varchar(30), did varchar(30), usednumber varchar(30), cld varchar(30), calldate varchar(15), calltime varchar(15), callduration varchar(15), source varchar, destination varchar, terminaltype varchar);
+create table byokakin_kddi_infinidata_202203 (cdrid bigint, servicecode varchar(30), did varchar(30), usednumber varchar(30), cld varchar(30), calldate varchar(15), calltime varchar(15), callduration varchar(15), source varchar, destination varchar, terminaltype varchar);
 
 create table byokakin_kddi_processedcdr_202203 (cdrid bigint, cdrclassification varchar(10), customercode varchar(10), terminaltype varchar(10),freedialnumber varchar(30), callingnumber varchar(30), calldate varchar, calltime varchar(15), callduration varchar(15), cld varchar(30), sourcearea varchar, destinationarea varchar, cdrcallcharge numeric(16,5), callrate  numeric(16,5),finalcallcharge numeric(16,5), vendorcallcharge numeric(16,5) );
 
