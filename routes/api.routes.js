@@ -34,6 +34,12 @@ router.use('/v1', require('./apiv1/commission/commissionInfo.routes'));
 
 /**********End */
 
+/** DID Number details **/
+
+router.use('/v1', require('./apiv1/did_number/didNumber.routes'));
+
+/**********End */
+
 
 /**** Byokakin  ******/
 
@@ -81,6 +87,7 @@ router.use('/v1', require('./apiv1/kickback/archive.data.routes'));
 router.use('/v1', require('./apiv1/kickback/invoice.routes'));
 router.use('/v1', require('./apiv1/kickback/cdr.routes'));
 router.use('/v1', require('./apiv1/kickback/approval.routes'));
+router.use('/v1', require('./apiv1/kickback/company.routes'));
 
 
 /** sougo **/

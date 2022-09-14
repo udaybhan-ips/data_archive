@@ -10,7 +10,7 @@ module.exports = {
 
       //console.log("req.."+JSON.stringify(req));
 
-      const billingMonth = "07";
+      const billingMonth = "08";
       const billingYear ="2022";
       const serviceType = "Kotehi";
       const callType = ['free_number','d_number'];

@@ -450,7 +450,7 @@ module.exports = {
             .on('end', function () {
               insertByBatches(csvData);
               insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
-              //insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
+              insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
             })
             .on('error', function (error) {
               console.log("Error" + error.message);

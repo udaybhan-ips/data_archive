@@ -2,6 +2,8 @@ var config = require('./../../config/config');
 var db = require('./../../config/database');
 
 module.exports = {
+
+
   findAll: async function() {
       try {
         
@@ -12,6 +14,83 @@ module.exports = {
           return error;
       }
   },
+
+  getKickbackFreeDialRate: async function (data) {
+
+
+
+    try {
+        const query = `select * from kickback_rate where deleted = false order by customer_id`;
+        const summaryRes = await db.queryIBS(query, []);
+
+        if (summaryRes.rows) {
+            return (summaryRes.rows);
+        }
+        throw new Error('not found')
+
+    } catch (error) {
+        console.log("error in getting kickback free dial rates!" + error.message)
+        throw new Error(error.message)
+    }
+},
+
+updateKickbackFreeDialRate: async function (param) {
+
+  try {
+      console.log("data.." + JSON.stringify(param))
+
+      if(param.minute_rate === null || param.minute_rate === undefined || param.minute_rate ==='') {
+        throw new Error("Invalid request");
+      }
+
+      const query = `update kickback_rate set minute_rate='${param.minute_rate}', 
+      update_name='${param.updated_by}', update_date=now() , deleted=${param.deleted} where customer_id = '${param.customer_id}' `;
+
+      const summaryRes = await db.queryIBS(query, []);
+
+      if (summaryRes.rows) {
+          return (summaryRes.rows);
+      }
+      throw new Error('not found')
+
+  } catch (error) {
+      console.log("error in getting adding updating kotehi info.." + error.message)
+      throw new Error(error.message)
+  }
+},
+
+addKickbackFreeDialRate: async function (data) {
+
+  try {
+      console.log("data here.." + JSON.stringify(data))
+      if (data.customer_id == undefined || data.customer_id == '' || data.minute_rate == '' || data.minute_rate == undefined) {
+          throw new Error('Invalid request');
+      }
+      const searchQuery = `select * from kickback_rate where  customer_id= '${data.customer_id}' and deleted = false`;
+
+      const searchRes = await db.queryIBS(searchQuery);
+      if (searchRes && searchRes.rows && searchRes.rows.length > 0) {
+          throw new Error("This kick company rate is already there, so you can update!!")
+      }
+
+      const insertQuery = `insert into kickback_rate (customer_id, minute_rate, rate_valid_start, rate_valid_end, record_name, record_date) Values 
+          ('${data.customer_id}','${data.minute_rate}','${data.rate_valid_start}','${data.rate_valid_end}','${data.added_by}',now()) returning data_id`;
+
+      const insertRes = await db.queryIBS(insertQuery, []);
+
+
+      if(insertRes && insertRes.rowCount > 0){
+        return insertRes.rowCount;        
+      }else{
+        throw new Error(insertRes)
+      }
+
+  } catch (error) {
+      console.log("error in getting adding kick company rate info..." + error.message)
+      throw new Error(error.message)
+  }
+},
+
 
   create: async function(data) {
     console.log(data);

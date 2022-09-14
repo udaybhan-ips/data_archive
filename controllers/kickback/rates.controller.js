@@ -14,6 +14,63 @@ module.exports = {
           });
     }    
   },
+  getKickbackFreeDialRate: async function(req, res) {
+    
+    
+
+    try {
+        const [summaryRes,summaryErr] = await handleError(Rate.getKickbackFreeDialRate());
+        if(summaryErr) {
+             //throw new Error('Could not fetch the summary');
+             return res.status(500).json({
+              message: summaryErr.message
+            });  
+        }
+        return res.status(200).json(summaryRes);
+        
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+  
+
+  updateKickbackFreeDialRate: async function(req, res) {
+    try {
+        const [summaryRes,summaryErr] = await handleError(Rate.updateKickbackFreeDialRate(req.body));
+        if(summaryErr) {
+             //throw new Error('Could not fetch the summary');
+             return res.status(500).json({
+              message: summaryErr.message
+            });  
+        }
+        return res.status(200).json(summaryRes);
+        
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+  addKickbackFreeDialRate: async function(req, res) {
+    try {
+        const [summaryRes,summaryErr] = await handleError(Rate.addKickbackFreeDialRate(req.body));
+        if(summaryErr) {
+             //throw new Error('Could not fetch the summary');
+             return res.status(500).json({
+              message: summaryErr.message
+            });  
+        }
+        return res.status(200).json(summaryRes);
+        
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+
   listRates: async function(req, res) {
     try {
         const listRatesRes = await Rate.findAll(req.body);
@@ -126,3 +183,10 @@ module.exports = {
 //       });
 //   },
 };
+
+
+const handleError = (promise) => {
+  return promise
+    .then(data => ([data, undefined]))
+    .catch(error => Promise.resolve([undefined, error]));
+}

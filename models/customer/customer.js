@@ -2,12 +2,12 @@ var config = require('./../../config/config');
 var db = require('./../../config/database');
 var KDDIRate = require('../byokakin/kddi/rate');
 var NTTRate = require('../byokakin/ntt/rate');
-
+ 
 module.exports = {
   findAll: async function () {
     try {
 
-      const query = `select id, customer_cd, customer_name, post_number, email, tel_number,upd_id, upd_date, address, staff_name, 
+      const query = `select id, customer_cd, customer_name, post_number, email, tel_number,upd_id,fax_number,  upd_date, address, staff_name, 
       service_type ->> 'kddi_customer' as kddi_customer,  service_type ->> 'ntt_customer' as ntt_customer, 
       service_type ->> 'ntt_orix_customer' as ntt_orix_customer, service_type  from  m_customer 
       where is_deleted=false order by customer_cd desc`;
