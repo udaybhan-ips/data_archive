@@ -65,10 +65,15 @@ module.exports = {
             throw new Error('Invalid request');
         }
 
+        let stopDate = null;
+
+        if(param.stop_date__c != undefined && param.stop_date__c!='' && param.stop_date__c!=null) {
+            stopDate =  param.stop_date__c;
+        }
         
 
       const query=`update ntt_kddi_freedial_c set cust_code__c='${param.customer_cd}', upda_name__c='${updatedBy}', 
-      used_star__c='${param.modified_date}', stop_date__c='${param.stop_date__c}',  date_upda__c=now() , rema_info__c='${remark}' where id in (${ids.toString()}) `;
+      used_star__c='${param.modified_date}', stop_date__c='${stopDate}',  date_upda__c=now() , rema_info__c='${remark}' where id in (${ids.toString()}) `;
       const summaryRes= await db.queryByokakin(query,[]);
       
       if(summaryRes.rows){
