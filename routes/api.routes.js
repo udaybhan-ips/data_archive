@@ -67,6 +67,7 @@ router.use('/v1', require('./apiv1/byokakin/free_dial/freeNumber.routes'));
 /********** Additional Kotehi configuration */
 
 router.use('/v1', require('./apiv1/byokakin/addi_kotehi_info/addiKotehiInfo.routes'));
+router.use('/v1', require('./apiv1/byokakin/account_info/accountInfo.routes'));
 
 /**** manage customer list *****/
 
