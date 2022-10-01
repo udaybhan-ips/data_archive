@@ -78,6 +78,25 @@ module.exports = {
       });
     }    
   },
+  deleteCommissionInfo: async function(req, res) {
+    
+    try {
+        const [deleteCommissionSummaryRes,deleteCommissionSummaryErr] = await handleError(CommissionInfo.deleteCommissionSummary(req.body));
+        if(deleteCommissionSummaryErr) {
+
+             return res.status(500).json({
+              message: deleteCommissionSummaryErr.message
+            });  
+        }
+        return res.status(200).json(deleteCommissionSummaryRes);
+        
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+  
 
   updateAddiKotehiInfo: async function(req, res) {
     

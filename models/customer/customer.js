@@ -7,7 +7,8 @@ module.exports = {
   findAll: async function () {
     try {
 
-      const query = `select id, customer_cd, customer_name, post_number, email, tel_number,upd_id,fax_number,  upd_date, address, staff_name, 
+      const query = `select id, customer_cd, customer_name, post_number, email, tel_number,upd_id,fax_number,  
+      upd_date, address, staff_name, 
       service_type ->> 'kddi_customer' as kddi_customer,  service_type ->> 'ntt_customer' as ntt_customer, 
       service_type ->> 'ntt_orix_customer' as ntt_orix_customer, service_type  from  m_customer 
       where is_deleted=false order by customer_cd desc`;
@@ -79,7 +80,7 @@ module.exports = {
   },
 
   updateCustomerInfo: async function (data) {
-    console.log(data);
+    console.log("data"+JSON.stringify(data));
     let updateData = '';
     try {
       const query = `INSERT INTO m_customer_history (customer_cd, customer_name, address, tel_number, email, staff_name, 
@@ -113,9 +114,8 @@ module.exports = {
 
       }
 
-      if (data.upd_id) {
-        updateData = updateData + `upd_id= '${data.upd_id}',`;
-      }
+      
+      
 
       if (data.post_number) {
         updateData = updateData + `post_number= '${data.post_number}',`;
@@ -131,7 +131,8 @@ module.exports = {
         updateData = updateData + `service_type ='${JSON.stringify(data.service_type)}',`;
       }
 
-      updateData = updateData + 'upd_date= now()';
+      
+      updateData = updateData + `upd_date= now(), upd_id= '${data.updated_by}' `;
 
       const queryUpdate = `update m_customer set ${updateData} where  id='${data.id}'`;
 

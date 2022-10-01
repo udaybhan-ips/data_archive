@@ -6,7 +6,7 @@ module.exports = {
         try {
           const query=`select data_idno as id, agent_code, freedial_code as target_agent_code, serv_name, 
           call_sort as call_type, edat_star as start_date, edat_fini as end_date, amnt_conv as commisson,
-         edit_by, edit_date  from agent_incentive where edat_fini::date > now() order by agent_code, freedial_code` ;
+         edit_by, edit_date  from agent_incentive where edat_fini::date > now()  order by agent_code` ;
 
         //  console.log("query.."+query)
 
@@ -22,7 +22,31 @@ module.exports = {
             throw new Error(error.message)
       }
   },
+  deleteCommissionSummary: async function(data) {
 
+    console.log("data..."+JSON.stringify(data))
+
+    
+
+    try {
+      const query=`delete from agent_commission where bill_numb ='${data.bill_numb}' ` ;
+      const queryDetail=`delete from agent_commission_details where bill_numb ='${data.bill_numb}' ` ;
+
+    //  console.log("query.."+query)
+
+      const deleteRes= await db.queryByokakin(query,[]);
+      const deleteDetatilRes= await db.queryByokakin(queryDetail,[]);
+      
+      if(deleteRes && deleteDetatilRes){
+          return (deleteRes);              
+      }
+      throw new Error('not found')
+
+  } catch (error) {
+        console.log("error in delete commission data !"+error.message)
+        throw new Error(error.message)
+  }
+},
 
   getCommissionSummary: async function({year, month, comp_code}) {
 
@@ -32,7 +56,7 @@ module.exports = {
         throw new Error('Invalid Request!')
       }
 
-      let where = `WHERE bill_start::date ='${year}-${month}-1'`;
+      let where = `WHERE bill_start::date ='${year}-${month}-1' and bill_sum > 0`;
 
       if(comp_code !=undefined && comp_code !='' && comp_code !=null){
         where += `AND agent_code='${comp_code}'`; 
@@ -40,7 +64,7 @@ module.exports = {
 
       
 
-      const query=` select * from agent_commission ${where} ` ;
+      const query=` select * from agent_commission ${where}  ` ;
 
     //  console.log("query.."+query)
 
@@ -65,7 +89,7 @@ module.exports = {
         throw new Error('Invalid Request!')
       }
 
-      let where = `WHERE bill_start::date ='${year}-${month}-1'`;
+      let where = `WHERE bill_start::date ='${year}-${month}-1' and comm_amnt > 0 `;
 
       if(comp_code !=undefined && comp_code !='' && comp_code !=null){
         where += `AND agent_code='${comp_code}'`; 
@@ -93,16 +117,16 @@ module.exports = {
   }
 },
 
-  createCommissionDetails: async function({comp_code, year, month, carrier, createdBy}) {
+  createCommissionDetails: async function({comp_code, year, month,  createdBy}) {
 
     try {
 
-        if(comp_code == undefined || comp_code =='' || carrier == undefined || carrier ==''  ){
+        if(comp_code == undefined || comp_code =='' ){
             throw new Error('Invalid Request')
         }
 
       const query=` select * from agent_incentive where agent_code='${comp_code}' and 
-      serv_name='${carrier}' and edat_fini::date > now() order by freedial_code`;
+      edat_fini::date > now() order by freedial_code`;
       const targetAgentCode = await db.queryByokakin(query, []);
 
       if(targetAgentCode && targetAgentCode.rows && targetAgentCode.rows.length > 0 ){
@@ -110,7 +134,7 @@ module.exports = {
 
         for(let i=0; i < targetAgentCode.rows.length; i++) {
             let getCommissionData = `select count(*), SUM(FINALCALLCHARGE) as TOTAL_AMOUNT from 
-            byokakin_${carrier}_processedcdr_${year}${month} where terminaltype= '${targetAgentCode.rows[i].call_sort}' 
+            byokakin_${targetAgentCode.rows[i].serv_name}_processedcdr_${year}${month} where terminaltype= '${targetAgentCode.rows[i].call_sort}' 
             and customercode='${targetAgentCode.rows[i].freedial_code}'`;
 
             const getCommissionDataRes = await db.queryByokakin(getCommissionData, []);
@@ -124,7 +148,7 @@ module.exports = {
                 }                
                 const insertQuery = `insert into agent_commission_details (agent_code, freedial_code, bill_numb, serv_name, call_sort, 
                 bill_start, bill_end, bill_amnt, amnt_conv, comm_amnt) VALUES ('${comp_code}','${targetAgentCode.rows[i].freedial_code}',
-                'bill_numb','${carrier}','${targetAgentCode.rows[i].call_sort}','${year}-${month}-01','${year}-${month}-30','${total_amount}',
+                'bill_numb','${targetAgentCode.rows[i].serv_name}','${targetAgentCode.rows[i].call_sort}','${year}-${month}-01','${year}-${month}-30','${total_amount}',
                 '${targetAgentCode.rows[i].amnt_conv}','${commissionAmt}')`;
                  const insertRes = await db.queryByokakin(insertQuery, []);
                  res.push(insertRes);
@@ -145,7 +169,7 @@ module.exports = {
             reco_name, modi_date, modi_name, paid_flag, paidprocessby, paidprocessdate , serv_name) VALUES ('${comp_code}','bill_numb','0',
             '${totalCommissionAmt}',0,0,'${totalCommissionAmt}','${year}-${month}-01','${year}-${month}-30', now(),'${year}-${month}-30',
              '${subTotalCommissionAmt}',0,'${taxCommissionAmt}', '${totalCommissionAmt}', now(),'${createdBy}', now(),'${createdBy}',
-             null, null, null, '${carrier}')`;
+             null, null, null, 'NTT-KDDI')`;
 
         const sumRes = await db.queryByokakin(insertSummaryData, []);
 

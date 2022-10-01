@@ -1,5 +1,5 @@
 var db = require('./../../../config/database');
-const BATCH_SIZE = 1000000;
+const BATCH_SIZE = 100000;
 var PDFDocument = require("pdfkit");
 var utility = require('../../../public/javascripts/utility');
 var fs = require("fs");
@@ -62,7 +62,8 @@ module.exports = {
 
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
-      where is_deleted = false and service_type ->> 'kddi_customer'  = 'true'  order by customer_code`;
+      where is_deleted = false and service_type ->> 'kddi_customer'  = 'true'  
+      order by customer_code`;
      // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getKDDICompListRes = await db.query(query, [], true);
 
@@ -82,7 +83,7 @@ module.exports = {
       const query = `select  raw_cdr.* from byokakin_kddi_raw_cdr_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
       (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g') = free_dial.free_numb__c 
       and free_dial.cust_code__c::int = '${customer_code}' and 
-      (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')  and  free_dial.carr_comp__c='KDDI' ) `;
+      (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')   ) `;
 
       const getKDDIRAWDataRes = await db.queryByokakin(query, []);
 
@@ -104,7 +105,7 @@ module.exports = {
       const query = `select  raw_cdr.* from byokakin_kddi_infinidata_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
       (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g')=free_dial.free_numb__c  and 
       (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')
-      and free_dial.cust_code__c::int = '${customer_code}' and  free_dial.carr_comp__c='KDDI')`;
+      and free_dial.cust_code__c::int = '${customer_code}' )`;
 
 
       const getKDDIRAWInboundDataRes = await db.queryByokakin(query, []);
@@ -393,7 +394,7 @@ async function generateHeader(customerDetails, doc) {
     // .image("logo.png", 50, 45, { width: 50 })
     //.fillColor("#444444")
     .fontSize(10)
-    .text(`株式会社　アイ・ピー・エス`, 50, 57, { align: "right" })
+    .text(`株式会社アイ・ピー・エス・プロ`, 50, 57, { align: "right" })
     .text(`〒${postNumber}`, 50, 70, { align: "right" })
     .text(`${address}`, 50, 83, { align: "right" })
     .text(`${Phone}`, 10, 96, { align: "right" })

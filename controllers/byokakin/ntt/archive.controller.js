@@ -40,7 +40,7 @@ module.exports = {
 
   uploadNTTRAW: async function (req, res) {
     try {
-      const billingMonth = "07";
+      const billingMonth = "08";
       const billingYear ="2022";
       const carrier = 'NTT';
       //const deleteTargetDateData = await ArchiveNTT.deleteTargetDateCDR(billingMonth, serviceType, callType);

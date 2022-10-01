@@ -444,7 +444,6 @@ module.exports = {
                 obj2['terminaltype'] = row[15];
                 csvInfiniData.push(obj2);
                 csvstream.resume();
-
               }
             })
             .on('end', function () {

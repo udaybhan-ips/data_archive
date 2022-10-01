@@ -64,7 +64,7 @@ module.exports = {
 
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
-      where is_deleted = false and service_type ->> 'ntt_customer'  = 'true' and customer_cd='00000436' order by customer_code   `;
+      where is_deleted = false and service_type ->> 'ntt_customer'  = 'true' and customer_cd in ('00001235') order by customer_code   `;
       // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getNTTCompListRes = await db.query(query, [], true);
 
@@ -402,7 +402,7 @@ async function generateHeader(customerDetails, doc) {
     // .image("logo.png", 50, 45, { width: 50 })
     //.fillColor("#444444")
     .fontSize(10)
-    .text(`株式会社　アイ・ピー・エス`, 50, 57, { align: "right" })
+    .text(`株式会社アイ・ピー・エス・プロ`, 50, 57, { align: "right" })
     .text(`〒${postNumber}`, 50, 70, { align: "right" })
     .text(`${address}`, 50, 83, { align: "right" })
     .text(`${Phone}`, 10, 96, { align: "right" })
