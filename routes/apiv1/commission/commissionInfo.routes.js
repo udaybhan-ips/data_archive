@@ -6,7 +6,6 @@ router.post('/commission/createCommissionDetails',  CommissionInfoController.cre
 router.post('/commission/getCommissionDetails',  CommissionInfoController.getCommissionDetails);
 router.post('/commission/getCommissionSummary',  CommissionInfoController.getCommissionSummary);
 router.post('/commission/deleteCommissionInfo',  CommissionInfoController.deleteCommissionInfo);
-
-// router.post('/byokakin/addi_kotehi/addAddiKotehiNumber',  CommissionInfoController.addAddiKotehiInfo);
+router.post('/commission/addCommissionInfo',  CommissionInfoController.addCommissionInfo);
 
 module.exports = router;

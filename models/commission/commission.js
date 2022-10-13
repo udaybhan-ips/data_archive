@@ -6,7 +6,7 @@ module.exports = {
         try {
           const query=`select data_idno as id, agent_code, freedial_code as target_agent_code, serv_name, 
           call_sort as call_type, edat_star as start_date, edat_fini as end_date, amnt_conv as commisson,
-         edit_by, edit_date  from agent_incentive where edat_fini::date > now()  order by agent_code` ;
+         edit_by, edit_date , amount from agent_incentive where edat_fini::date > now()  order by agent_code` ;
 
         //  console.log("query.."+query)
 
@@ -119,6 +119,8 @@ module.exports = {
 
   createCommissionDetails: async function({comp_code, year, month,  createdBy}) {
 
+    let billNo = 1000;
+
     try {
 
         if(comp_code == undefined || comp_code =='' ){
@@ -128,6 +130,15 @@ module.exports = {
       const query=` select * from agent_incentive where agent_code='${comp_code}' and 
       edat_fini::date > now() order by freedial_code`;
       const targetAgentCode = await db.queryByokakin(query, []);
+
+      const getBillNoQuery = `select max(bill_numb) as max_bill_no from agent_commission `;
+      const billNoRes = await db.queryByokakin(getBillNoQuery, []);
+
+      console.log("billNoRes.."+JSON.stringify(billNoRes))
+
+      if (billNoRes.rows && billNoRes.rows.length > 0 && billNoRes.rows[0].max_bill_no!==null && billNoRes.rows[0].max_bill_no!=='null') {
+        billNo = parseInt(billNoRes.rows[0].max_bill_no, 10) + 1;
+      }
 
       if(targetAgentCode && targetAgentCode.rows && targetAgentCode.rows.length > 0 ){
         let res = [], subTotalCommissionAmt = 0, totalCommissionAmt = 0, taxCommissionAmt = 0 ;
@@ -148,7 +159,7 @@ module.exports = {
                 }                
                 const insertQuery = `insert into agent_commission_details (agent_code, freedial_code, bill_numb, serv_name, call_sort, 
                 bill_start, bill_end, bill_amnt, amnt_conv, comm_amnt) VALUES ('${comp_code}','${targetAgentCode.rows[i].freedial_code}',
-                'bill_numb','${targetAgentCode.rows[i].serv_name}','${targetAgentCode.rows[i].call_sort}','${year}-${month}-01','${year}-${month}-30','${total_amount}',
+                '${billNo}','${targetAgentCode.rows[i].serv_name}','${targetAgentCode.rows[i].call_sort}','${year}-${month}-01','${year}-${month}-30','${total_amount}',
                 '${targetAgentCode.rows[i].amnt_conv}','${commissionAmt}')`;
                  const insertRes = await db.queryByokakin(insertQuery, []);
                  res.push(insertRes);
@@ -166,7 +177,7 @@ module.exports = {
 
         const insertSummaryData = `insert into agent_commission (agent_code, bill_numb, bill_coun, amount_use,advbefore_pay,advnow_pay,
             total_bill, bill_start, bill_end, bill_issue, bill_due, bill_sum, bill_disc, bill_tax,   bill_total, reco_date, 
-            reco_name, modi_date, modi_name, paid_flag, paidprocessby, paidprocessdate , serv_name) VALUES ('${comp_code}','bill_numb','0',
+            reco_name, modi_date, modi_name, paid_flag, paidprocessby, paidprocessdate , serv_name) VALUES ('${comp_code}','${billNo}','0',
             '${totalCommissionAmt}',0,0,'${totalCommissionAmt}','${year}-${month}-01','${year}-${month}-30', now(),'${year}-${month}-30',
              '${subTotalCommissionAmt}',0,'${taxCommissionAmt}', '${totalCommissionAmt}', now(),'${createdBy}', now(),'${createdBy}',
              null, null, null, 'NTT-KDDI')`;
@@ -212,7 +223,7 @@ module.exports = {
   }
 },
 
-addAddiKotehiInfo: async function(data) {
+addCommissionInfo: async function(data) {
 
     try {
 
@@ -223,32 +234,31 @@ addAddiKotehiInfo: async function(data) {
             throw new Error('Invalid request');
         }
 
-        let d_fd_n_number = data.d_fd_n_number.trim();
-        let carrier_amount =0 , ips_amount = 0 ; 
-        
-        if(data.carrier_amount !==null && data.carrier_amount !== undefined && data.carrier_amount !=='' ){
-            carrier_amount = data.carrier_amount;
-        }
-        
-        if(data.ips_amount !== null && data.ips_amount !== undefined && data.ips_amount !==''){
-            ips_amount = data.ips_amount;
-        }
-
-        const searchQuery = `select * from ntt_kddi_additional_kotehi_detail where 
-        d_fd_n_number = '${d_fd_n_number}' and product_name='${data.product_name.trim()}' 
-        and carrier='${data.carrier}' and customer_cd= '${data.comp_code}' and deleted = false`;
+        const searchQuery = `select * from agent_incentive where 
+        agent_code = '${data.comp_code}' and freedial_code='${data.freedial_code}' 
+        and serv_name='${data.carrier}' and call_sort= '${data.call_type}' and deleted = false`;
         console.log("searchQuery.."+ (searchQuery))
 
         const searchRes = await db.queryByokakin(searchQuery);
         if(searchRes && searchRes.rows && searchRes.rows.length >0){
-            throw  new Error("This number number already there, so you can update that number!!")
+            throw  new Error("This record is already there, so you can update !!")
+        }
+
+        let amount =0, commisson = 0 ;
+
+        if(data.amount !==null && data.amount!== undefined) {
+          amount = data.amount;
         }
 
 
-        const insertQuery = `insert into ntt_kddi_additional_kotehi_detail (customer_cd, customer_name, carrier, d_fd_n_number, 
-                 stop_date, added_by, date_added, modified_by, modified_date, product_name, carrier_amount, ips_amount) Values 
-                ('${data.comp_code}','${data.compName}','${data.carrier}','${d_fd_n_number}', 
-                '3000-01-01','${data.added_by}',now(), '${data.modified_by}', now(), '${data.product_name.trim()}', ${carrier_amount}, ${ips_amount} ) returning id`;
+        if(data.commisson !==null && data.commisson!== undefined) {
+          commisson = data.commisson/100;
+        }
+
+        const insertQuery = `insert into agent_incentive (agent_code, freedial_code, serv_name, call_sort, 
+          edat_star, edat_fini, amnt_conv, edit_by, edit_date, amount) Values 
+                ('${data.comp_code}','${data.freedial_code}','${data.carrier}','${data.call_type}', 
+                now(),'3000-01-01','${commisson}','${data.addedBy}', now(), '${amount}')`;
             
         const insertRes = await db.queryByokakin(insertQuery,[]);      
     

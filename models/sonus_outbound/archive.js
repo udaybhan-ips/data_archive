@@ -1,6 +1,11 @@
 var db = require('./../../config/database');
 const { BATCH_SIZE } = require('../../config/config');
-const CDR_SONUS_OUTBOUND_CS='cdr_sonus_outbound_cs';
+const pgp = require('pg-promise')({
+  capSQL: true
+});
+
+const ColumnSet = ['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound', 'dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_comp_code', 'billing_comp_name', 'trunk_port', 'sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_inani', 'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'register_date', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus', 'sonus_callingnumber', 'sonus_egcallednumber', 'sonus_egrprotovariant', 'landline_amount', 'mob_amount', 'bill_num'];
+const tableName ='cdr_sonus_outbound' ;
 
 module.exports = {
 
@@ -55,7 +60,7 @@ module.exports = {
           if(customerId && customerName){
               where = `WHERE customer_id= '${customerId}' AND customer_name = '${customerName}' and deleted= false ` ;
           }else{
-            where =`WHERE deleted = false  `;
+            where =`WHERE  deleted = false  `;
           }
 
           const query=`select trunk_port, customer_name, customer_id,incallednumber from sonus_outbound_customer ${where}`;
@@ -101,12 +106,12 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo, trunkPortsVal
           wherePart = wherePart.substring(0, wherePart.length - 2);
         }
 
-        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 31 DAY) AND
+        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
         (${wherePart}) AND RECORDTYPEID = 3  `;
 
       }else{
       
-        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 31 DAY) AND
+        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
         INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND  RECORDTYPEID = 3        `;
       
       }
@@ -162,18 +167,14 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
   
     const JSON_data = Object.values(JSON.parse(JSON.stringify(records)));
     const dataSize=JSON_data.length;
-    // if(dataSize == 0){
-    //   return 'No data'
-    // }
     const chunkArray= await chunk(JSON_data,BATCH_SIZE);
-    //console.log(chunkArray);
     console.log(JSON.stringify(customerInfo));
     let res=[];
     let resArr=[];
+    const ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSet, { table: tableName })  
     for(let i=0;i<chunkArray.length;i++){
       const data = await getNextInsertBatch(chunkArray[i], customerInfo, ratesInfo);
-      //console.log("data="+JSON.stringify(data));
-      res=await db.queryBatchInsert(data,CDR_SONUS_OUTBOUND_CS);
+      res=await db.queryBatchInsert(data,'sonus',ColumnSetValue);
       resArr.push(res);
     }
     console.log("done"+ new Date());
@@ -181,8 +182,6 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
     return resArr;
 
   },
-
-
   updateBatchControl: async function(serviceId,targetDate,api) {
     let query;
     try {

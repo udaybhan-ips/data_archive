@@ -28,7 +28,7 @@ module.exports = {
             throw new Error('Error while delete summary data '+ deleteSummaryErr);  
           } 
 
-          const [createSummaryRes, createSummaryErr] = await handleError(BillingSonusOutbound.createSummaryData(customerListRes[i]['customer_name'], customerListRes[i]['customer_id'], billingYear, billingMonth));
+          const [createSummaryRes, createSummaryErr] = await handleError(BillingSonusOutbound.createSummaryData(customerListRes[i]['customer_name'], customerListRes[i]['customer_id'], billingYear, billingMonth, customerListRes[i]['landline_rate'], customerListRes[i]['mobile_rate']));
           if(createSummaryErr) {
             throw new Error('Error while creating summary data '+ createSummaryErr);  
           }

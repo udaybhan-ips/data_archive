@@ -59,10 +59,14 @@ module.exports = {
 
             const insertRes = await db.queryIBS(insertQuery, []);
 
-            return insertRes.rowCount;
+            if (insertRes.rowCount && insertRes) {
+                return insertRes.rowCount;
+            }
+            throw new Error(insertRes)
+         
 
         } catch (error) {
-            console.log("error in getting adding kick company info..." + error.message)
+            console.log("error in adding kick company info..." + error.message)
             throw new Error(error.message)
         }
     },

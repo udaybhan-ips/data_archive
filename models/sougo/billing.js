@@ -148,10 +148,11 @@ module.exports = {
   genrateInvoice: async function (company_code, billingYear, billingMonth, currentMonth) {
     try {
 
-      let path = __dirname + `\\Invoice\\${company_code}${billingYear}${billingMonth}.pdf`;
-
       const invoiceData = await getInvoiceData(company_code, billingYear, billingMonth);
       const customerAddress = await getCustomerInfo(company_code);
+
+      let path = __dirname + `\\Invoice\\1${company_code}${billingYear}${billingMonth}_${customerAddress[0]['company_name']}御中.pdf`;
+
       let totalCallAmount = 0;
       let totalCallDuration = 0;
 
@@ -414,7 +415,7 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
         paymentDueDate = `${currentYear}/10/31`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
-      paymentDueDate = `${currentYear}/09/30`;
+      paymentDueDate = `${currentYear}/10/31`;
     }
 
   await generateHeader(address, doc, totalCallAmount);

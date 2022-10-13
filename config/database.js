@@ -17,7 +17,8 @@ const pgp = require('pg-promise')({
 });
 
 const db_pgp = pgp(config.DATABASE_URL_BYOKAKIN);
-
+const db_sonus_pgp = pgp(config.DATABASE_URL_SONUS_DB);
+const db_ibs_pgp = pgp(config.DATABASE_URL_IBS);
 
 var connectionStringPortal = config.DATABASE_URL_IPS_PORTAL;
 var connectionString = config.DATABASE_URL_SONUS_DB;
@@ -64,13 +65,23 @@ const CS = {
 
 
 module.exports = {
-  queryBatchInsert: async function (data, cdr_cs, ColumnSet, tableName) {
+  queryBatchInsert: async function (data, db, ColumnSetValue) {
 
     console.log("data length=" + data.length);
-    console.log("cs=" + cdr_cs);
+    //console.log("cs=" + cdr_cs);
 
     let db_pgp, query, res;
+    
     try {
+
+      query = await pgp.helpers.insert(data, ColumnSetValue);
+      if(db==='sonus'){
+        res = await db_sonus_pgp.none(query)
+      }else if(db==='ibs'){
+        res = await db_ibs_pgp.none(query)
+      }
+
+      return res;
 
       if (cdr_cs == 'billcdr_cs' || cdr_cs == 'cdr_mvno_cs' || cdr_cs == 'cdr_mvno_fphone_cs') {
         db_pgp = pgp(config.DATABASE_URL_IBS);

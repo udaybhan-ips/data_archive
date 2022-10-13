@@ -17,7 +17,11 @@ module.exports = {
   },
   getAllSonusOutboundCustomer: async function() {
     try {
-          const query=`select  customer_name, customer_id   from sonus_outbound_customer  where deleted=false group by customer_name, customer_id order by customer_id`;
+          const query=`select  customer_name, customer_id, (select landline from sonus_outbound_rates 
+            where sonus_outbound_rates.customer_id=sonus_outbound_customer.customer_id) as landline_rate ,
+             (select mobile from sonus_outbound_rates where sonus_outbound_rates.customer_id=sonus_outbound_customer.customer_id) 
+             as mobile_rate   from sonus_outbound_customer  where deleted=false 
+             group by customer_name, customer_id order by customer_id`;
           
           const getAllSonusOutboundCustRes= await db.query(query,[], true);
           if(getAllSonusOutboundCustRes.rows){
@@ -40,18 +44,18 @@ module.exports = {
         return error;
     }
   },
-  createSummaryData: async function(customer_name, customer_id, year, month) {
+  createSummaryData: async function(customer_name, customer_id, year, month, landLineRate, mobileRate) {
     console.log("summary");
   
     try {
 
-        let landLineRate = '0.06';
-        let mobileRate = '0.115';
+        // let landLineRate = '0.06';
+        // let mobileRate = '0.115';
 
-        if(customer_id == '00001226'){
-           landLineRate = '0.05';
-           mobileRate = '0.15';
-        }
+        // if(customer_id == '00001226'){
+        //    landLineRate = '0.05';
+        //    mobileRate = '0.15';
+        // }
         
         const getSummaryData=`select sum( case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR left(sonus_egcallednumber,2)='90' ) then 1 else 0 end) as mobile_count,
         sum( case when ( left(sonus_egcallednumber,2)='70' OR  left(sonus_egcallednumber,2)='80' OR left(sonus_egcallednumber,2)='90' ) then 0 else 1 end) as landline_count,

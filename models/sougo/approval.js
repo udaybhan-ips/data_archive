@@ -4,7 +4,8 @@ var utility= require('./../../public/javascripts/utility');
 module.exports = {
     getStatusByInvoiceNo: async function(data) {
         try {
-            const query=`select * from kickback_sougo_approval_history where invoice_number='${data.bill_no}' order by approved_date desc `;
+            const query=`select * from kickback_sougo_approval_history where invoice_number='${data.bill_no}' 
+            order by approved_date desc `;
             const invoiceStatusRes= await db.queryIBS(query,[]);
             console.log(query);
             if(invoiceStatusRes.rows){

@@ -111,7 +111,8 @@ module.exports = {
   getKickCompList: async function () {
 
     try {
-      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable  order by  customer_id     `;
+      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable 
+       where service_type='rate_base' and customer_id !='00000893' order by  customer_id     `;
       const getKickCompListRes = await db.queryIBS(query, []);
 
       if (getKickCompListRes.rows) {
@@ -462,15 +463,16 @@ module.exports = {
   genrateInvoice: async function (customerId, serviceType, billingYear, billingMonth, currentMonth, term_use, bill_no) {
     try {
 
-      let path;
-      if (customerId == '00000697' || customerId == '00000893') {
-        path = __dirname + `\\Invoice\\${customerId}${billingYear}${billingMonth}${bill_no}.pdf`;
-      } else {
-        path = __dirname + `\\Invoice\\${customerId}${billingYear}${billingMonth}.pdf`;
-      }
-
       const invoiceData = await getInvoiceData(customerId, serviceType, billingYear, billingMonth, term_use, bill_no);
       const customerAddress = await getCustomerInfo(customerId);
+      
+      let path;
+      if (customerId == '00000697' || customerId == '00000893') {
+        path = __dirname + `\\Invoice\\10${customerId}_${customerAddress[0]['customer_name']}${billingYear}${billingMonth}${bill_no}.pdf`;
+      } else {
+        path = __dirname + `\\Invoice\\10${customerId}_${customerAddress[0]['customer_name']}${billingYear}${billingMonth}.pdf`;
+      }
+
       let totalCallAmount = 0;
       let totalCallDuration = 0;
       let invoiceNo;
@@ -756,6 +758,7 @@ async function createInvoice(customerId, serviceType, billingYear, billingMonth,
   let doc = new PDFDocument({ margin: 50 });
   let MAXY = doc.page.height - 50;
   let fontpath = (__dirname + '\\..\\..\\controllers\\font\\ipaexg.ttf');
+
   doc.font(fontpath);
   await generateHeader(address, doc, totalCallAmount, serviceType);
 
@@ -828,10 +831,10 @@ async function generateHeader(customerDetails, doc, totalCallAmount, serviceType
   let ElIAddress1, ELIPostNumber, ElIAddress2, ElIAddress3, ELIPhone, ELIFax;
 
   if (serviceType == 'rate_base') {
-    ElIAddress1 = "株式会社アイ・ピー・エス";
-    ELIPostNumber = "〒104－0045";
-    ElIAddress2 = "東京都中央区築地4-1-1";
-    ElIAddress3 = "東劇ビル8階";
+    ElIAddress1 = "株式会社アイ・ピー・エス・プロ";
+    ELIPostNumber = "〒104-0061";
+    ElIAddress2 = "東京都中央区銀座4-12-15";
+    ElIAddress3 = "歌舞伎座タワー8F";
     ELIPhone = "TEL: 03-3549-7626";
     ELIFax = "FAX : 03-3545-7331";
   } else {

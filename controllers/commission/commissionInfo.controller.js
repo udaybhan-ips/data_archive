@@ -116,10 +116,10 @@ module.exports = {
       });
     }    
   },
-  addAddiKotehiInfo: async function(req, res) {
+  addCommissionInfo: async function(req, res) {
     
     try {
-        const [freeNumListRes,freeNumListErr] = await handleError(CommissionInfo.addAddiKotehiInfo(req.body));
+        const [freeNumListRes,freeNumListErr] = await handleError(CommissionInfo.addCommissionInfo(req.body));
         if(freeNumListErr) {
              return res.status(500).json({
               message: freeNumListErr.message

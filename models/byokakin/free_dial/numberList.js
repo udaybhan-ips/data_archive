@@ -40,7 +40,7 @@ module.exports = {
             where = where.substring(0, where.length-3)
          }
          
-          const query=`select * from ntt_kddi_freedial_c ${where} `;
+          const query=`select * from ntt_kddi_freedial_c ${where} order by free_numb__c`;
 
         //  console.log("query.."+query)
 

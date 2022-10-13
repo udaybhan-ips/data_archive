@@ -13,7 +13,7 @@ let ColumnSetInfini = ['servicecode', 'did', 'usednumber', 'cld', 'calldate', 'c
 
 
 let ColumnSetKDDIRAW = ['did', 'freedialnum', 'cld', 'calldate', 'calltime', 'callduration', 'source', 'destination', 'callclassi', 'calltype', 'callcharge', 'customercode'];
-let tableNameKDDIRAW = { table: 'byokakin_kddi_raw_cdr_202207' };
+
 
 let ColumnSetKDDIBillDetail = ['bill_numb__c', 'bill_start__c', 'cdrtype', 'cdrid', 'cdrcnt', 'account', 'servicename', 'productname', 'taxinclude', 'amount', 'comp_acco__c'];
 let tableNameKDDIBillDetail = { table: 'kddi_kotei_bill_details' };
@@ -550,7 +550,7 @@ async function insertByBatches(records, type, billingYear, billingMonth) {
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetKDDIBillDetail, tableNameKDDIBillDetail);
     }
     else {
-      res = await db.queryBatchInsert(chunkArray[i], null, ColumnSet, tableName);
+      res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSet, tableName);
     }
   }
   resArr.push(res);

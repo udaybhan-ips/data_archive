@@ -1,7 +1,16 @@
 var db = require('./../../config/database');
+const pgp = require('pg-promise')({
+
+  capSQL: true
+});
 const { BATCH_SIZE } = require('../../config/config');
 const CDR_CS = 'cdr_cs';
 const BILLCDR_CS = 'billcdr_cs';
+
+
+let ColumnSetSonus = ['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound','dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_company_code', 'trunk_port','sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_anani','sonus_incallednumber', 'sonus_ingressprotocolvariant', 'registerdate', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus','sonus_callingnumber'];
+
+let ColumnSetBillCDR = ['cdr_id', 'date_bill', 'company_code', 'carrier_code', 'in_outbound', 'call_type', 'trunk_port_target', 'duration', 'start_time', 'stop_time', 'orig_ani', 'term_ani', 'route_info', 'date_update', 'orig_carrier_id', 'term_carrier_id','transit_carrier_id', 'selected_carrier_id', 'trunk_port_name', 'gw', 'session_id', 'call_status', 'kick_company', 'term_use']
 
 module.exports = {
 
@@ -90,24 +99,42 @@ module.exports = {
   },
 
 
-  insertByBatches: async function (records, getCompanyCodeInfoRes, getRemoteControlNumberDataRes, carrierInfo, companyInfo, __type) {
+  insertByBatches: async function (records, getCompanyCodeInfoRes, getRemoteControlNumberDataRes, carrierInfo, companyInfo, __type, tableName) {
 
     const chunkArray = chunk(records, BATCH_SIZE);
-    let res = [];
+    let res = [], ColumnSetValue;
     let resArr = [];
-    for (let i = 0; i < chunkArray.length; i++) {
-      if (__type == 'raw_cdr') {
-        const data = await getNextInsertBatch(chunkArray[i], getCompanyCodeInfoRes, getRemoteControlNumberDataRes);
-        res = await db.queryBatchInsert(data, CDR_CS);
-      } else if (__type == 'bill_cdr') {
-        const data = await getNextInsertBatchBillCDR(chunkArray[i], carrierInfo, companyInfo);
-        res = await db.queryBatchInsert(data, BILLCDR_CS);
+    
+    try{
+
+      if(__type == 'raw_cdr')  {
+        ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetSonus, { table: tableName })           
+      }else{
+        ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetBillCDR, { table: `billcdr_main` })           
       }
-      resArr.push(res);
+      
+      for (let i = 0; i < chunkArray.length; i++) {
+
+        if (__type == 'raw_cdr') {       
+          const data = await getNextInsertBatch(chunkArray[i], getCompanyCodeInfoRes, getRemoteControlNumberDataRes);   
+          res = await db.queryBatchInsert(data, 'sonus', ColumnSetValue);
+      
+        } else if (__type == 'bill_cdr') {
+  
+          const data = await getNextInsertBatchBillCDR(chunkArray[i], carrierInfo, companyInfo);
+          res = await db.queryBatchInsert(data,'ibs', ColumnSetValue);
+        }
+        resArr.push(res);
+      }
+      console.log("done" + new Date());
+      console.log(resArr);
+      return resArr;
+
+    }catch(err){
+      console.log("Error..."+err.message);
     }
-    console.log("done" + new Date());
-    console.log(resArr);
-    return resArr;
+
+   
 
   },
   updateBatchControl: async function (serviceId, targetDate, api) {
