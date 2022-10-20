@@ -6,7 +6,7 @@ const utility = require("../../../public/javascripts/utility")
 
 let ColumnSetNTTKoteihi = ['did', 'carrier','carrier_name', 'service_name', 'amount', 'taxclassification', 'dailydisplay', 'date_added'];
 let ColumnSetNTTKoteihiCDR = ['companyname', 'comp_acco__c', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 
-'hiwarihyouji', 'datebill', 'linkedcdrid'];
+'hiwarihyouji', 'datebill', 'linkedcdrid', 'carrier'];
 let ColumnSetNTTKoteihiCDRBILL = ['cdrid', 'bill_code', 'comp_acco__c', 'bill_count', 'companyname', 'kaisenbango', 'riyougaisya',
  'seikyuuuchiwake', 'kingaku', 'zeikubun', 'datebill'];
 let ColumnSetNTTInbound = ['customername', 'did', 'calldate', 'calltime', 'callduration', 'callcharge', 'callcount104',
@@ -304,6 +304,7 @@ module.exports = {
           tmpObj['hiwarihyouji'] = kotehiData.rows[i]['dailydisplay'];
           tmpObj['datebill'] = `${billingYear}-${billingMonth}-01`;
           tmpObj['linkedcdrid'] = kotehiData.rows[i]['cdrid'];
+          tmpObj['carrier'] = kotehiData.rows[i]['carrier_name'];
 
           tmpData.push(tmpObj);
         }

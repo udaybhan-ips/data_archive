@@ -7,5 +7,6 @@ router.post('/commission/getCommissionDetails',  CommissionInfoController.getCom
 router.post('/commission/getCommissionSummary',  CommissionInfoController.getCommissionSummary);
 router.post('/commission/deleteCommissionInfo',  CommissionInfoController.deleteCommissionInfo);
 router.post('/commission/addCommissionInfo',  CommissionInfoController.addCommissionInfo);
+router.post('/commission/updateCommissionConfig',  CommissionInfoController.updateCommissionInfo);
 
 module.exports = router;

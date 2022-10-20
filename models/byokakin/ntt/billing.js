@@ -3,6 +3,7 @@ const BATCH_SIZE = 100000;
 var PDFDocument = require("pdfkit");
 var utility = require('../../../public/javascripts/utility');
 var fs = require("fs");
+const path = require('path');
 
 let ColumnSetNTTProcessedData = ['cdrid', 'cdrclassification', 'customercode', 'terminaltype', 'freedialnumber', 'callingnumber', 'calldate',
   'calltime', 'callduration', 'cld', 'sourcearea', 'destinationarea', 'cdrcallcharge', 'callrate', 'finalcallcharge', 'vendorcallcharge',
@@ -64,7 +65,7 @@ module.exports = {
 
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
-      where is_deleted = false and service_type ->> 'ntt_customer'  = 'true' and customer_cd in ('00001235') order by customer_code   `;
+      where is_deleted = false and service_type ->> 'ntt_customer'  = 'true' and customer_cd='00001273' order by customer_code   `;
       // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getNTTCompListRes = await db.query(query, [], true);
 
@@ -216,10 +217,13 @@ module.exports = {
   genrateInvoice: async function (company_code, customer_name, billingYear, billingMonth, carrier) {
     try {
 
-      let path = __dirname + `\\data\\${carrier}\\${billingYear}${billingMonth}\\Invoice\\${company_code}${billingYear}${billingMonth}.pdf`;
+     // let path = __dirname + `\\data\\${carrier}\\${billingYear}${billingMonth}\\Invoice\\${company_code}${billingYear}${billingMonth}.pdf`;
 
       const invoiceData = await getInvoiceData(company_code, billingYear, billingMonth);
-      const customerAddress = await getCustomerInfo(company_code);
+      const customerAddress = await getCustomerInfo();
+
+      let filePath = path.join(__dirname, `../ntt/data/${carrier}/${billingYear}${billingMonth}/Invoice/10${company_code}_${billingYear}${billingMonth}明細書_${customer_name}NTT.pdf`);
+
       let koteiAmount = 0;
       let cdrAmount = 0;
 
@@ -231,7 +235,7 @@ module.exports = {
       cdrAmount = parseInt(cdrAmount, 10);
       koteiAmount = parseInt(koteiAmount, 10);
 
-      await createInvoice(company_code, customer_name, customerAddress, billingYear, billingMonth, invoiceData, path, koteiAmount, cdrAmount);
+      await createInvoice(company_code, customer_name, customerAddress, billingYear, billingMonth, invoiceData, filePath, koteiAmount, cdrAmount);
       console.log("Done...")
     } catch (err) {
       console.log("error...." + err.message);
@@ -246,8 +250,8 @@ async function createInvoice(company_code, customer_name, address, billingYear, 
   const tax = parseInt(subTotal * .1);
   const totalAmount = subTotal + tax;
 
-  let doc = new PDFDocument({ margin: 50 });
-  let MAXY = doc.page.height - 50;
+  let doc = new PDFDocument({size: [597,842], margin:50});
+  let MAXY = doc.page.height ;
   let fontpath = (__dirname + '\\..\\..\\..\\controllers\\font\\ipaexg.ttf');
   doc.font(fontpath);
 
@@ -277,49 +281,52 @@ function generateCustomerInformation(doc, invoice, y, koteiAmount, cdrAmount, su
     .text(`通話料小計`, 150, y, { width: 100, align: "center" })
     .text(`小計`, 250, y, { width: 100, align: "center" })
     .text(`消費税`, 350, y, { width: 100, align: "center" })
-    .text(`合計`, 450, y, { width: 110, align: "center" })
+    .text(`合計`, 450, y, { width: 90, align: "center" })
 
   doc.rect(50, y - 5, 100, 30).stroke()
   doc.rect(150, y - 5, 100, 30).stroke()
   doc.rect(250, y - 5, 100, 30).stroke()
   doc.rect(350, y - 5, 100, 30).stroke()
-  doc.rect(450, y - 5, 110, 30).stroke()
+  doc.rect(450, y - 5, 90, 30).stroke()
     .fontSize(12)
     .text(`¥${utility.numberWithCommas(koteiAmount)}`, 50, y + 30, { width: 100, align: "center" })
     .text(`¥${utility.numberWithCommas(cdrAmount)}`, 150, y + 30, { width: 100, align: "center" })
     .text(`¥${utility.numberWithCommas(subTotal)}`, 250, y + 30, { width: 100, align: "center" })
     .text(`¥${utility.numberWithCommas(tax)}`, 350, y + 30, { width: 100, align: "center" })
-    .text(`¥${utility.numberWithCommas(totalAmount)}`, 450, y + 30, { width: 110, align: "center" })
+    .text(`¥${utility.numberWithCommas(totalAmount)}`, 450, y + 30, { width: 90, align: "center" })
     .fontSize(8)
   doc.rect(50, y + 25, 100, 25).stroke()
   doc.rect(150, y + 25, 100, 25).stroke()
   doc.rect(250, y + 25, 100, 25).stroke()
   doc.rect(350, y + 25, 100, 25).stroke()
-  doc.rect(450, y + 25, 110, 25).stroke()
+  doc.rect(450, y + 25, 90, 25).stroke()
 
     .moveDown();
   return y + 35;
 }
 
 function basciInfo(doc, y, company_code, customer_name, billingYear, billingMonth) {
+  const todayYYYYMMDD= getYearMonthDay();
+  const todayYYYYMMDDArr = todayYYYYMMDD.split("-");
+
   doc
     .fontSize(8)
     .text(`明細番号`, 50, y + 10, { width: 100, align: "left" })
     .text(`会社 `, 50, y + 25, { width: 100, align: "left" })
-    .text(`1000000${company_code}_NTT_${billingYear}${billingMonth}_01`, 125, y + 10, { width: 250, align: "left" })
+    .text(`10${company_code}_NTT_${billingYear}${billingMonth}_01`, 125, y + 10, { width: 250, align: "left" })
     .text(`${customer_name}`, 125, y + 25, { width: 300, align: "left" })
 
     .text(`ご利用月`, 50, y + 65, { width: 100, align: "left" })
     .text(`請求日 `, 50, y + 80, { width: 100, align: "left" })
 
     .text(`${billingYear}-${billingMonth}-01 ～ ${billingYear}-${billingMonth}-30`, 125, y + 65, { width: 250, align: "left" })
-    .text(`${billingYear}-08-24`, 125, y + 80, { width: 100, align: "left" })
+    .text(`${todayYYYYMMDDArr[0]}-${todayYYYYMMDDArr[1].padStart(2, '0')}-${todayYYYYMMDDArr[2].padStart(2, '0')}`, 125, y + 80, { width: 100, align: "left" })
 
     .moveDown()
   return y + 35;
 }
 
-function drawLine(doc, startX, Y = 50, Z = 560) {
+function drawLine(doc, startX, Y = 50, Z = 540) {
   doc
     .moveTo(Y, startX)                            // set the current point
     .lineTo(Z, startX)                            // draw a line
@@ -332,17 +339,17 @@ function addTableHeader(doc, y) {
 
   doc
     .fontSize(12)
-    .text(`課金番号`, 50, y + 5, { width: 75, align: "center" })
-    .text(`統合明細科目名称`, 125, y + 5, { width: 125, align: "center" })
-    .text(`品 目 `, 250, y + 5, { width: 175, align: "center" })
+    .text(`課金対象`, 50, y + 5, { width: 75, align: "center" })
+    .text(`請求内容`, 125, y + 5, { width: 300, align: "center" })
+   // .text(`品 目 `, 250, y + 5, { width: 175, align: "center" })
     .text(`課税対象`, 425, y + 5, { width: 50, align: "center" })
-    .text(`統合明細金額`, 475, y + 5, { width: 85, align: "center" })
+    .text(`金額`, 475, y + 5, { width: 65, align: "center" })
 
   doc.rect(50, y - 5, 75, 30).stroke()
-  doc.rect(125, y - 5, 125, 30).stroke()
-  doc.rect(250, y - 5, 175, 30).stroke()
+  doc.rect(125, y - 5, 300, 30).stroke()
+ // doc.rect(250, y - 5, 175, 30).stroke()
   doc.rect(425, y - 5, 50, 30).stroke()
-  doc.rect(475, y - 5, 85, 30).stroke()
+  doc.rect(475, y - 5, 65, 30).stroke()
 
     //drawLine(doc, y)
     .moveDown();
@@ -356,21 +363,21 @@ function customTable(doc, y, data, MAXY) {
   for (let i = 0; i < data.length; i++) {
     height = height + 20;
     textInRowFirst(doc, data[i].account, 50, height, "center", 75);
-    textInRowFirst(doc, data[i].servicename, 125, height, "center", 125);
-    textInRowFirst(doc, data[i].productname, 250, height, "center", 175);
+   // textInRowFirst(doc, data[i].servicename, 125, height, "center", 125);
+    textInRowFirst(doc, data[i].productname, 125, height, "center", 300);
     textInRowFirst(doc, data[i].taxinclude, 425, height, "center", 50);
-    textInRowFirst(doc, '¥' + utility.numberWithCommas(parseFloat(data[i].amount).toFixed(2)), 475, height, "right", 85);
+    textInRowFirst(doc, '¥' + utility.numberWithCommas(parseFloat(data[i].amount).toFixed(2)), 475, height, "right", 65);
 
-    if (height >= 680) {
-      doc.text(counter, 500, 720)
-      doc.addPage({ margin: 50 })
+    if (height >= 750) {
+     // doc.text(counter, 500, 720)
+      doc.addPage()
       height = 50;
       counter++;
       //addTableHeader(doc, 50, 50);
 
     }
   }
-  doc.text(counter, 500, 720)
+  //doc.text(counter, 500, 720)
 
   return height;
 }
@@ -394,8 +401,8 @@ async function generateHeader(customerDetails, doc) {
   const customerName = customerDetails[0]['customer_name'];
   const address = customerDetails[0]['address'];
 
-  const Phone = "TEL. 03-3549-7621（代）";
-  const Fax = "FAX. 03-3545-7331";
+  const Phone = `TEL. ${customerDetails[0]['tel_number']}（代）`;
+  const Fax = `FAX. ${customerDetails[0]['fax_number']}`;
 
 
   doc
@@ -431,11 +438,11 @@ async function generateFooter(doc, y) {
 }
 
 
-async function getCustomerInfo(company_code) {
+async function getCustomerInfo() {
   try {
     const query = `select * from m_customer where customer_cd='00000130'`;
 
-    const ratesRes = await db.queryIBS(query, [], true);
+    const ratesRes = await db.query(query, [], true);
 
     if (ratesRes.rows) {
       return (ratesRes.rows);
@@ -450,7 +457,7 @@ async function getInvoiceData(company_code, year, month) {
   try {
     const query = `select * from (select (kingaku) amount, 0 as cdr_amount, (kingaku) kotei_amount , 
     comp_acco__c as comp_code, cdrid, riyougaisya as servicename, seikyuuuchiwake as productname,
-     zeikubun as taxinclude, kaisenbango as account
+     '合算10％' as taxinclude, kaisenbango as account
      from ntt_koteihi_cdr_bill where datebill::date = '${year}-${month}-01' and comp_acco__c = '${company_code}' 
       UNION ALL
        select   sum( case when terminaltype!='その他' then finalcallcharge else 0 end) as amount ,
@@ -613,7 +620,6 @@ async function getFinalCharge(customerId, terminalType, rates, callDuration, cal
       if (terminalType.includes("その他") || callCharge == 0 ) {
         resData['resFinalCharge'] = callCharge;
         resData['vendorCallCharge'] = callCharge;      
-  
       }
     }
 
@@ -772,4 +778,12 @@ async function roundToFour(num) {
   else
     res = num;
   return res;
+}
+function getYearMonthDay(){
+  var dateObj = new Date();
+var month = dateObj.getUTCMonth() + 1; //months from 1-12
+var day = dateObj.getUTCDate();
+var year = dateObj.getUTCFullYear();
+
+return year + "-" + month + "-" + day;
 }

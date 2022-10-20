@@ -7,5 +7,6 @@ temp
 *.pdf
 *.ttf
 *.otf
+*.xlsx
 .vscode/
 -

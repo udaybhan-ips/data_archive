@@ -1,4 +1,5 @@
 var db = require('../../config/database');
+var utility= require('./../../public/javascripts/utility');
 
 module.exports = {
     getCommissionInfo: async function(data) {
@@ -6,7 +7,7 @@ module.exports = {
         try {
           const query=`select data_idno as id, agent_code, freedial_code as target_agent_code, serv_name, 
           call_sort as call_type, edat_star as start_date, edat_fini as end_date, amnt_conv as commisson,
-         edit_by, edit_date , amount from agent_incentive where edat_fini::date > now()  order by agent_code` ;
+         edit_by, edit_date , amount from agent_incentive where edat_fini::date > now() and deleted=false order by agent_code` ;
 
         //  console.log("query.."+query)
 
@@ -117,9 +118,12 @@ module.exports = {
   }
 },
 
-  createCommissionDetails: async function({comp_code, year, month,  createdBy}) {
+  createCommissionDetails: async function({comp_code, year, month,payment_plan_date,  createdBy}) {
 
     let billNo = 1000;
+    const getNumberOfDaysInMonth = utility.daysInMonth(month, year);
+
+    console.log("getNumberOfDaysInMonth.."+getNumberOfDaysInMonth)
 
     try {
 
@@ -159,7 +163,7 @@ module.exports = {
                 }                
                 const insertQuery = `insert into agent_commission_details (agent_code, freedial_code, bill_numb, serv_name, call_sort, 
                 bill_start, bill_end, bill_amnt, amnt_conv, comm_amnt) VALUES ('${comp_code}','${targetAgentCode.rows[i].freedial_code}',
-                '${billNo}','${targetAgentCode.rows[i].serv_name}','${targetAgentCode.rows[i].call_sort}','${year}-${month}-01','${year}-${month}-30','${total_amount}',
+                '${billNo}','${targetAgentCode.rows[i].serv_name}','${targetAgentCode.rows[i].call_sort}','${year}-${month}-01','${year}-${month}-${getNumberOfDaysInMonth}','${total_amount}',
                 '${targetAgentCode.rows[i].amnt_conv}','${commissionAmt}')`;
                  const insertRes = await db.queryByokakin(insertQuery, []);
                  res.push(insertRes);
@@ -175,10 +179,13 @@ module.exports = {
             totalCommissionAmt = subTotalCommissionAmt + taxCommissionAmt;
         }
 
+      
+       
+
         const insertSummaryData = `insert into agent_commission (agent_code, bill_numb, bill_coun, amount_use,advbefore_pay,advnow_pay,
             total_bill, bill_start, bill_end, bill_issue, bill_due, bill_sum, bill_disc, bill_tax,   bill_total, reco_date, 
             reco_name, modi_date, modi_name, paid_flag, paidprocessby, paidprocessdate , serv_name) VALUES ('${comp_code}','${billNo}','0',
-            '${totalCommissionAmt}',0,0,'${totalCommissionAmt}','${year}-${month}-01','${year}-${month}-30', now(),'${year}-${month}-30',
+            '${totalCommissionAmt}',0,0,'${totalCommissionAmt}','${year}-${month}-01','${year}-${month}-${getNumberOfDaysInMonth}',now(),'${payment_plan_date}',
              '${subTotalCommissionAmt}',0,'${taxCommissionAmt}', '${totalCommissionAmt}', now(),'${createdBy}', now(),'${createdBy}',
              null, null, null, 'NTT-KDDI')`;
 
@@ -198,17 +205,21 @@ module.exports = {
 
     try {
         console.log("data.."+ JSON.stringify(param))
-        let carrier_amount =0 , ips_amount = 0 ; 
-        if(param.carrier_amount !==null && param.carrier_amount !== undefined && param.carrier_amount !=='' ){
-            carrier_amount = param.carrier_amount;
-        }
         
-        if(param.ips_amount !== null && param.ips_amount !== undefined && param.ips_amount !==''){
-            ips_amount = param.ips_amount;
+        let amount =0, commisson = 0 ;
+
+        // // if(param.amount !==null && param.amount!== undefined) {
+        // //   amount = param.amount;
+        // // }
+
+
+        if(param.commisson !==null && param.commisson!== undefined) {
+          commisson = param.commisson;
         }
-        
-      const query=`update ntt_kddi_additional_kotehi_detail set carrier_amount='${carrier_amount}', ips_amount='${ips_amount}', 
-      modified_by='${param.updatedBy}', modified_date=now() , deleted=${param.deleted} where id = ${param.id} `;
+
+       
+      const query=`update agent_incentive set amnt_conv='${commisson}', 
+      edit_by='${param.edit_by}', edit_date=now() , deleted=${param.deleted} where data_idno = ${param.id} `;
 
       const summaryRes= await db.queryByokakin(query,[]);
       
@@ -269,6 +280,9 @@ addCommissionInfo: async function(data) {
         throw new Error(error.message)
   }
 },
+
+
+
  
   
 }

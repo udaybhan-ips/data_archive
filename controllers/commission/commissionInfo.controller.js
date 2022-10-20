@@ -21,7 +21,7 @@ module.exports = {
   },
 
   createCommissionDetails: async function(req, res) {
-    
+    console.log("req.."+ JSON.stringify(req.body))
     try {
         const [createCommissionDetailsRes,createCommissionDetailsErr] = await handleError(CommissionInfo.createCommissionDetails(req.body));
         if(createCommissionDetailsErr) {
@@ -43,7 +43,7 @@ module.exports = {
     
     try {
 
-      console.log("req.."+ JSON.stringify(req.body))
+      
         const [getCommissionDetailsRes,getCommissionDetailsErr] = await handleError(CommissionInfo.getCommissionDetails(req.body));
         if(getCommissionDetailsErr) {
 
@@ -98,17 +98,19 @@ module.exports = {
   },
   
 
-  updateAddiKotehiInfo: async function(req, res) {
-    
+  updateCommissionInfo: async function(req, res) {
+    console.log("req..."+JSON.stringify(req.body))
     try {
-        const [freeNumListRes,freeNumListErr] = await handleError(CommissionInfo.updateAddiKotehiInfo(req.body));
-        if(freeNumListErr) {
+        const [updateCommRes,updateCommErr] = await handleError(CommissionInfo.updateCommissionInfo(req.body));
+
+
+        if(updateCommErr) {
 
              return res.status(500).json({
-              message: freeNumListErr.message
+              message: updateCommErr.message
             });  
         }
-        return res.status(200).json(freeNumListRes);
+        return res.status(200).json(updateCommRes);
         
     } catch (error) {
       return res.status(400).json({
