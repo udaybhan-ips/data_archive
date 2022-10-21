@@ -56,19 +56,11 @@ module.exports = {
       if(year == undefined || year == '' || year == null || month == undefined || month == '' || month ==null){
         throw new Error('Invalid Request!')
       }
-
       let where = `WHERE bill_start::date ='${year}-${month}-1' and bill_sum > 0`;
-
       if(comp_code !=undefined && comp_code !='' && comp_code !=null){
         where += `AND agent_code='${comp_code}'`; 
       }
-
-      
-
       const query=` select * from agent_commission ${where}  ` ;
-
-    //  console.log("query.."+query)
-
       const summaryRes= await db.queryByokakin(query,[]);
       
       if(summaryRes.rows){
@@ -91,15 +83,12 @@ module.exports = {
       }
 
       let where = `WHERE bill_start::date ='${year}-${month}-1' and comm_amnt > 0 `;
-
       if(comp_code !=undefined && comp_code !='' && comp_code !=null){
         where += `AND agent_code='${comp_code}'`; 
       }
-
       if(carrier !=undefined && carrier !='' && carrier !=null){
         where += `AND serv_name='${carrier}'`; 
       }
-
       const query=`select data_idno as id, agent_code, freedial_code, bill_numb, serv_name, call_sort, 
       bill_start, bill_end, bill_amnt, amnt_conv, comm_amnt from agent_commission_details ${where} ` ;
 
@@ -148,6 +137,9 @@ module.exports = {
         let res = [], subTotalCommissionAmt = 0, totalCommissionAmt = 0, taxCommissionAmt = 0 ;
 
         for(let i=0; i < targetAgentCode.rows.length; i++) {
+
+          if(targetAgentCode.rows[i].serv_name=='KDDI' || targetAgentCode.rows[i].serv_name =='NTT') {
+
             let getCommissionData = `select count(*), SUM(FINALCALLCHARGE) as TOTAL_AMOUNT from 
             byokakin_${targetAgentCode.rows[i].serv_name}_processedcdr_${year}${month} where terminaltype= '${targetAgentCode.rows[i].call_sort}' 
             and customercode='${targetAgentCode.rows[i].freedial_code}'`;
@@ -163,15 +155,54 @@ module.exports = {
                 }                
                 const insertQuery = `insert into agent_commission_details (agent_code, freedial_code, bill_numb, serv_name, call_sort, 
                 bill_start, bill_end, bill_amnt, amnt_conv, comm_amnt) VALUES ('${comp_code}','${targetAgentCode.rows[i].freedial_code}',
-                '${billNo}','${targetAgentCode.rows[i].serv_name}','${targetAgentCode.rows[i].call_sort}','${year}-${month}-01','${year}-${month}-${getNumberOfDaysInMonth}','${total_amount}',
-                '${targetAgentCode.rows[i].amnt_conv}','${commissionAmt}')`;
+                '${billNo}','${targetAgentCode.rows[i].serv_name}','${targetAgentCode.rows[i].call_sort}','${year}-${month}-01',
+                '${year}-${month}-${getNumberOfDaysInMonth}','${total_amount}','${targetAgentCode.rows[i].amnt_conv}','${commissionAmt}')`;
+                 const insertRes = await db.queryByokakin(insertQuery, []);
+                 res.push(insertRes);
+                 if(res =='data already there!'){
+                    throw new Error(res)
+                 }
+            }  
+          }else if(targetAgentCode.rows[i].serv_name=='IPSPRO-SONUS_OUTBOUND') {
+
+            let getCommissionData ="";
+            if(targetAgentCode.rows[i].call_sort=='携帯'){
+              
+              getCommissionData = `select count(*) as total, sum(duration) from cdr_sonus_outbound where to_char(start_time, 'YYYY-MM') 
+              ='${year}-${month}' and (left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR 
+              left(sonus_egcallednumber,2)='90') and billing_comp_code='${targetAgentCode.rows[i].freedial_code}'`;
+              
+            }else{
+              getCommissionData = `select count(*) as total, sum(duration) from cdr_sonus_outbound where to_char(start_time, 'YYYY-MM') 
+              ='${year}-${month}' and left(sonus_egcallednumber,2)!='70' and  left(sonus_egcallednumber,2) != '80' and 
+              left(sonus_egcallednumber,2)!='90' and billing_comp_code='${targetAgentCode.rows[i].freedial_code}'`;
+            }
+            
+            const getCommissionDataRes = await db.query(getCommissionData, []);
+
+            if(getCommissionDataRes && getCommissionDataRes.rows && getCommissionDataRes.rows.length>0){
+                let commissionAmt = 0, total_amount = 0;
+                if(getCommissionDataRes.rows[0].total_amount!=null){
+                    commissionAmt = getCommissionDataRes.rows[0].total_amount*targetAgentCode.rows[i].amnt_conv;
+                    total_amount = getCommissionDataRes.rows[0].total_amount;
+                    subTotalCommissionAmt +=  parseInt(commissionAmt,10);
+                }                
+                const insertQuery = `insert into agent_commission_details (agent_code, freedial_code, bill_numb, serv_name, call_sort, 
+                bill_start, bill_end, bill_amnt, amnt_conv, comm_amnt) VALUES ('${comp_code}','${targetAgentCode.rows[i].freedial_code}',
+                '${billNo}','${targetAgentCode.rows[i].serv_name}','${targetAgentCode.rows[i].call_sort}','${year}-${month}-01',
+                '${year}-${month}-${getNumberOfDaysInMonth}','${total_amount}','${targetAgentCode.rows[i].amnt_conv}','${commissionAmt}')`;
                  const insertRes = await db.queryByokakin(insertQuery, []);
                  res.push(insertRes);
                  if(res =='data already there!'){
                     throw new Error(res)
                  }
 
-            }           
+            }
+            
+
+          }
+
+                    
         }
 
         if(subTotalCommissionAmt>0){
