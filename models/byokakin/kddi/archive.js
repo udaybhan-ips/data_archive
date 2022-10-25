@@ -234,7 +234,7 @@ module.exports = {
   getKDDIKotehiProcessedData: async function ({ year, month }) {
     try {
       console.log("year, month .." + year, month);
-      const query = ` select  substring(split_part(bill_numb__c, '-',2),4) as comp_code,  sum (amount) from kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_numb__c, '-',2),4) `;
+      const query = `select  substring(split_part(bill_numb__c, '-',2),4) as comp_code,  sum (amount) from kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_numb__c, '-',2),4) `;
       const getKDDIKotehiProcessedDataRes = await db.queryByokakin(query, []);
       return getKDDIKotehiProcessedDataRes.rows;
     } catch (e) {

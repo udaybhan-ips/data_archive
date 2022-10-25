@@ -203,12 +203,15 @@ module.exports = {
 
       let comCode = '', comCode4Dig = '';
 
-      if (row.length > 0) {
+     
+
+      if (row.length > 0 && selectedData.comp_code!=undefined && selectedData.comp_code!=null)  {
         comCode = selectedData.comp_code;
         comCode4Dig = comCode.slice(comCode.length - 4);
       } else {
         throw new Error('request data not available');
       }
+
       const query = ` select *, substring(split_part(bill_code, '-',2),4) as comp_code from ntt_koteihi_cdr_bill where   
       to_char(datebill::date, 'MM-YYYY')='${selectedData.month}-${selectedData.year}' and  substring(split_part(bill_code, '-',2),4) = '${comCode4Dig}' `;
 
