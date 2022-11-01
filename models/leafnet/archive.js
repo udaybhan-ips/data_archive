@@ -56,7 +56,7 @@ getTargetCDR: async function(targetDateWithTimezone) {
     let resArr=[];
     for(let i=0;i<chunkArray.length;i++){
       const data =  getNextInsertBatch(chunkArray[i]);
-      res=await db.queryBatchInsert(data,CDR_SONUS_CS);
+      res=await db.queryBatchInsertWithoutColumnSet(data,CDR_SONUS_CS);
       resArr.push(res);
     }
     console.log("done"+ new Date());

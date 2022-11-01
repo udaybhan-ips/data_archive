@@ -401,6 +401,8 @@ module.exports = {
         let csvDataInbound = [], csvDataOutbound = [], fileName = '';
         console.log("file name ..." + files[i]);
 
+
+
         if (path.extname(files[i]).toLowerCase() == fileType) {
           fileName = path.join(__dirname, `../ntt_orix/data/${carrier}/${billingYear}${billingMonth}/RAW_CDR/${files[i]}`)
 
@@ -434,7 +436,7 @@ module.exports = {
                 if (recordType == 'フリーダイヤル') {
                   let terminaltype = row[15].trim();
                   if (parentDID == '0354913704' || parentDID == '0337002845' || parentDID == '0337008029' || parentDID == '0354912091'
-                    || parentDID == '0354912097' || parentDID == '05038511863') {
+                    || parentDID == '0354912097' || parentDID == '05038511863' ||  fileName.includes('割引対象外')) {
                     terminaltype = 'その他';
                   }
 

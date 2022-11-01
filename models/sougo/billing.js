@@ -51,7 +51,7 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main
+      const query = `select distinct(company_code) as company_code from billcdr_main where company_code='1011000013'
        order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
@@ -382,7 +382,14 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
   let doc = new PDFDocument({ margin: 50 });
   let MAXY = doc.page.height - 50;
   let fontpath = (__dirname + '\\..\\..\\controllers\\font\\ipaexg.ttf');
+  let imagePath = (__dirname+'\\IPSP_seal.jpg')
   doc.font(fontpath);
+  //{ width: 100, align: "right" }
+  doc.image(imagePath, 465, 60, {
+    fit: [120, 160],
+    align: 'right',
+    //width: '300'
+  });
 
   let paymentDueDate = "";
   let tmpPaymentDate = "";

@@ -2,7 +2,7 @@ var EmailNotification = require('../../models/kickback/emailNotification');
 
 let internlReport = true;
 let externalReport = true;
-let internalSummaryReport = false;
+let internalSummaryReport = true;
 
 
 module.exports = {
@@ -26,7 +26,6 @@ module.exports = {
       if (allKickCompErr) {
         console.log("Could not get all kick company");
         throw new Error('Could not get all kick company');
-
       }
 
       const [allKickCompEmail, allKickCompEmailErr] = await handleError(EmailNotification.getAllKickCompEmail(Dates.targetDateWithTimezone));

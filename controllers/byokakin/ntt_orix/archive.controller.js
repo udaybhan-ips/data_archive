@@ -43,7 +43,7 @@ module.exports = {
 
   uploadNTTORIXRAW: async function (req, res) {
     try {
-      const billingMonth = "07";
+      const billingMonth = "08";
       const billingYear ="2022";
       const carrier = 'NTTORIX';
       //const deleteTargetDateData = await ArchiveNTTORIX.deleteTargetDateCDR(billingMonth, serviceType, callType);
