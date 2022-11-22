@@ -4,26 +4,26 @@ var billingController = require('../byokakin/ntt/billing.controller');
 var CDRsController = require('../byokakin/ntt/cdr.controller');
 // var EmailController = require('../byokakin/emailNotification.controller');
 
-// var archiverJob = new CronJob ('58 9 * * *',function(){
+// var archiverJob = new CronJob ('30 12 * * *',function(){
 //     console.log('This is byokakin NTT archiver start');
 //     archiveController.uploadKotehiNTT();
 //     console.log('This is byokakin NTT archiver End');  
 // },null, true, 'Asia/Tokyo');
 
-// var archiverJob = new CronJob ('9 10 * * *',function(){
+// var archiverJob = new CronJob ('34 12 * * *',function(){
 //     console.log('This is byokakin NTT archiver start');
 //     archiveController.NTTKotehiCharge();
 //     console.log('This is byokakin NTT archiver End');  
 // },null, true, 'Asia/Tokyo');
 
-// var billingControllerJob = new CronJob ('26 16 * * *',function(){
+// var billingControllerJob = new CronJob ('45 9 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.getData();
 //     console.log('This is byokakin email notification end');
 // },null, true, 'Asia/Tokyo');
 
  
-// var archiverJob = new CronJob ('48 10 * * *',function(){
+// var archiverJob = new CronJob ('57 12 * * *',function(){
 //     console.log('This is byokakin archiver start');
 //     archiveController.uploadNTTRAW();
 //     console.log('This is byokakin archiver End');  

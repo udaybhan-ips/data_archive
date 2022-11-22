@@ -3,7 +3,7 @@ module.exports = {
 
   uploadKotehiNTT: async function (req, res) {
     try {
-      const billingMonth = "09";
+      const billingMonth = "10";
       const billingYear ="2022";
       const carrier = 'NTT';
       console.log("here")
@@ -21,7 +21,7 @@ module.exports = {
   NTTKotehiCharge: async function(req, res){
 
     try{
-      const billingMonth = "09";
+      const billingMonth = "10";
       const billingYear ="2022";
       
       const resNTTFreeDialNumList = await ArchiveNTT.getNTTFreeDialNumList();
@@ -40,7 +40,7 @@ module.exports = {
 
   uploadNTTRAW: async function (req, res) {
     try {
-      const billingMonth = "09";
+      const billingMonth = "10";
       const billingYear ="2022";
       const carrier = 'NTT';
       //const deleteTargetDateData = await ArchiveNTT.deleteTargetDateCDR(billingMonth, serviceType, callType);

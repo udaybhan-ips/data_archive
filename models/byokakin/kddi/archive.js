@@ -65,15 +65,15 @@ module.exports = {
     try {
       const query = `select customer_name, customer_cd, id from m_customer `
       const getKDDICustomerList = await db.query(query, [], true);
-      if(getKDDICustomerList && getKDDICustomerList.rows){
-        return getKDDICustomerList.rows;        
-      }else{
+      if (getKDDICustomerList && getKDDICustomerList.rows) {
+        return getKDDICustomerList.rows;
+      } else {
         return 'Not found'
       }
-      
+
     } catch (e) {
       console.log("err in get kddi company list=" + e.message);
-      throw new Error("Error in fetching customer details..."+e.message);      
+      throw new Error("Error in fetching customer details..." + e.message);
     }
   },
   getKDDIKotehiABasciData: async function () {
@@ -133,13 +133,13 @@ module.exports = {
   getAdditionalKotehiData: async function (data) {
     try {
       let carrierWhere = "";
-      if(data.carrier!=='' && data.carrier!==undefined && data.carrier!==null){
+      if (data.carrier !== '' && data.carrier !== undefined && data.carrier !== null) {
         carrierWhere = `and carrier = '${data.carrier}'`;
       }
       const query = ` SELECT * from ntt_kddi_additional_kotehi_detail where deleted = false ${carrierWhere} `;
       const getAdditionalKotehiDataRes = await db.queryByokakin(query, []);
-      if(getAdditionalKotehiDataRes && getAdditionalKotehiDataRes.rows)
-      return getAdditionalKotehiDataRes.rows;
+      if (getAdditionalKotehiDataRes && getAdditionalKotehiDataRes.rows)
+        return getAdditionalKotehiDataRes.rows;
       else
         throw new Error(getAdditionalKotehiDataRes);
     } catch (e) {

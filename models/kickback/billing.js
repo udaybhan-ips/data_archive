@@ -112,7 +112,7 @@ module.exports = {
 
     try {
       const query = `select customer_id, service_type, cell_phone_limit from kickback_billable 
-       where service_type='rate_base' and customer_id !='00000893' order by  customer_id     `;
+       where customer_id='00000784' and deleted=false  order by  customer_id     `;
       const getKickCompListRes = await db.queryIBS(query, []);
 
       if (getKickCompListRes.rows) {
@@ -193,7 +193,7 @@ module.exports = {
       }
       if (service_type == 'rate_base') {
         query = `select count(*) as total_calls, sum(duration) as total_duration , term_ani 
-      from billcdr_main where term_ani in (${_03_numbers}) and duration>1 and call_status in (16, 31) group by term_ani order by term_ani  `;
+      from billcdr_main_202209 where term_ani in (${_03_numbers}) and duration>1 and call_status in (16, 31) group by term_ani order by term_ani  `;
       } else {
         if (isExceed || kickCompany == '00000697') {
           let queryTermUse1 = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 

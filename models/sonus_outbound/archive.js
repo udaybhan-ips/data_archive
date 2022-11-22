@@ -99,19 +99,20 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo, trunkPortsVal
       if(type == 'incallednumber'){
         let wherePart="";
         for ( let i=0; i<customerInfo.length; i++){
-          wherePart = wherePart + ` (INGRPSTNTRUNKNAME in ('${customerInfo[i].trunk_port}') AND incallednumber like '${customerInfo[i]['incallednumber']}' ) OR` ;
+          wherePart = wherePart + ` (INGRPSTNTRUNKNAME in ('${customerInfo[i].trunk_port}') 
+          AND incallednumber like '${customerInfo[i]['incallednumber']}' ) OR` ;
         }
         //remove last  value (OR)
         if(wherePart.substr(wherePart.length - 2)=='OR'){
           wherePart = wherePart.substring(0, wherePart.length - 2);
         }
 
-        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
+        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 30 DAY) AND
         (${wherePart}) AND RECORDTYPEID = 3  `;
 
       }else{
       
-        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
+        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 30 DAY) AND
         INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND  RECORDTYPEID = 3        `;
       
       }
@@ -141,7 +142,8 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
       if(customerInfo['incallednumber']){ 
     //    where=` WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND 
         where=` WHERE  STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
-        INGRPSTNTRUNKNAME in ('${customerInfo.trunk_port}') AND incallednumber like '${customerInfo['incallednumber']}' AND RECORDTYPEID = 3 order by STARTTIME `;
+        INGRPSTNTRUNKNAME in ('${customerInfo.trunk_port}') AND incallednumber 
+        like '${customerInfo['incallednumber']}' AND RECORDTYPEID = 3 order by STARTTIME `;
       }else{
         let trunkPorts = customerInfo.trunk_port;
 

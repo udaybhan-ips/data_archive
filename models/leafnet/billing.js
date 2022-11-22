@@ -111,7 +111,7 @@ insertByBatches: async function(records, ratesData) {
     
         for(let i=0;i<chunkArray.length;i++){
             const data = await getNextInsertBatch(chunkArray[i], ipsRates, ratesData);
-            res=await db.queryBatchInsert(data,CDR_SONUS_BILLING_CS);
+            res=await db.queryBatchInsertWithoutColumnSet(data,CDR_SONUS_BILLING_CS);
             resArr.push(res);
         }
     }catch(err){

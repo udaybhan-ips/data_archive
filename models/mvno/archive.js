@@ -126,7 +126,7 @@ module.exports = {
         authcode ,  billableseconds ,  billdate ,  billedseconds ,  billedsecondsdisplay ,  billingclass ,   callcharge ,  calldirection ,  
         callstatuscode ,  calltypecode ,  connectseconds ,  custaccountcode ,   custcode ,  custid ,  custserviceid ,  discountamount , 
         dnis ,  origani , termani , outportgroupnumber , termcountrydesc , stoptime ,   starttime , inseizetime 
-        FROM CALL WITH(NOLOCK) WHERE starttime BETWEEN '${targetDateWithTimezone}' and  DATEADD(day, 30, '${targetDateWithTimezone}') AND 
+        FROM CALL WITH(NOLOCK) WHERE starttime BETWEEN '${targetDateWithTimezone}' and  DATEADD(day, 31, '${targetDateWithTimezone}') AND 
         (calldirection = 'O') AND (connectseconds > 0) ORDER BY starttime `;
       //console.log("query="+query);
       const data = await db.msSQLServer(query);
@@ -153,7 +153,7 @@ module.exports = {
     for (let i = 0; i < chunkArray.length; i++) {
       const data = await getNextInsertBatch(chunkArray[i]);
       //console.log("data="+JSON.stringify(data));
-      res = await db.queryBatchInsert(data, CDR_MVNO_CS);
+      res = await db.queryBatchInsertWithoutColumnSet(data, CDR_MVNO_CS);
       resArr.push(res);
     }
     console.log("done" + new Date());
@@ -227,14 +227,14 @@ module.exports = {
 
       let where = "";
       if (leg == 'A') {
-        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 30 DAY)  
+        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 31 DAY)  
         AND (GW IN ('NFPGSX4','IPSGSX5')) 
         AND (CALLDURATION > 0)
         AND RECORDTYPEID = 3 
         AND ((EGCALLEDNUMBER LIKE '%33328222%'))
         order by STARTTIME asc `;
       } else {
-        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 30 DAY)  
+        where = `WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 31 DAY)  
         AND (GW IN ('NFPGSX4','IPSGSX5')) 
         AND (CALLDURATION > 0)
         AND RECORDTYPEID = 3 
@@ -268,7 +268,7 @@ module.exports = {
     let resArr = [];
     for (let i = 0; i < chunkArray.length; i++) {
       const data = await getNextInsertBatchFphone(chunkArray[i], leg, ratesInfo, getFPhoneCarrierChageRes, getFPhoneRelayCarrierRes, getFPhoneTermUse,company_code);
-      res = await db.queryBatchInsert(data, CDR_MVNO_FPHONE_CS);
+      res = await db.queryBatchInsertWithoutColumnSet(data, CDR_MVNO_FPHONE_CS);
       resArr.push(res);
     }
     console.log("done" + new Date());

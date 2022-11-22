@@ -13,9 +13,9 @@ module.exports = {
       }
       // console.log(JSON.stringify(Dates));
 
-      const deleteTargetDateData = await ArchiveSonusOutbound.deleteTargetDateCDR(Dates.targetDate, '00001253','Geek feed (Cali Mama (IPS))');
+      const deleteTargetDateData = await ArchiveSonusOutbound.deleteTargetDateCDR(Dates.targetDate);
 
-      const getAllTrunkgroupRes = await ArchiveSonusOutbound.getAllTrunkgroup('00001253','Geek feed (Cali Mama (IPS))');
+      const getAllTrunkgroupRes = await ArchiveSonusOutbound.getAllTrunkgroup();
       const getRatesRes = await ArchiveSonusOutbound.getRates();
 
       console.log(JSON.stringify(getAllTrunkgroupRes));
@@ -54,9 +54,9 @@ module.exports = {
 
       // For incallednumber 
 
-      // let getTargetCDRWithIncalledRes = await ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, TGsWithIncalledNum, null, "incallednumber");
+      let getTargetCDRWithIncalledRes = await ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, TGsWithIncalledNum, null, "incallednumber");
 
-      // const getWithCalledDataRes = await ArchiveSonusOutbound.insertByBatches(getTargetCDRWithIncalledRes, TGsWithIncalledNum, getRatesRes);
+      const getWithCalledDataRes = await ArchiveSonusOutbound.insertByBatches(getTargetCDRWithIncalledRes, TGsWithIncalledNum, getRatesRes);
 
 
 

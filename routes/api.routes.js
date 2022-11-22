@@ -32,6 +32,15 @@ router.use('/v1', require('./apiv1/customer/customers.routes'));
 
 router.use('/v1', require('./apiv1/commission/commissionInfo.routes'));
 
+
+/**********End */
+
+
+/** Additional Services **/
+
+router.use('/v1', require('./apiv1/addi_service/addiServiceInfo.routes'));
+
+
 /**********End */
 
 /** DID Number details **/

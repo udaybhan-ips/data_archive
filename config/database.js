@@ -108,9 +108,7 @@ module.exports = {
   queryBatchInsert: async function (data, db, ColumnSetValue) {
 
     console.log("data length=" + data.length);
-    //console.log("cs=" + cdr_cs);
-
-    let db_pgp, query, res;
+    let  query, res;
     
     try {
 
@@ -120,34 +118,10 @@ module.exports = {
       }else if(db==='ibs'){
         res = await db_ibs_pgp.none(query)
       }
-
       return res;
-
-      if (cdr_cs == 'billcdr_cs' || cdr_cs == 'cdr_mvno_cs' || cdr_cs == 'cdr_mvno_fphone_cs') {
-        db_pgp = pgp(config.DATABASE_URL_IBS);
-      } else if (ColumnSet) {
-        db_pgp = pgp(config.DATABASE_URL_BYOKAKIN);
-      } else {
-        db_pgp = pgp(config.DATABASE_URL_SONUS_DB);
-      }
-
-      if (ColumnSet) {
-        const ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSet, tableName)
-        query = pgp.helpers.insert(data, ColumnSetValue);
-        res = await db_pgp.none(query)
-      } else {
-        query = pgp.helpers.insert(data, CS[cdr_cs]);
-        res = await db_pgp.none(query)
-      }
-
-
-
     } catch (e) {
       console.log("error while bulk data inserting:" + e.message)
     }
-
-
-    //console.log("3")
     return res;
   },
 

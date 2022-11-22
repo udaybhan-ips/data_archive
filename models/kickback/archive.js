@@ -8,7 +8,7 @@ const CDR_CS = 'cdr_cs';
 const BILLCDR_CS = 'billcdr_cs';
 
 
-let ColumnSetSonus = ['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound','dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_company_code', 'trunk_port','sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_anani','sonus_incallednumber', 'sonus_ingressprotocolvariant', 'registerdate', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus','sonus_callingnumber'];
+let ColumnSetSonus = ['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound','dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_company_code', 'trunk_port','sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_anani','sonus_incallednumber', 'sonus_ingressprotocolvariant', 'registerdate', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus','sonus_callingnumber', 'sonus_egcallednumber'];
 
 let ColumnSetBillCDR = ['cdr_id', 'date_bill', 'company_code', 'carrier_code', 'in_outbound', 'call_type', 'trunk_port_target', 'duration', 'start_time', 'stop_time', 'orig_ani', 'term_ani', 'route_info', 'date_update', 'orig_carrier_id', 'term_carrier_id','transit_carrier_id', 'selected_carrier_id', 'trunk_port_name', 'gw', 'session_id', 'call_status', 'kick_company', 'term_use']
 
@@ -56,13 +56,15 @@ module.exports = {
     try {
       const query = `SELECT GW, SESSIONID, STARTTIME, CALLDURATION, ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, DISCONNECTTIME, ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
         CALLDURATION*0.01 AS DURATION, CEIL(CALLDURATION*0.01) AS DURATIONKIRIAGE, INANI, INGRPSTNTRUNKNAME,
-        OUTGOING, INCALLEDNUMBER, CALLINGPARTYCATEGORY, EGCALLEDNUMBER, INGRESSPROTOCOLVARIANT,CALLSTATUS FROM COLLECTOR_73 
+        OUTGOING, INCALLEDNUMBER, CALLINGPARTYCATEGORY, EGCALLEDNUMBER, INGRESSPROTOCOLVARIANT,CALLSTATUS, CALLINGNUMBER FROM COLLECTOR_73 
         where STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
         AND (GW IN ('NFPGSX4','IPSGSX5')) 
         AND (CALLDURATION > 0)
         AND RECORDTYPEID = 3 
         AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
         order by STARTTIME asc ` ;
+        //AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
+        //AND (INGRPSTNTRUNKNAME IN ('IPSCSQFFFFJ7') )
 
       const data = await db.mySQLQuery(query, [], 'kickback');
       return data;
@@ -466,6 +468,8 @@ async function getNextInsertBatch(data, getCompanyCodeInfoRes, getRemoteControlN
       obj['sonus_gw'] = data[i]['GW'];
       obj['sonus_callstatus'] = data[i]['CALLSTATUS'];
       obj['sonus_callingnumber'] = data[i]['CALLINGNUMBER'];
+      obj['sonus_egcallednumber'] = data[i]['EGCALLEDNUMBER'];
+
       valueArray.push(obj);
 
     }

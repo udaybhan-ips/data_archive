@@ -51,7 +51,7 @@ module.exports = {
   getAllCompCode: async function () {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main where company_code='1011000013'
+      const query = `select distinct(company_code) as company_code from billcdr_main where company_code='1011000017'
        order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
@@ -417,12 +417,12 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
         
     } else if (tmpPaymentDate == 'half_yearly') {
       if (parseInt(billingMonth) > 10 && parseInt(billingMonth) <=3 )
-        paymentDueDate = `${billingYear }/10/31`;
+        paymentDueDate = `${billingYear }/05/01`;
       else
-        paymentDueDate = `${currentYear}/10/31`;
+        paymentDueDate = `${currentYear}/05/01`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
-      paymentDueDate = `${currentYear}/10/31`;
+      paymentDueDate = `${currentYear}/11/30`;
     }
 
   await generateHeader(address, doc, totalCallAmount);

@@ -65,8 +65,8 @@ module.exports = {
 
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
-      where is_deleted = false and service_type ->> 'ntt_customer'  = 'true' 
-      and customer_cd in ('00000822') order by customer_code   `;
+      where is_deleted = false and service_type ->> 'ntt_customer'  = 'true' and customer_cd='00001281'
+       order by customer_code   `;
       // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getNTTCompListRes = await db.query(query, [], true);
 
@@ -85,9 +85,9 @@ module.exports = {
 
       let where = `where raw_cdr.carriertype ='NTT'`; 
 
-      if(customer_code !=='00001166'){
+//      if(customer_code !=='00001166'){
         where += `and raw_cdr.callcharge > 0`
-      }
+  //    }
 
       const query = `select  raw_cdr.*, 0 as callcount104 from 
       byokakin_ntt_rawcdr_outbound_${billingYear}${billingMonth}  raw_cdr join ntt_kddi_freedial_c free_dial on 
@@ -223,7 +223,7 @@ module.exports = {
       const invoiceData = await getInvoiceData(company_code, billingYear, billingMonth);
       const customerAddress = await getCustomerInfo();
 
-      let filePath = path.join(__dirname, `../ntt/data/${carrier}/${billingYear}${billingMonth}/Invoice/10${company_code}_${billingYear}${billingMonth}明細書_${customer_name}NTT_rev1.pdf`);
+      let filePath = path.join(__dirname, `../ntt/data/${carrier}/${billingYear}${billingMonth}/Invoice/10${company_code}_${billingYear}${billingMonth}明細書_${customer_name}NTT.pdf`);
 
       let koteiAmount = 0;
       let cdrAmount = 0;
@@ -320,7 +320,7 @@ function basciInfo(doc, y, company_code, customer_name, billingYear, billingMont
     .text(`ご利用月`, 50, y + 65, { width: 100, align: "left" })
     .text(`請求日 `, 50, y + 80, { width: 100, align: "left" })
 
-    .text(`${billingYear}-${billingMonth}-01 ～ ${billingYear}-${billingMonth}-30`, 125, y + 65, { width: 250, align: "left" })
+    .text(`${billingYear}-${billingMonth}-01 ～ ${billingYear}-${billingMonth}-31`, 125, y + 65, { width: 250, align: "left" })
     .text(`${todayYYYYMMDDArr[0]}-${todayYYYYMMDDArr[1].padStart(2, '0')}-${todayYYYYMMDDArr[2].padStart(2, '0')}`, 125, y + 80, { width: 100, align: "left" })
 
     .moveDown()

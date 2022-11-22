@@ -118,8 +118,8 @@ addDIDNumberList: async function(data) {
 
         for(let i= 0; i< didNumberArr.length; i++){
             insertQuery = `insert into _03numbers (customer_cd, _03_numbers, rico_name, 
-                start_date, issue_date) Values 
-                ('${data.comp_code}','${didNumberArr[i]}', '${data.updatedBy}','${data.start_date}',now()) returning id`;
+                start_date, issue_date, valid_flag) Values 
+                ('${data.comp_code}','${didNumberArr[i]}', '${data.updatedBy}','${data.start_date}',now(), 0) returning id`;
             
             const insertRes = await db.queryIBS(insertQuery,[]);      
               
