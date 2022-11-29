@@ -129,7 +129,7 @@ module.exports = {
       if (detailAddiServiceData && detailAddiServiceData.rows && detailAddiServiceData.rows.length > 0) {
 
         let res = [];
-        let rateCount = 0, rateSecond = 0, quantity = 0, rateSecondAmount = 0, totalDuration = 0,rateCountAmount=0, remarks = '';
+        let rateCount = 0, rateSecond = 0, quantity = 0, rateSecondAmount = 0, totalDuration = 0,rateCountAmount=0, remarks = '', tax=0, totalAmount =0;
 
         const queryData = `select count(*) as count, sum(duration::numeric) as duration from cdr_${year}${month} 
         where term_carrier_id='${detailAddiServiceData.rows[0].term_carrier_id}'`
@@ -145,6 +145,10 @@ module.exports = {
           
           rateSecondAmount = parseFloat(rateSecond) * parseFloat(totalDuration);
           rateCountAmount = parseFloat(rateCount) * parseFloat(quantity);
+
+          tax = (parseFloat(rateSecondAmount) + parseFloat(rateCountAmount)) *.1;
+
+          totalAmount = (parseFloat(rateSecondAmount) + parseFloat(rateCountAmount)) + tax;
 
 
           const insertQuery = `insert into addi_service_detail (bill_no, customer_code, date_bill, bill_term_start, bill_term_end, 
@@ -166,9 +170,9 @@ module.exports = {
         
 
         const insertSummaryData = `insert into addi_service_history (customer_code, bill_no, date_payment, bill_term_start,bill_term_end,bill_second,
-          bill_rate,  amount, tax, date_insert, name_insert, call_count) VALUES ('${comp_code}','${billNo}','${payment_plan_date}',
+          bill_rate, bill_amount , tax,amount, date_insert, name_insert, call_count) VALUES ('${comp_code}','${billNo}','${payment_plan_date}',
           '${year}-${month}-01','${year}-${month}-${getNumberOfDaysInMonth}','${totalDuration}',0,
-          '${parseFloat(rateSecondAmount)+parseFloat(rateCountAmount)}',0,now(),'${createdBy}', ${quantity})`;
+          '${parseFloat(rateSecondAmount)+parseFloat(rateCountAmount)}','${tax}','${totalAmount}',now(),'${createdBy}', ${quantity})`;
 
         const sumRes = await db.queryIBS(insertSummaryData, []);
       }

@@ -5,7 +5,7 @@ module.exports = {
   findAll: async function() {
       try {
         console.log("in company");
-          const query="select * from company where deleted=false order by company_code asc";
+          const query=`select *  from company where deleted=false order by company_code asc`;
           const companyListRes= await db.queryIBS(query,[]);
           return companyListRes.rows;
       } catch (error) {

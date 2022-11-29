@@ -3,7 +3,7 @@ module.exports = {
 
   uploadKotehiNTTORIX: async function (req, res) {
     try {
-      const billingMonth = "08";
+      const billingMonth = "10";
       const billingYear ="2022";
       
       const carrier = 'NTTORIX';
@@ -23,7 +23,7 @@ module.exports = {
   NTTORIXKotehiCharge: async function(req, res){
 
     try{
-      const billingMonth = "08";
+      const billingMonth = "10";
       const billingYear ="2022";
       
       const resNTTORIXFreeDialNumList = await ArchiveNTTORIX.getNTTORIXFreeDialNumList();
@@ -43,7 +43,7 @@ module.exports = {
 
   uploadNTTORIXRAW: async function (req, res) {
     try {
-      const billingMonth = "08";
+      const billingMonth = "10";
       const billingYear ="2022";
       const carrier = 'NTTORIX';
       //const deleteTargetDateData = await ArchiveNTTORIX.deleteTargetDateCDR(billingMonth, serviceType, callType);

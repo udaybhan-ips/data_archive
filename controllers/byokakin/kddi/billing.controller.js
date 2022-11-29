@@ -69,15 +69,15 @@ module.exports = {
         //finish
         /*****  create summary data for byokakin */
 
-        // const [getSummaryDataRes, getSummaryDataErr] = await handleError(BillingByokakin.getSummaryData(getKDDICompListRes[i]['customer_code'], billingYear, billingMonth));
-        // if (getSummaryDataErr) {
-        //   throw new Error('error'+getSummaryDataErr);
-        // }
+        const [getSummaryDataRes, getSummaryDataErr] = await handleError(BillingByokakin.getSummaryData(getKDDICompListRes[i]['customer_code'], billingYear, billingMonth));
+        if (getSummaryDataErr) {
+          throw new Error('error'+getSummaryDataErr);
+        }
 
-        // const [createSummaryRes, createSummaryErr] = await handleError(BillingByokakin.createSummaryData('bill_no', getKDDICompListRes[i]['customer_code'], billingYear, billingMonth, getSummaryDataRes));
-        // if (createSummaryErr) {
-        //   throw new Error('Error while creating summary data ' + createSummaryErr);
-        // }
+        const [createSummaryRes, createSummaryErr] = await handleError(BillingByokakin.createSummaryData('bill_no', getKDDICompListRes[i]['customer_code'], billingYear, billingMonth, getSummaryDataRes));
+        if (createSummaryErr) {
+          throw new Error('Error while creating summary data ' + createSummaryErr);
+        }
 
         const [createInvoiceRes, createInvoiceErr] = await handleError(BillingByokakin.genrateInvoice(getKDDICompListRes[i]['customer_code'], getKDDICompListRes[i]['customer_name'], billingYear, billingMonth));
 

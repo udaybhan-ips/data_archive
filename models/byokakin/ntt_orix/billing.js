@@ -51,7 +51,7 @@ module.exports = {
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
       where is_deleted = false and service_type ->> 'ntt_orix_customer'  = 'true' 
-      and customer_cd in  ('00000926','00000927','00000928','00000918')  order by customer_code   `;
+        order by customer_code   `;
       // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getNTTCompListRes = await db.query(query, [], true);
 

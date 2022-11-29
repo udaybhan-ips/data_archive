@@ -5,7 +5,7 @@ module.exports = {
   getData: async function (req, res) {
     try {
 
-      const billingMonth = '09', billingYear = "2022";
+      const billingMonth = '10', billingYear = "2022";
       const carrier = 'NTTORIX'
 
       // console.log("ratesDetails="+JSON.stringify(ratesDetails));
@@ -32,33 +32,33 @@ module.exports = {
         // outbound data processing
 
 
-        // const [ratesDetails, ratesErr] = await handleError(BillingByokakin.getRates(getNTTCompListRes[i]['customer_code']));
-        // if (ratesErr) {
-        //   throw new Error('Could not fetch Rates details');
-        // }
+        const [ratesDetails, ratesErr] = await handleError(BillingByokakin.getRates(getNTTCompListRes[i]['customer_code']));
+        if (ratesErr) {
+          throw new Error('Could not fetch Rates details');
+        }
 
-        // const [getOutboundRAWCDRRes, getOutboundRAWCDRError] = await handleError(BillingByokakin.getNTTOutboundRAWData(billingYear, billingMonth, getNTTCompListRes[i]['customer_code']));
-        // if (getOutboundRAWCDRError) {
-        //   throw new Error('Could not fetch outbound RAW cdr details');
-        // }
+        const [getOutboundRAWCDRRes, getOutboundRAWCDRError] = await handleError(BillingByokakin.getNTTOutboundRAWData(billingYear, billingMonth, getNTTCompListRes[i]['customer_code']));
+        if (getOutboundRAWCDRError) {
+          throw new Error('Could not fetch outbound RAW cdr details');
+        }
 
-        // const [createDetailsRes, createDetailsErr] = await handleError(BillingByokakin.insertProcessedDataByBatches('OUTBOUND', carrier, getOutboundRAWCDRRes, ratesDetails, getNTTCompListRes[i]['customer_code'], billingYear, billingMonth ));
-        // if (createDetailsErr) {
-        //   throw new Error('Error while creating summary data ' + createDetailsErr);
-        // }
+        const [createDetailsRes, createDetailsErr] = await handleError(BillingByokakin.insertProcessedDataByBatches('OUTBOUND', carrier, getOutboundRAWCDRRes, ratesDetails, getNTTCompListRes[i]['customer_code'], billingYear, billingMonth ));
+        if (createDetailsErr) {
+          throw new Error('Error while creating summary data ' + createDetailsErr);
+        }
 
         // //inbound data processing
 
-        // const [getInboundRAWCDRRes, getInboundRAWCDRError] = await handleError(BillingByokakin.getNTTRAWInboundData(billingYear, billingMonth, getNTTCompListRes[i]['customer_code']));
-        // if (getInboundRAWCDRError) {
-        //   throw new Error('Could not fetch inbound RAW cdr details');
-        // }
+        const [getInboundRAWCDRRes, getInboundRAWCDRError] = await handleError(BillingByokakin.getNTTRAWInboundData(billingYear, billingMonth, getNTTCompListRes[i]['customer_code']));
+        if (getInboundRAWCDRError) {
+          throw new Error('Could not fetch inbound RAW cdr details');
+        }
 
 
-        // const [createDetailsInboundRes, createDetailsInboundErr] = await handleError(BillingByokakin.insertProcessedDataByBatches('INBOUND', carrier, getInboundRAWCDRRes, ratesDetails, getNTTCompListRes[i]['customer_code'], billingYear, billingMonth));
-        // if (createDetailsInboundErr) {
-        //   throw new Error('Error while creating summary data ' + createDetailsInboundErr);
-        // }
+        const [createDetailsInboundRes, createDetailsInboundErr] = await handleError(BillingByokakin.insertProcessedDataByBatches('INBOUND', carrier, getInboundRAWCDRRes, ratesDetails, getNTTCompListRes[i]['customer_code'], billingYear, billingMonth));
+        if (createDetailsInboundErr) {
+          throw new Error('Error while creating summary data ' + createDetailsInboundErr);
+        }
 
         //finish
         /*****  create summary data for byokakin */
