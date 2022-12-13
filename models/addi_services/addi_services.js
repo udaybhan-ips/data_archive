@@ -131,8 +131,18 @@ module.exports = {
         let res = [];
         let rateCount = 0, rateSecond = 0, quantity = 0, rateSecondAmount = 0, totalDuration = 0,rateCountAmount=0, remarks = '', tax=0, totalAmount =0;
 
-        const queryData = `select count(*) as count, sum(duration::numeric) as duration from cdr_${year}${month} 
-        where term_carrier_id='${detailAddiServiceData.rows[0].term_carrier_id}'`
+        let queryData=""
+if(comp_code=='00000997'){
+  queryData = `select count(*) as count, sum(duration::numeric) as duration from cdr_${year}${month} 
+  where term_carrier_id='${detailAddiServiceData.rows[0].term_carrier_id}' or orig_carrier_id ='${detailAddiServiceData.rows[0].orig_carrier_id}'`
+}else{
+  queryData = `select count(*) as count, sum(duration::numeric) as duration from cdr_${year}${month} 
+  where term_carrier_id='${detailAddiServiceData.rows[0].term_carrier_id}'`
+}
+
+       
+
+
         const queryDataRes = await db.query(queryData, []);
         for (let i = 0; i < queryDataRes.rows.length; i++) {
 

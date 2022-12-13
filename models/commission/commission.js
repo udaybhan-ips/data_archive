@@ -154,6 +154,8 @@ module.exports = {
             const total_amount = 0;
             subTotalCommissionAmt += parseInt(commissionAmt, 10);
 
+            console.log("subTotalCommissionAmt.."+subTotalCommissionAmt)
+
 
             const insertQuery = `insert into agent_commission_details (agent_code, freedial_code, bill_numb, serv_name, call_sort, 
               bill_start, bill_end, bill_amnt, amnt_conv, comm_amnt) VALUES ('${comp_code}','${targetAgentCode.rows[i].freedial_code}',
@@ -191,9 +193,12 @@ module.exports = {
 
               if (getCommissionDataRes.rows[0].total_amount != null) {
                 commissionAmt = getCommissionDataRes.rows[0].total_amount * targetAgentCode.rows[i].amnt_conv;
+                commissionAmt = parseFloat(commissionAmt).toFixed(2);
                 total_amount = getCommissionDataRes.rows[0].total_amount;
                 subTotalCommissionAmt += parseInt(commissionAmt, 10);
               }
+              console.log("subTotalCommissionAmt.."+subTotalCommissionAmt)
+
               const insertQuery = `insert into agent_commission_details (agent_code, freedial_code, bill_numb, serv_name, call_sort, 
                 bill_start, bill_end, bill_amnt, amnt_conv, comm_amnt) VALUES ('${comp_code}','${targetAgentCode.rows[i].freedial_code}',
                 '${billNo}','${targetAgentCode.rows[i].serv_name}','${targetAgentCode.rows[i].call_sort}','${year}-${month}-01',
@@ -231,9 +236,12 @@ module.exports = {
 
               if (getCommissionDataRes.rows[0].duration != null  ) {
                 commissionAmt = getCommissionDataRes.rows[0].duration * rate * targetAgentCode.rows[i].amnt_conv;
+                commissionAmt = parseFloat(commissionAmt).toFixed(2);
                 total_amount = getCommissionDataRes.rows[0].duration * rate;
                 subTotalCommissionAmt += parseInt(commissionAmt, 10);
               }
+              console.log("subTotalCommissionAmt.."+subTotalCommissionAmt)
+
               const insertQuery = `insert into agent_commission_details (agent_code, freedial_code, bill_numb, serv_name, call_sort, 
                 bill_start, bill_end, bill_amnt, amnt_conv, comm_amnt) VALUES ('${comp_code}','${targetAgentCode.rows[i].freedial_code}',
                 '${billNo}','${targetAgentCode.rows[i].serv_name}','${targetAgentCode.rows[i].call_sort}','${year}-${month}-01',

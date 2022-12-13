@@ -79,7 +79,7 @@ update ntt_kddi_freedial_c set free_numb__c= '036361094'    where   length(free_
 
 
 
- CREATE TABLE IF NOT EXISTS "cdr_202211" ("cdr_id" BIGSERIAL, "date_bill" TIMESTAMP WITHout TIME ZONE not null , orig_ani VARCHAR , term_ani VARCHAR,
+ CREATE TABLE IF NOT EXISTS "cdr_202212" ("cdr_id" BIGSERIAL, "date_bill" TIMESTAMP WITHout TIME ZONE not null , orig_ani VARCHAR , term_ani VARCHAR,
  "start_time" TIMESTAMP WITHout TIME ZONE not null , "stop_time" TIMESTAMP WITHout TIME ZONE not null
   ,"duration" VARCHAR(255), "duration_use" VARCHAR(255),
   "dom_int_call" VARCHAR(255), "orig_carrier_id" VARCHAR(255),

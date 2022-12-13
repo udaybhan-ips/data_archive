@@ -10,7 +10,7 @@ module.exports = {
 
       //console.log("req.."+JSON.stringify(req));
 
-      const billingMonth = "10";
+      const billingMonth = "11";
       const billingYear ="2022";
       const serviceType = "Kotehi";
       const callType = ['free_number','d_number'];
@@ -40,7 +40,7 @@ module.exports = {
 
   uploadKDDIRAW: async function (req, res) {
     try {
-      const billingMonth = "10";
+      const billingMonth = "11";
       const billingYear ="2022";
       const serviceType = "RAW";
       

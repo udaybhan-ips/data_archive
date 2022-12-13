@@ -447,8 +447,8 @@ module.exports = {
               }
             })
             .on('end', function () {
-              insertByBatches(csvData);
-              insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
+              //insertByBatches(csvData);
+              //insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
               insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
             })
             .on('error', function (error) {

@@ -112,7 +112,7 @@ module.exports = {
 
     try {
       const query = `select customer_id, service_type, cell_phone_limit from kickback_billable 
-       where customer_id='00000784' and deleted=false  order by  customer_id     `;
+       where customer_id ='00001032' and  deleted=false  order by  customer_id     `;
       const getKickCompListRes = await db.queryIBS(query, []);
 
       if (getKickCompListRes.rows) {
@@ -269,7 +269,7 @@ module.exports = {
         where = `where term_ani in (${_03_numbers})  and term_use=1`;
       }
 
-      const query = `select  * from     billcdr_main ${where} `;
+      const query = `select  * from  billcdr_main ${where} `;
       console.log("query==" + query);
       const data = await db.queryIBS(query);
 
@@ -313,6 +313,7 @@ module.exports = {
           duration = parseInt(duration / 60, 10);
         }
         let item_no = i + 1;
+        
         let query = `insert into kickback_detail (bill_no, item_no , item_name, call_minute, amount, remarks, date_update,
           name_update, date_insert, name_insert, call_count) VALUES('${bill_no}', '${item_no}', '${_03_numbers[i]['_03_numbers']}', '${duration}', 0, '' ,'now()','', 'now()',
            'system','${call_count}')`;

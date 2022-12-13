@@ -16,7 +16,7 @@ var CDRsController = require('../byokakin/ntt/cdr.controller');
 //     console.log('This is byokakin NTT archiver End');  
 // },null, true, 'Asia/Tokyo');
 
-// var billingControllerJob = new CronJob ('45 9 * * *',function(){
+// var billingControllerJob = new CronJob ('17 11 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.getData();
 //     console.log('This is byokakin email notification end');

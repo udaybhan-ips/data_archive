@@ -5,7 +5,7 @@ module.exports = {
   getData: async function (req, res) {
     try {
 
-      const billingMonth = '10', billingYear = "2022";
+      const billingMonth = '11', billingYear = "2022";
 
       // console.log("ratesDetails="+JSON.stringify(ratesDetails));
 
@@ -31,10 +31,10 @@ module.exports = {
         // outbound data processing
 
 
-      //   const [ratesDetails, ratesErr] = await handleError(BillingByokakin.getRates(getKDDICompListRes[i]['customer_code']));
-      //   if (ratesErr) {
-      //     throw new Error('Could not fetch Rates details');
-      //   }
+        // const [ratesDetails, ratesErr] = await handleError(BillingByokakin.getRates(getKDDICompListRes[i]['customer_code']));
+        // if (ratesErr) {
+        //   throw new Error('Could not fetch Rates details');
+        // }
 
       //   if(ratesDetails.length <=0){
       //     console.log("Rates are not defined for this company..");
