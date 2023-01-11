@@ -65,7 +65,8 @@ module.exports = {
 
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
-      where is_deleted = false and service_type ->> 'ntt_customer'  = 'true' and customer_cd in ('00001036','00000901')
+      where is_deleted = false and service_type ->> 'ntt_customer'  = 'true' and customer_cd  in
+       ('00000901','00001300','00001301','00001302','00001303') 
        order by customer_code   `;
       // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getNTTCompListRes = await db.query(query, [], true);
@@ -235,6 +236,11 @@ module.exports = {
 
       cdrAmount = parseInt(cdrAmount, 10);
       koteiAmount = parseInt(koteiAmount, 10);
+
+      if(cdrAmount<=0 && koteiAmount<=0){
+        console.log("No data!!");
+        return 'no data';
+      }
 
       await createInvoice(company_code, customer_name, customerAddress, billingYear, billingMonth, invoiceData, filePath, koteiAmount, cdrAmount);
       console.log("Done...")

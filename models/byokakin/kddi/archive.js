@@ -234,7 +234,24 @@ module.exports = {
   getKDDIKotehiProcessedData: async function ({ year, month }) {
     try {
       console.log("year, month .." + year, month);
-      const query = `select  substring(split_part(bill_numb__c, '-',2),4) as comp_code,  sum (amount) from kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_numb__c, '-',2),4) `;
+
+      let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
+      const lastYear = lastMonthDate.year;
+      const lastMonth = lastMonthDate.month;
+      
+      //const query = `select  substring(split_part(bill_numb__c, '-',2),4) as comp_code,  sum (amount) from kddi_kotei_bill_details 
+      //where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_numb__c, '-',2),4) `;
+
+      const query = `select * from (select  substring(split_part(bill_numb__c, '-',2),4) as comp_code, 
+       sum (amount) from kddi_kotei_bill_details  where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' 
+       group by substring(split_part(bill_numb__c, '-',2),4)) as current_month  
+       left join 
+       (select  substring(split_part(bill_numb__c, '-',2),4) as prev_comp_code, sum (amount) as prev_amount 
+       from kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}' 
+       group by substring(split_part(bill_numb__c, '-',2),4) ) as prev_month 
+       on (current_month.comp_code=prev_month.prev_comp_code)`
+
+
       const getKDDIKotehiProcessedDataRes = await db.queryByokakin(query, []);
       return getKDDIKotehiProcessedDataRes.rows;
     } catch (e) {
@@ -447,9 +464,9 @@ module.exports = {
               }
             })
             .on('end', function () {
-              //insertByBatches(csvData);
-              //insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
-              insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
+            //  insertByBatches(csvData);
+              insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
+              //insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
             })
             .on('error', function (error) {
               console.log("Error" + error.message);

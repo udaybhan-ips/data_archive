@@ -72,7 +72,7 @@ module.exports = {
     }
   },
 
-  getAddiServiceDetailsData: async function ({ year, month, comp_code}) {
+  getAddiServiceDetailsData: async function ({ year, month, comp_code }) {
 
     try {
 
@@ -85,7 +85,7 @@ module.exports = {
       if (comp_code != undefined && comp_code != '' && comp_code != null) {
         where += `AND customer_code='${comp_code}'`;
       }
-      
+
       const query = `select * from addi_service_detail ${where}  order by customer_code asc`;
 
       console.log("query.." + query)
@@ -129,36 +129,39 @@ module.exports = {
       if (detailAddiServiceData && detailAddiServiceData.rows && detailAddiServiceData.rows.length > 0) {
 
         let res = [];
-        let rateCount = 0, rateSecond = 0, quantity = 0, rateSecondAmount = 0, totalDuration = 0,rateCountAmount=0, remarks = '', tax=0, totalAmount =0;
+        let rateCount = 0, rateSecond = 0, quantity = 0, rateSecondAmount = 0, totalDuration = 0, rateCountAmount = 0, remarks = '', tax = 0, totalAmount = 0;
 
-        let queryData=""
-if(comp_code=='00000997'){
-  queryData = `select count(*) as count, sum(duration::numeric) as duration from cdr_${year}${month} 
+        let queryData = ""
+        if (comp_code == '00000997') {
+          queryData = `select count(*) as count, sum(duration::numeric) as duration from cdr_${year}${month} 
   where term_carrier_id='${detailAddiServiceData.rows[0].term_carrier_id}' or orig_carrier_id ='${detailAddiServiceData.rows[0].orig_carrier_id}'`
-}else{
-  queryData = `select count(*) as count, sum(duration::numeric) as duration from cdr_${year}${month} 
+        } else {
+          queryData = `select count(*) as count, sum(duration::numeric) as duration from cdr_${year}${month} 
   where term_carrier_id='${detailAddiServiceData.rows[0].term_carrier_id}'`
-}
+        }
 
-       
+
 
 
         const queryDataRes = await db.query(queryData, []);
         for (let i = 0; i < queryDataRes.rows.length; i++) {
 
-        
+
 
           rateCount = detailAddiServiceData.rows[0]['rate_count'];
           rateSecond = detailAddiServiceData.rows[0]['rate_second'];
           quantity = queryDataRes.rows[i]['count'];
           totalDuration = queryDataRes.rows[i]['duration'];
-          
+
           rateSecondAmount = parseFloat(rateSecond) * parseFloat(totalDuration);
           rateCountAmount = parseFloat(rateCount) * parseFloat(quantity);
 
-          tax = (parseFloat(rateSecondAmount) + parseFloat(rateCountAmount)) *.1;
+          rateSecondAmount= parseInt(rateSecondAmount);
+          rateCountAmount = parseInt(rateCountAmount);
 
-          totalAmount = (parseFloat(rateSecondAmount) + parseFloat(rateCountAmount)) + tax;
+          tax = ((rateSecondAmount) + (rateCountAmount)) * .1;
+          tax = parseInt(tax,10);
+          totalAmount = parseInt(rateSecondAmount,10) + parseInt(rateCountAmount,10) + parseInt(tax,10);
 
 
           const insertQuery = `insert into addi_service_detail (bill_no, customer_code, date_bill, bill_term_start, bill_term_end, 
@@ -166,7 +169,7 @@ if(comp_code=='00000997'){
                 now(),'${year}-${month}-01', '${year}-${month}-${getNumberOfDaysInMonth}','${rateCount}','${quantity}',
                 '${rateCountAmount}','${createdBy}',now(),'6012-通話回数（国内）')`;
 
-                const insertQuery1 = `insert into addi_service_detail (bill_no, customer_code, date_bill, bill_term_start, bill_term_end, 
+          const insertQuery1 = `insert into addi_service_detail (bill_no, customer_code, date_bill, bill_term_start, bill_term_end, 
                   rate, quantity, total_amount, name_insert, date_insert, remarks) VALUES ('${billNo}','${comp_code}',
                   now(),'${year}-${month}-01', '${year}-${month}-${getNumberOfDaysInMonth}','${rateSecond}','${totalDuration}',
                   '${rateSecondAmount}','${createdBy}',now(),'6012-通話秒数（国内）')`;
@@ -177,12 +180,12 @@ if(comp_code=='00000997'){
           res.push(insertRes1);
 
         }
-        
+
 
         const insertSummaryData = `insert into addi_service_history (customer_code, bill_no, date_payment, bill_term_start,bill_term_end,bill_second,
           bill_rate, bill_amount , tax,amount, date_insert, name_insert, call_count) VALUES ('${comp_code}','${billNo}','${payment_plan_date}',
           '${year}-${month}-01','${year}-${month}-${getNumberOfDaysInMonth}','${totalDuration}',0,
-          '${parseFloat(rateSecondAmount)+parseFloat(rateCountAmount)}','${tax}','${totalAmount}',now(),'${createdBy}', ${quantity})`;
+          '${parseInt(rateSecondAmount,10) + parseInt(rateCountAmount,10)}','${tax}','${totalAmount}',now(),'${createdBy}', ${quantity})`;
 
         const sumRes = await db.queryIBS(insertSummaryData, []);
       }

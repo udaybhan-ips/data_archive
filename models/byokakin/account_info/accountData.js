@@ -32,7 +32,7 @@ module.exports = {
   updateAccountInfo: async function(param) {
 
     try {
-        console.log("data.."+ JSON.stringify(param))
+      console.log("data.."+ JSON.stringify(param))
 
       const query=`update free_call_account set accountid='${param.accountid}' , accountpassword='${param.accountpassword}', deleted=${param.deleted}, 
       modifyby='${param.modifyby}', modifydate= now()   where dataid = ${param.id} `;
@@ -52,9 +52,7 @@ module.exports = {
 
 addAccountInfo: async function(data) {
 
-    try {
-
-    
+    try {    
         console.log("data here.."+ JSON.stringify(data))
 
         if(data.comp_code == undefined || data.comp_code == '' ||  data.carriername == '' || data.carriername == undefined){
@@ -63,7 +61,6 @@ addAccountInfo: async function(data) {
 
         let accountid = data.accountid.trim();
         let accountpassword = data.accountpassword.trim();
-
         
         const searchQuery = `select * from free_call_account where 
         accountid = '${accountid}' and carriername='${data.carriername}' 

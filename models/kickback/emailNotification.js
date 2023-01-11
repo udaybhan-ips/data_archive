@@ -551,7 +551,7 @@ module.exports = {
             let emailTO = `${customerInfo['mail_address']}`;
             let emailCC = `${customerInfo['east_link_address']}`;
 
-          //    emailTO = 'uday@ipspro.co.jp';
+             // emailTO = 'uday@ipspro.co.jp';
              // emailCC = 'uday@ipsism.co.jp';
             //  emailCC = 'y_ito@ipspro.co.jp';
 
@@ -579,8 +579,8 @@ module.exports = {
     sendEmailAllData: async function (html, subject) {
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
-            to: 'uday@ipspro.co.jp',
-            cc: 'y_ito@ipspro.co.jp',
+            to: 'telecom@ipspro.co.jp',
+            cc: 'y_ito@ipspro.co.jp,uday@ipspro.co.jp',
             subject,
             html
         }

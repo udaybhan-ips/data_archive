@@ -228,6 +228,11 @@ module.exports = {
       cdrAmount = parseInt(cdrAmount, 10);
       koteiAmount = parseInt(koteiAmount, 10);
 
+      if(cdrAmount<=0 && koteiAmount<=0){
+        console.log("No data!!");
+        return 'no data';
+      }
+
       await createInvoice(company_code, customer_name, customerAddress, billingYear, billingMonth, invoiceData, filePath, koteiAmount, cdrAmount);
       console.log("Done...")
     } catch (err) {

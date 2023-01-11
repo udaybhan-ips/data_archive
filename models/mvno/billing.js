@@ -64,11 +64,11 @@ module.exports = {
         if(customer_name == 'MEISHIN'){
 
           getSummaryData=` select sum(duration_use::numeric) as duration ,count(*) as total, sum (CEILING(duration_use::numeric)*.23)as bill,
-          '33328230' as dnis  from cdr_202211 where term_ani like  '00328230%' ` ;
+          '33328230' as dnis  from cdr_202212 where term_ani like  '00328230%' ` ;
 
         }else{
           getSummaryData=`select dnis, sum(billableseconds)as duration, sum(billableseconds*0.23) as bill, count(*) total from
-          calltemp_excel2 where dnis='${did}' and starttime >= '2022-10-31 15:00:00' and starttime <='2022-11-30 14:59:59' 
+          calltemp_excel2 where dnis='${did}' and starttime >= '2022-11-30 15:00:00' and starttime <='2022-12-31 14:59:59' 
           group by dnis order by dnis` ;
         }
 
@@ -114,7 +114,7 @@ module.exports = {
     try {
         
         const getSummaryData=`select count(*) as total, sum(Duration::int) as duration, sum(Call_Charge) as bill from
-          CDR_FPHONE where LEG='${leg}'and start_time between '2022/11/01 00:00:00' and '2022/11/30 23:59:59' and 
+          CDR_FPHONE where LEG='${leg}'and start_time between '2022/12/01 00:00:00' and '2022/12/31 23:59:59' and 
           Company_Code='${customer_id}' and call_charge !='NaN'` ;
 
         const sonusDataRows= await db.queryIBS(getSummaryData,[]);

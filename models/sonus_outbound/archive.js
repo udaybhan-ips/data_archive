@@ -60,7 +60,7 @@ module.exports = {
           if(customerId && customerName){
               where = `WHERE customer_id= '${customerId}' AND customer_name = '${customerName}' and deleted= false ` ;
           }else{
-            where =`WHERE  deleted = false and  customer_id='00001288' `;
+            where =`WHERE  deleted = false  `;
           }
 
           const query=`select trunk_port, customer_name, customer_id,incallednumber from sonus_outbound_customer ${where}`;
@@ -107,12 +107,12 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo, trunkPortsVal
           wherePart = wherePart.substring(0, wherePart.length - 2);
         }
 
-        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 30 DAY) AND
+        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 31 DAY) AND
         (${wherePart}) AND RECORDTYPEID = 3  `;
 
       }else{
       
-        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 30 DAY) AND
+        where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 31 DAY) AND
         INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND  RECORDTYPEID = 3        `;
       
       }

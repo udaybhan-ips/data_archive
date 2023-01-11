@@ -408,21 +408,21 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
     if (tmpPaymentDate == 'yearly') {
       if (parseInt(billingMonth) > 4){
         console.log("IF")
-        paymentDueDate = `${billingYear + 1}/05/01`;
+        paymentDueDate = `${billingYear +1}/05/01`;
       }        
       else{
         console.log("ELSE")
-        paymentDueDate = `${currentYear +1 }/05/01`;
+        paymentDueDate = `${currentYear }/05/01`;
       }
         
     } else if (tmpPaymentDate == 'half_yearly') {
       if (parseInt(billingMonth) > 10 && parseInt(billingMonth) <=3 )
-        paymentDueDate = `${billingYear }/05/01`;
+        paymentDueDate = `${billingYear +1}/05/01`;
       else
         paymentDueDate = `${currentYear}/05/01`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
-      paymentDueDate = `${currentYear + 1}/01/04`;
+      paymentDueDate = `${currentYear }/01/31`;
     }
 
   await generateHeader(address, doc, totalCallAmount);
