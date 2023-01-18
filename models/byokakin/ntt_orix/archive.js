@@ -162,10 +162,21 @@ module.exports = {
 
   getNTTORIXKotehiProcessedData: async function ({ year, month }) {
     try {
-      console.log("year, month .." + year, month);
-      const query = ` select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  
-      sum (kingaku) as amount from ntt_koteihi_cdr_bill
-       where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_code, '-',2),4) `;
+      console.log("in orix year , month .." + year, month);
+      
+      let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
+      const lastYear = lastMonthDate.year;
+      const lastMonth = lastMonthDate.month;
+
+      const query = ` select * from (select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  
+      sum (kingaku) as amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' 
+      group by substring(split_part(bill_code, '-',2),4)) as lj 
+      left join 
+      (select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as prev_comp_code,  
+      sum (kingaku) as prev_amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}' 
+      group by substring(split_part(bill_code, '-',2),4)) as last_month 
+      on (lj.comp_code= last_month.prev_comp_code) `;
+
       const getNTTORIXKotehiProcessedDataRes = await db.queryByokakin(query, []);
       return getNTTORIXKotehiProcessedDataRes.rows;
     } catch (e) {

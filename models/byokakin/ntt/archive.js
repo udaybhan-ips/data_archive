@@ -166,8 +166,19 @@ module.exports = {
   getNTTKotehiProcessedData: async function ({ year, month }) {
     try {
       console.log("year, month .." + year, month);
-      const query = ` select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  sum (kingaku) as amount 
-      from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_code, '-',2),4) `;
+
+      let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
+      const lastYear = lastMonthDate.year;
+      const lastMonth = lastMonthDate.month;
+
+      const query = ` select * from (select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  
+      sum (kingaku) as amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' 
+      group by substring(split_part(bill_code, '-',2),4)) as lj 
+      left join 
+      (select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as prev_comp_code,  
+      sum (kingaku) as prev_amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}' 
+      group by substring(split_part(bill_code, '-',2),4)) as last_month 
+      on (lj.comp_code= last_month.prev_comp_code) `;
 
       console.log("query..."+query)
 
@@ -471,14 +482,24 @@ module.exports = {
                     if (recordType == 'VoIP') {
                       DID = parentDID;
                     } else {
+                      
                       let prefix = parentDID.substring(parentDID.indexOf("(") + 1, parentDID.lastIndexOf(")"));
                       parentDID = parentDID.replace("(", "").replace(")", "").replaceAll("-", "");
+
                       if (recordType == "国際") {
                         DID = tempRecord;
                       } else {
                         DID = prefix + tempRecord;
                       }
                     }
+
+                    if(DID ==''){
+                      console.log("tempRecord"+tempRecord);
+                      console.log("recordType"+recordType);
+                      console.log("parentDID"+parentDID);                     
+                    }
+
+
                     obj1['customername'] = row[0];
                     obj1['parentdid'] = parentDID;
                     obj1['calltype'] = recordType;
@@ -553,7 +574,6 @@ async function insertByBatches(records, type, billingYear, billingMonth) {
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTOutbound, tableNameNTTRAWOut);
 
     }
-
     else if (type == 'ntt_koteihi_cdr_bill') {
       let tableNameNTTKoteihiCDRBILL = { table: 'ntt_koteihi_cdr_bill' };
       res = await db.queryBatchInsertByokakin(chunkArray[i], ColumnSetNTTKoteihiCDRBILL, tableNameNTTKoteihiCDRBILL);

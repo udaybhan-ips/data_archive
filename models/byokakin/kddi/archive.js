@@ -64,6 +64,7 @@ module.exports = {
   getKDDICustomerList: async function () {
     try {
       const query = `select customer_name, customer_cd, id from m_customer `
+      
       const getKDDICustomerList = await db.query(query, [], true);
       if (getKDDICustomerList && getKDDICustomerList.rows) {
         return getKDDICustomerList.rows;
@@ -121,7 +122,8 @@ module.exports = {
 
   getKDDIFreeAccountNumList: async function () {
     try {
-      const query = `select carriername, comp_code__c, accountid, usedflag from free_call_account where carriername='KDDI' and usedflag = '1' `
+      const query = `select carriername, comp_code__c, accountid, usedflag from free_call_account 
+      where carriername='KDDI' and usedflag = '1' and deleted =false `
       const getKDDIFreeAccountNumListRes = await db.queryByokakin(query, []);
       return getKDDIFreeAccountNumListRes.rows;
     } catch (e) {
@@ -464,9 +466,9 @@ module.exports = {
               }
             })
             .on('end', function () {
-            //  insertByBatches(csvData);
+              insertByBatches(csvData);
               insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
-              //insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
+              insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
             })
             .on('error', function (error) {
               console.log("Error" + error.message);

@@ -141,7 +141,7 @@ function tableCreate(rawData, processData) {
 
     try{
         table+= `<table class='some-table' border="2" style='${style}'>
-             <thead> <tr> <th>DATE</th> <th>SONUS RAW(10.168.11.252</th> <th>PRO(10.168.22.41)</th> <th> DIFFERENCE </th></tr> </thead>
+             <thead> <tr> <th>DATE</th> <th>SONUS RAW(10.168.11.252</th> <th>PRO(10.168.11.41)</th> <th> DIFFERENCE </th></tr> </thead>
         <tbody>
         ${tableRows}    
         </tbody>

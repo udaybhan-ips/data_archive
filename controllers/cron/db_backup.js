@@ -1,7 +1,7 @@
 var CronJob = require("cron").CronJob;
 var BACKUPController = require('../db_backup/dbBackup.controller');
 
-// var BACKUPControllerJob = new CronJob ('1 0 * * *',function(){
+// var BACKUPControllerJob = new CronJob ('36 16 * * *',function(){
 //     console.log('This is db backup cron start');
 //     BACKUPController.cdrSonusBackup();
 //     console.log('This is db backup end');

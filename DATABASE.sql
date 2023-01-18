@@ -74,7 +74,7 @@ update ntt_kddi_freedial_c set free_numb__c= '036361094'    where   length(free_
  update ntt_kddi_freedial_c set free_numb__c=RIGHT(free_numb__c, 10)  where   length(free_numb__c) =16 and data_idno not in ('55325', '56467', '56471', '57095', '59927');
  update ntt_kddi_freedial_c set free_numb__c= LEFT(free_numb__c, 10)  where   length(free_numb__c) =16 ;
  
- update ntt_kddi_freedial_c set free_numb__c= LEFT(free_numb__c, 10) where   length(free_numb__c) =17 and  data_idno !='58253';
+ update ntt_kddi_freedial_c set free_numb__c = LEFT(free_numb__c, 10) where   length(free_numb__c) =17 and  data_idno !='58253';
  update ntt_kddi_freedial_c set free_numb__c='0120500778'  where   data_idno ='58253';
 
 

@@ -24,6 +24,18 @@ module.exports = {
           });
     }    
   },
+
+  getAllSonusRates: async function(req, res) {
+    try {
+        const listRatesRes = await Rate.getAllSonusRates(req.body);
+        return res.status(200).json(listRatesRes);
+    } catch (error) {
+        return res.status(400).json({
+            message: error.message
+          });
+    }    
+  },
+
   updateRates: async function(req, res) {
     try {
         const listRatesRes = await Rate.updateRates(req.body);

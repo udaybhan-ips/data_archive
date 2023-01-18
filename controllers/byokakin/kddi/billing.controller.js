@@ -2,10 +2,10 @@ var BillingByokakin = require('../../../models/byokakin/kddi/billing');
 const dateId = 3;
 
 module.exports = {
-  getData: async function (req, res) {
+  cdrProcessing: async function (req, res) {
     try {
 
-      const billingMonth = '11', billingYear = "2022";
+      const billingMonth = '12', billingYear = "2022";
 
       // console.log("ratesDetails="+JSON.stringify(ratesDetails));
 
@@ -17,19 +17,7 @@ module.exports = {
 
       for (let i = 0; i < getKDDICompListRes.length; i++) {
 
-        // const [BillNoArr, getBillNoErr] = await handleError(BillingByokakin.getBillNoInfo());
-        // if (getBillNoErr) {
-        //   throw new Error('Could not fetch bill no');
-        // }
-
-        // console.log("bill_no " + BillNoArr.max_bill_no);
-
-        // let bill_no = parseInt(BillNoArr.max_bill_no, 10) + 1;
-
-
-
         // outbound data processing
-
 
         const [ratesDetails, ratesErr] = await handleError(BillingByokakin.getRates(getKDDICompListRes[i]['customer_code']));
         if (ratesErr) {
@@ -64,8 +52,40 @@ module.exports = {
         const [createDetailsInboundRes, createDetailsInboundErr] = await handleError(BillingByokakin.insertProcessedDataByBatches('INBOUND', getInboundRAWCDRRes, ratesDetails, getKDDICompListRes[i]['customer_code'], billingYear, billingMonth));
         if (createDetailsInboundErr) {
           throw new Error('Error while creating summary data ' + createDetailsInboundErr);
-        }
+        }       
 
+      }
+
+      console.log("done..")
+
+      return {
+        message: 'success! data inserted sucessfully',
+      };
+    } catch (error) {
+
+      console.log("Error !!!" + error.message);
+      return {
+        message: error
+      };
+    }
+  },
+
+  getData: async function (req, res) {
+    try {
+
+      const billingMonth = '12', billingYear = "2022";
+
+      // console.log("ratesDetails="+JSON.stringify(ratesDetails));
+
+      const [getKDDICompListRes, getKDDICompListErr] = await handleError(BillingByokakin.getKDDICompList());
+      if (getKDDICompListErr) {
+        throw new Error('Could not fetch Byokakin Company list details');
+      }
+      console.log("getKDDICompListRes==" + JSON.stringify(getKDDICompListRes));
+
+      for (let i = 0; i < getKDDICompListRes.length; i++) {
+
+        
         //finish
         /*****  create summary data for byokakin */
 
