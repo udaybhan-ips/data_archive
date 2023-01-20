@@ -8,6 +8,7 @@ router.get('/users/:id', usersController.getOneUser);
 router.put('/users/:id/name', usersController.changeName);
 router.put('/users/:id/password', usersController.changePassword);
 
+router.post('/users/changePassword', usersController.changePassword);
 router.post('/users/change_password_by_user', usersController.changePasswordByUser);
 
 

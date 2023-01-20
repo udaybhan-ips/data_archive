@@ -4,8 +4,7 @@ var User = require('../../models/user/user');
 
 module.exports = {
   createUser: function(req, res) {
-    
-    User.create(req.body)
+  User.create(req.body)
       .then(function(result) {
         return res.status(200).json({
           message: 'success! created account for new user',
@@ -44,7 +43,9 @@ module.exports = {
   },
 
   changePassword: function(req, res) {
-    User.updatePassword({ email: req.params.email, updated_by: req.body.updated_by, password: req.body.password })
+
+   
+    User.updatePassword({ email: req.body.email, updated_by: req.body.updated_by, password: req.body.password })
       .then(function(result) {
         return res.status(200).json(result);
       })

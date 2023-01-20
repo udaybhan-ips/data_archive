@@ -65,7 +65,7 @@ module.exports = {
 
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
-      where is_deleted = false and service_type ->> 'ntt_customer'  = 'true' 
+      where customer_cd='00001166' and is_deleted = false and service_type ->> 'ntt_customer'  = 'true' 
       
        order by customer_code   `;
       // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
@@ -86,9 +86,9 @@ module.exports = {
 
       let where = `where raw_cdr.carriertype ='NTT'`; 
 
-//      if(customer_code !=='00001166'){
+     if(customer_code !=='00001166'){
         where += `and raw_cdr.callcharge > 0`
-  //    }
+     }
 
       const query = `select  raw_cdr.*, 0 as callcount104 from 
       byokakin_ntt_rawcdr_outbound_${billingYear}${billingMonth}  raw_cdr join ntt_kddi_freedial_c free_dial on 
@@ -96,6 +96,9 @@ module.exports = {
       and free_dial.cust_code__c::int = '${customer_code}' and 
       (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')  
       and  free_dial.carr_comp__c='NTT' ) ${where} `;
+
+
+      console.log("query..."+query);
 
       const getNTTRAWDataRes = await db.queryByokakin(query, []);
 
@@ -129,6 +132,22 @@ module.exports = {
     } catch (error) {
       console.log("err in get kddi raw inbound data =" + error.message);
       return error;
+    }
+  },
+
+  deleteSummaryData: async function (customerId, year, month) {
+    try {
+
+      const query = `delete from byokakin_billing_history where customercode='${customerId}' 
+      and carrier ='NTT'  and cdrmonth::date ='${year}-${month}-01' `;
+
+      const deleteRes = await db.queryByokakin(query, []);
+      
+      return deleteRes;
+
+    } catch (error) {
+      console.log("error in geting summary data.." + error.message);
+      throw new Error("error in geting summary data.." + error.message);
     }
   },
 

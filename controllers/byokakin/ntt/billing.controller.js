@@ -85,6 +85,11 @@ module.exports = {
 
       for (let i = 0; i < getNTTCompListRes.length; i++) {
 
+        const [deleteSummaryDataRes, deleteSummaryDataErr] = await handleError(BillingByokakin.deleteSummaryData(getNTTCompListRes[i]['customer_code'], billingYear, billingMonth));
+        if (deleteSummaryDataErr) {
+          throw new Error('error'+deleteSummaryDataErr);
+        }
+
         const [getSummaryDataRes, getSummaryDataErr] = await handleError(BillingByokakin.getSummaryData(getNTTCompListRes[i]['customer_code'], billingYear, billingMonth));
         if (getSummaryDataErr) {
           throw new Error('error'+getSummaryDataErr);
