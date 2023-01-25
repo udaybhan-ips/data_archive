@@ -85,7 +85,7 @@ module.exports = {
     try {
       const query = `SELECT * from ${tableName} where (SONUS_GW IN ('nfpgsx4','IPSGSX5'))  AND ((TERM_ANI ILIKE '035050%')
        OR (TERM_ANI ILIKE '35050%') OR (TERM_ANI ILIKE '036110%') OR (TERM_ANI ILIKE '36110%') OR (TERM_ANI ILIKE '050505%')
-        OR (TERM_ANI ILIKE '50505%')) and start_time::date='${targetDate}'::date   `;
+       OR (TERM_ANI ILIKE '50505%')) and start_time::date='${targetDate}'::date   `;
 
       //     console.log("query="+query);
 
@@ -116,13 +116,10 @@ module.exports = {
       }
       
       for (let i = 0; i < chunkArray.length; i++) {
-
         if (__type == 'raw_cdr') {       
           const data = await getNextInsertBatch(chunkArray[i], getCompanyCodeInfoRes, getRemoteControlNumberDataRes);   
           res = await db.queryBatchInsert(data, 'sonus', ColumnSetValue);
-      
         } else if (__type == 'bill_cdr') {
-  
           const data = await getNextInsertBatchBillCDR(chunkArray[i], carrierInfo, companyInfo);
           res = await db.queryBatchInsert(data,'ibs', ColumnSetValue);
         }
@@ -135,9 +132,6 @@ module.exports = {
     }catch(err){
       console.log("Error..."+err.message);
     }
-
-   
-
   },
   updateBatchControl: async function (serviceId, targetDate, api) {
     let query;
@@ -360,8 +354,6 @@ async function getCompanyCodeOnRelayCode(data, relayCode, carrierCode, pattern, 
           }
         }
       }
-
-
       for (let i = 0; i < data.length; i++) {
         if (data[i]['carrier_code'] == carrierCode && data[i]['relay_carrier'] == relayCode) {
           if (data[i]['company_code2'] == '' || data[i]['company_code2'] == null || data[i]['company_code2'] == undefined) {
@@ -471,15 +463,11 @@ async function getNextInsertBatch(data, getCompanyCodeInfoRes, getRemoteControlN
       obj['sonus_egcallednumber'] = data[i]['EGCALLEDNUMBER'];
 
       valueArray.push(obj);
-
     }
   } catch (err) {
     console.log("err in data preapring==" + err.message);
   }
-
   console.log("arr length=" + (valueArray.length));
-
-
   return valueArray;
 
 }

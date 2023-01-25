@@ -2,10 +2,11 @@ var BillingByokakin = require('../../../models/byokakin/ntt_orix/billing');
 const dateId = 3;
 
 module.exports = {
-  getData: async function (req, res) {
+
+  cdrProcessing: async function (req, res) {
     try {
 
-      const billingMonth = '11', billingYear = "2022";
+      const billingMonth = '12', billingYear = "2022";
       const carrier = 'NTTORIX'
 
       // console.log("ratesDetails="+JSON.stringify(ratesDetails));
@@ -59,14 +60,55 @@ module.exports = {
         if (createDetailsInboundErr) {
           throw new Error('Error while creating summary data ' + createDetailsInboundErr);
         }
+        
+      }
 
-        //finish
-        /*****  create summary data for byokakin */
+      console.log("cdr processing done..")
+
+      return {
+        message: 'success! data inserted sucessfully',
+      };
+    } catch (error) {
+
+      console.log("Error !!!" + error.message);
+      return {
+        message: error
+      };
+    }
+  },
+
+  getData: async function (req, res) {
+    try {
+
+      const billingMonth = '12', billingYear = "2022";
+      const carrier = 'NTTORIX'
+
+      // console.log("ratesDetails="+JSON.stringify(ratesDetails));
+
+      const [getNTTCompListRes, getNTTCompListErr] = await handleError(BillingByokakin.getNTTCompList(billingYear, billingMonth));
+      if (getNTTCompListErr) {
+        throw new Error('Could not fetch Byokakin Company list details');
+      }
+      console.log("getNTTCompListRes==" + JSON.stringify(getNTTCompListRes));
+
+      for (let i = 0; i < getNTTCompListRes.length; i++) {
+
+        // const [BillNoArr, getBillNoErr] = await handleError(BillingByokakin.getBillNoInfo());
+        // if (getBillNoErr) {
+        //   throw new Error('Could not fetch bill no');
+        // }
+
+        // console.log("bill_no " + BillNoArr.max_bill_no);
+
+        // let bill_no = parseInt(BillNoArr.max_bill_no, 10) + 1;
+
 
         const [getSummaryDataRes, getSummaryDataErr] = await handleError(BillingByokakin.getSummaryData(getNTTCompListRes[i]['customer_code'], billingYear, billingMonth));
         if (getSummaryDataErr) {
           throw new Error('error'+getSummaryDataErr);
         }
+
+        
 
         const [createSummaryRes, createSummaryErr] = await handleError(BillingByokakin.createSummaryData('bill_no', getNTTCompListRes[i]['customer_code'], billingYear, billingMonth, getSummaryDataRes));
         if (createSummaryErr) {

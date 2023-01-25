@@ -320,7 +320,7 @@ function basciInfo(doc, y, company_code, customer_name, billingYear, billingMont
 
     .text(`${billingYear}-${billingMonth}-01 ～ ${billingYear}-${billingMonth}-30`, 125, y + 65, { width: 250, align: "left" })
     .text(`${todayYYYYMMDDArr[0]}-${todayYYYYMMDDArr[1].padStart(2, '0')}-${todayYYYYMMDDArr[2].padStart(2, '0')}`, 125, y + 80, { width: 100, align: "left" })
-    //.text(`${billingYear}-08-24`, 125, y + 80, { width: 100, align: "left" })
+    
 
     .moveDown()
   return y + 35;
@@ -493,9 +493,6 @@ async function getNextInsertBatch(cdrType, carrier, data, rates, customerId, bil
   try {
     for (let i = 0; i < data.length; i++) {
       let obj = {}, terminalType, freedialNumber, callingNumber, callDuration, destinationArea, chargeAmt, callDate, callTime, sourceArea, callCharge;
-
-
-
 
       if (cdrType === 'OUTBOUND') {
         terminalType = await getTerminalType(data[i]['cld'], data[i]['destination'], data[i]['calltype']);
