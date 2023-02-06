@@ -155,7 +155,7 @@ module.exports = {
     </div>`;
   
     let mailOption={
-        from: 'ips_teh@sysmail.ipsism.co.jp',
+        from: 'ips_tech@sysmail.ipsism.co.jp',
         to: 'telecom@ipspro.co.jp',
         cc:'y_ito@ipspro.co.jp,uday@ipspro.co.jp',
        // to:'uday@ipsism.co.jp',

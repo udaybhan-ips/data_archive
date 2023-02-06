@@ -18,6 +18,7 @@ var KDDI = require('./controllers/cron/kddi_cron');
 var NTT = require('./controllers/cron/ntt_cron');
 var NTTORIX = require('./controllers/cron/ntt_orix_cron');
 var DBBACKUP = require('./controllers/cron/db_backup');
+var jobComsq = require('./controllers/cron/comsq_cron');
 
 
 

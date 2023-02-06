@@ -62,7 +62,7 @@ module.exports = {
 
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
-      where is_deleted = false and service_type ->> 'kddi_customer'  = 'true' 
+      where is_deleted = false  and service_type ->> 'kddi_customer'  = 'true' 
       order by customer_code`;
      // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getKDDICompListRes = await db.query(query, [], true);
@@ -120,10 +120,28 @@ module.exports = {
     }
   },
 
+  deleteSummaryData: async function (customerId, year, month) {
+    try {
+
+      const query = `delete from byokakin_billing_history where 
+      cdrmonth::date ='${year}-${month}-01' and carrier ='KDDI' and customercode='${customerId}' `;
+
+      const deleteRes = await db.queryByokakin(query, []);
+      if (!deleteRes) {
+        throw new Error('not found')
+      }
+      return deleteRes;
+
+    } catch (error) {
+      console.log("error in deleting summary data.." + error.message);
+      throw new Error("error in deleting summary data.." + error.message);
+    }
+  },
+
   getSummaryData: async function (customerId, year, month) {
     try {
 
-      const query = `select customercode, cdr_amount::int as cdr_amount, kotei_amount  from ( select customercode,
+      const query = `select customercode, trunc(cdr_amount::numeric,0) as cdr_amount, kotei_amount  from ( select customercode,
          sum (finalcallcharge) as cdr_amount  from  byokakin_kddi_processedcdr_${year}${month} 
        where customercode='${customerId}' group by customercode) as bkpc full join 
        (select sum(amount) kotei_amount, comp_acco__c
@@ -621,7 +639,6 @@ async function getFinalCharge(terminalType, rates, callDuration, callCharge, cal
     if (terminalType.includes("その他") || callCharge == 0) {
       resData['resFinalCharge'] = callCharge;
       resData['vendorCallCharge'] = callCharge;      
-
     }
 
     return resData;
@@ -697,8 +714,8 @@ async function getTerminalType(callCharge, cld, destination, callType) {
 
     } else if (firstDigit != '0' && cld != '104' && cld != '110' && cld != '114' &&
       cld != '117' && cld != '188' && cld != '177') {
-
-      terminalType = 'その他 - Intl';
+     
+        terminalType = 'その他 - Intl';
 
     } else if ((firstThreeDigit == '070' || firstThreeDigit == '080' || firstThreeDigit == '090') && destination != 'PHS') {
 

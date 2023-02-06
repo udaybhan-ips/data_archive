@@ -18,7 +18,7 @@ var billingController = require('../byokakin/kddi/billing.controller');
 
 // },null, true, 'Asia/Tokyo');
 
-// var billingControllerJob = new CronJob ('16 10 * * *',function(){
+// var billingControllerJob = new CronJob ('40 11 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.getData();
 //     console.log('This is byokakin email notification end');

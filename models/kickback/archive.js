@@ -27,7 +27,7 @@ module.exports = {
       return error;
     }
   },
-  getTableName: async function (targetDate) {
+  getTableName: async function (targetDate, __type) {
     try {
       const year = new Date(targetDate).getFullYear();
       let month = new Date(targetDate).getMonth() + 1;
@@ -35,13 +35,112 @@ module.exports = {
       if (parseInt(month, 10) < 10) {
         month = '0' + month;
       }
-      return `cdr_${year}${month}`;
+
+      if(__type ==='billcdr'){
+        return `billcdr_${year}${month}`;
+      }else{
+        return `cdr_${year}${month}`;
+      }      
 
     } catch (e) {
       console.log("err in get table=" + e.message);
       return console.error(e);
     }
   },
+
+  checkTableExist: async function (tableName, database="sonus_db") {
+    try {
+      let checkTableExistRes = false; 
+      const query = `SELECT EXISTS ( SELECT FROM information_schema.tables WHERE  table_schema ='public' AND table_name = '${tableName}' )` ;
+      if(database === "ibs"){
+        checkTableExistRes = await db.queryIBS(query,[]);
+      }else{
+        checkTableExistRes = await db.query(query,[]);
+      }
+      
+      if (checkTableExistRes && checkTableExistRes.rows) {
+        return checkTableExistRes.rows[0]['exists']
+      }
+      return checkTableExistRes;
+
+    } catch (e) {
+      console.log("err in get table=" + e.message);
+      throw new Error("Error in checking table exist!!"+e.message)
+    }
+  },
+
+  createTable: async function (tableName) {
+    try {
+      const query =` CREATE TABLE IF NOT EXISTS "${tableName}" ("cdr_id" BIGSERIAL, "date_bill" TIMESTAMP WITHout TIME ZONE not null , orig_ani VARCHAR , term_ani VARCHAR,
+      "start_time" TIMESTAMP WITHout TIME ZONE not null , "stop_time" TIMESTAMP WITHout TIME ZONE not null
+       ,"duration" VARCHAR(255), "duration_use" VARCHAR(255),
+       "dom_int_call" VARCHAR(255), "orig_carrier_id" VARCHAR(255),
+      "selected_carrier_id" VARCHAR, "billing_company_code" VARCHAR, "trunk_port" VARCHAR, "sonus_session_id" VARCHAR,
+      "sonus_start_time" TIMESTAMP WITHOUT TIME ZONE, "sonus_disconnect_time" TIMESTAMP WITHout TIME ZONE, "sonus_call_duration" VARCHAR,
+      "sonus_call_duration_second" VARCHAR, "sonus_anani" VARCHAR, "sonus_incallednumber" VARCHAR, "sonus_ingressprotocolvariant" VARCHAR,
+      "registerdate" TIMESTAMP WITHOUT TIME ZONE, "sonus_ingrpstntrunkname" VARCHAR, "sonus_gw" VARCHAR, "sonus_callstatus" VARCHAR,
+      "sonus_callingnumber" VARCHAR, "sonus_egcallednumber" VARCHAR, "sonus_egrprotovariant" VARCHAR, "createdAt" TIMESTAMP WITHOUT TIME ZONE ,
+      "updatedAt" TIMESTAMP WITHOUT TIME ZONE , in_outbound integer, term_carrier_id varchar, transit_carrier_id varchar, PRIMARY KEY ("cdr_id")) ` ;
+
+      const tableCreationRes = db.query(query, []);
+      if(tableCreationRes ){
+        return tableCreationRes;
+      }
+
+      throw new Error("Error while creating table..."+tableCreationRes)
+
+    } catch (e) {
+      throw new Error("Error while creating table..."+e.message)
+    }
+  },
+
+
+
+  createTableBillCDR: async function (tableName) {
+    try {
+      const query =` CREATE TABLE IF NOT EXISTS "${tableName}" (cdr_id bigint not null, date_bill timestamp without time zone not null, 
+        company_code varchar(10) not null, carrier_code varchar(6) not null, in_outbound integer not null , call_type integer  not null, 
+        trunk_port_target integer not null,duration numeric not null, start_time timestamp without time zone not null, 
+        stop_time timestamp without time zone not null, orig_ani varchar(30), term_ani varchar(30) not null, route_info  varchar not null, 
+        date_update timestamp without time zone not null, orig_carrier_id varchar(10), term_carrier_id varchar(10),transit_carrier_id varchar(50), 
+        selected_carrier_id varchar(10), trunk_port_name varchar(25), gw varchar(25), session_id varchar(30), call_status integer, 
+        kick_company varchar(10),term_use integer ) ` ;
+
+      const tableCreationRes = db.queryIBS(query, []);
+      if(tableCreationRes ){
+        return tableCreationRes;
+      }
+
+      throw new Error("Error while creating table..."+tableCreationRes)
+
+    } catch (e) {
+      throw new Error("Error while creating table..."+e.message)
+    }
+  },
+
+
+
+
+  sendErrorEmail: async function (tableName, targetDate) {
+    try {
+      const html = `Hi, \\n
+      There is something error in comsq table creating and batch control table!! \\n
+      table is ${tableName} and ${targetDate} \\n
+      Thank you`;
+      let mailOption = {
+        from: 'ips_tech@sysmail.ipsism.co.jp',
+        to: 'uday@ipspro.co.jp',
+      //  cc:'uday@ipspro.co.jp',
+        subject:'Please check the comsq batch date & table!!',
+        html
+      }
+      utility.sendEmail(mailOption);     
+    } catch (e) {
+      throw new Error("Error while sending email..."+e.message)
+    }
+  },
+
+  
   deleteTargetDateCDR: async function (targetDate, tableName) {
     try {
       const query = `delete FROM ${tableName} where START_TIME::date = '${targetDate}'::date`;
@@ -51,6 +150,8 @@ module.exports = {
       return error;
     }
   },
+
+
   getTargetCDR: async function (targetDateWithTimezone) {
 
     try {
@@ -72,9 +173,9 @@ module.exports = {
       return error;
     }
   },
-  deleteTargetBillableCDR: async function (targetDate, tableName) {
+  deleteTargetBillableCDR: async function (targetDate, tableNameBillCDR) {
     try {
-      const query = `delete FROM billcdr_main where START_TIME::date = '${targetDate}'::date`;
+      const query = `delete FROM ${tableNameBillCDR} where START_TIME::date = '${targetDate}'::date`;
       const deleteTargetDateRes = await db.queryIBS(query, []);
       return deleteTargetDateRes;
     } catch (error) {
@@ -112,7 +213,7 @@ module.exports = {
       if(__type == 'raw_cdr')  {
         ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetSonus, { table: tableName })           
       }else{
-        ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetBillCDR, { table: `billcdr_main` })           
+        ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetBillCDR, { table: tableName })           
       }
       
       for (let i = 0; i < chunkArray.length; i++) {

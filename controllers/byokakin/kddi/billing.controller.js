@@ -89,6 +89,11 @@ module.exports = {
         //finish
         /*****  create summary data for byokakin */
 
+        const [deleteSummaryDataRes, deleteSummaryDataErr] = await handleError(BillingByokakin.deleteSummaryData(getKDDICompListRes[i]['customer_code'], billingYear, billingMonth));
+        if (deleteSummaryDataErr) {
+          throw new Error('error'+deleteSummaryDataErr);
+        }
+
         const [getSummaryDataRes, getSummaryDataErr] = await handleError(BillingByokakin.getSummaryData(getKDDICompListRes[i]['customer_code'], billingYear, billingMonth));
         if (getSummaryDataErr) {
           throw new Error('error'+getSummaryDataErr);

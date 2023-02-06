@@ -133,7 +133,7 @@ module.exports = {
 
         let queryData = ""
         if (comp_code == '00000997') {
-          queryData = `select count(*) as count, sum(duration::numeric) as duration from cdr_${year}${month} 
+          queryData = `select count(*) as count, sum(duration::numeric) as duration from cdr_comsq_${year}${month} 
   where term_carrier_id='${detailAddiServiceData.rows[0].term_carrier_id}' or orig_carrier_id ='${detailAddiServiceData.rows[0].orig_carrier_id}'`
         } else {
           queryData = `select count(*) as count, sum(duration::numeric) as duration from cdr_${year}${month} 

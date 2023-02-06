@@ -35,10 +35,10 @@ module.exports = {
             return error;
         }
     },
-    getAllKickComp: async function () {
+    getAllKickComp: async function (targetDate, billcdrTableName) {
         try {
             console.log("in get all kick comp");
-            const query = ` select distinct(kick_company) as customer_cd from billcdr_main  order by kick_company`;
+            const query = ` select distinct(kick_company) as customer_cd from ${billcdrTableName}  order by kick_company`;
             const kickCompRes = await db.queryIBS(query, []);
             return kickCompRes.rows;
         } catch (error) {
@@ -58,17 +58,16 @@ module.exports = {
             return error;
         }
     },
-    getAllProTrafficSummary: async function (targetMonth) {
+    getAllProTrafficSummary: async function (tableNameBillCDR, targetMonth) {
         console.log("in all sum")
         const year = new Date(targetMonth).getFullYear();
         let month = new Date(targetMonth).getMonth() + 1;
         if (parseInt(month, 10) < 10) {
             month = '0' + month;
         }
-
         try {
             const query = `select count(*) as total,  sum(case when (call_status =16 OR call_status =31) then 1 else 0 end)  as total_16_31,
-             start_time::Date as day from billcdr_main where to_char(start_time, 'MM-YYYY') = '${month}-${year}' 
+             start_time::Date as day from ${tableNameBillCDR} where to_char(start_time, 'MM-YYYY') = '${month}-${year}' 
              group by start_time::Date order by start_time::Date `;
             // '2021-09-3
             console.log("query==" + query);
@@ -141,20 +140,20 @@ module.exports = {
         }
     },
 
-    getTrafficSummary: async function (kickCompany, targetDate) {
+    getTrafficSummary: async function (tableNameBillCDR, kickCompany, targetDate) {
         try {
             const query = `select count(*) as total_calls, sum(duration/60) as total_duration, term_use, kick_company
-            from billcdr_main where start_time::date = '${targetDate}'::date and kick_company='${kickCompany}' and duration>1 group by term_use,kick_company `;
+            from ${tableNameBillCDR} where start_time::date = '${targetDate}'::date and kick_company='${kickCompany}' and duration>1 group by term_use,kick_company `;
             const getTrafficSummaryRes = await db.queryIBS(query, []);
             return getTrafficSummaryRes.rows;
         } catch (error) {
             return error;
         }
     },
-    getTrafficSummaryMultiple: async function (kickCompany, targetDate) {
+    getTrafficSummaryMultiple: async function (tableNameBillCDR, kickCompany, targetDate) {
         try {
             const query = `select count(*) as total_calls, sum(duration/60) as total_duration, term_use, kick_company, daily_batch from
-             (select duration, term_use, kick_company, term_ani from billcdr_main where start_time::date = '${targetDate}'::date and
+             (select duration, term_use, kick_company, term_ani from ${tableNameBillCDR} where start_time::date = '${targetDate}'::date and
               kick_company='${kickCompany}')as lj join (select substring(_03_numbers, 2, 10) as _03_numbers, customer_cd, daily_batch  
               from  _03numbers where customer_cd ='${kickCompany}') as rj on(lj.term_ani=rj._03_numbers)  group by  term_use, kick_company, daily_batch `;
             const getTrafficSummaryRes = await db.queryIBS(query, []);
@@ -190,7 +189,6 @@ module.exports = {
 
     getSonusSummaryByTermaniTotalData: async function (year, month, tableName) {
         try {
-
             const query = `select count(*) as total, start_time::date as day,
             sum(case when (sonus_callstatus::int =16 OR sonus_callstatus::int =31) then 1 else 0 end)  as total_16_31
             from ${tableName} where to_char(start_time, 'MM-YYYY') = '${month}-${year}' 
@@ -216,12 +214,12 @@ module.exports = {
         }
     },
 
-    getCDRDailyTransitionSummary: async function (year, month) {
+    getCDRDailyTransitionSummary: async function (tableNameBillCDR, year, month) {
         try {
             const query = ` select start_time::date as day, gw as GATEWAY, trunk_port_name, count(*) as CDRCOUNT, sum(call_type) as KOKUSAI, 
             count(*) - sum(call_type) as KOKUNAI, sum(in_outbound) as INBOUND, count(*) - sum(in_outbound) as OUTBOUND, 
             sum(DURATION) as DURATIONS,sum(case when company_code='9999999999' then 1 else 0 end) as fumeichk
-            from billcdr_main where to_char(start_time,'MM-YYYY') = '${month}-${year}' 
+            from ${tableNameBillCDR} where to_char(start_time,'MM-YYYY') = '${month}-${year}' 
             group by start_time::date , GATEWAY, trunk_port_name 
             order by start_time::date , GATEWAY,trunk_port_name `;
 
@@ -360,7 +358,7 @@ module.exports = {
         }
     },
 
-    getTableName: async function (targetDate) {
+    getTableName: async function (targetDate, __type) {
         try {
             const year = new Date(targetDate).getFullYear();
             let month = new Date(targetDate).getMonth() + 1;
@@ -368,7 +366,12 @@ module.exports = {
             if (parseInt(month, 10) < 10) {
                 month = '0' + month;
             }
-            return `cdr_${year}${month}`;
+            if(__type === 'billcdr'){
+                return `billcdr_${year}${month}`;
+            }else{
+                return `cdr_${year}${month}`;
+            }
+            
 
         } catch (e) {
             console.log("err in get table=" + e.message);
@@ -447,7 +450,8 @@ module.exports = {
                 //  console.log("start Date=" + startDate);
                 //  console.log("actual start date" + actualStartDate)
 
-                let query = `select count(*) as total, sum(CALLDURATION*0.01/60) as duration  ,cast(addtime(starttime,'09:00:00') as Date) as day from COLLECTOR_73 
+                let query = `select count(*) as total, sum(CALLDURATION*0.01/60) as duration  ,cast(addtime(starttime,'09:00:00') as Date) as day 
+                from COLLECTOR_73 
                 where  ((INCALLEDNUMBER LIKE '35050%') OR (INCALLEDNUMBER LIKE '36110%') OR (INCALLEDNUMBER LIKE '50505%')) 
                 AND RECORDTYPEID = 3 
                 AND (CALLDURATION > 0)
@@ -551,8 +555,8 @@ module.exports = {
             let emailTO = `${customerInfo['mail_address']}`;
             let emailCC = `${customerInfo['east_link_address']}`;
 
-             // emailTO = 'uday@ipspro.co.jp';
-             // emailCC = 'uday@ipsism.co.jp';
+            //  emailTO = 'uday@ipspro.co.jp';
+            //  emailCC = 'uday@ipspro.co.jp';
             //  emailCC = 'y_ito@ipspro.co.jp';
 
             if (!emailTO) {
@@ -580,7 +584,9 @@ module.exports = {
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
             to: 'telecom@ipspro.co.jp',
+           // to: 'uday@ipspro.co.jp',
             cc: 'y_ito@ipspro.co.jp,uday@ipspro.co.jp',
+            //cc: 'uday@ipspro.co.jp',
             subject,
             html
         }

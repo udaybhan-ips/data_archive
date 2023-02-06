@@ -154,7 +154,7 @@ module.exports = {
   getSummaryData: async function (customerId, year, month) {
     try {
 
-      const query = `select customercode, cdr_amount::int as cdr_amount, kotei_amount  from ( select customercode,
+      const query = `select customercode, trunc(cdr_amount::numeric,0) as cdr_amount, kotei_amount  from ( select customercode,
          sum (finalcallcharge) as cdr_amount  from  byokakin_ntt_processedcdr_${year}${month} 
        where customercode='${customerId}' and carriertype ='NTT'  group by customercode) as bkpc full join 
        (select sum(kingaku) kotei_amount, comp_acco__c 
@@ -629,7 +629,6 @@ async function getFinalCharge(customerId, terminalType, rates, callDuration, cal
   
     }else if(callSort == '公衆'){
       resData = getActualRates(rates[0].public_rate, callDuration)
-  
     }else if(callSort == 'ナビダイヤル'){
       resData = getActualRates(rates[0].navi_dial_rate, callDuration)
 

@@ -18,13 +18,27 @@ module.exports = {
       }
       // console.log("table name=="+(tableNameRes));
 
+      const checkTableExistRes = await ArchiveKickback.checkTableExist(tableName);
+      const targetDay = new Date(Dates.targetDate).getDate();
+
+      if (!checkTableExistRes) {
+        if (targetDay == 1) {
+          // create table here
+          const checkTableExistRes = await ArchiveKickback.createTable(tableName);
+        } else {
+          //send email there is issue
+          const sendErrorEmail = await ArchiveKickback.sendErrorEmail(tableName, Dates.targetDate);
+          return ("Please check the batch control table and table name..! Table must be created!")
+        }
+      }
+
       const deleteTargetDateData = await ArchiveKickback.deleteTargetDateCDR(Dates.targetDate, tableName);
       const getTargetCDRRes = await ArchiveKickback.getTargetCDR(Dates.targetDateWithTimezone, tableName);
       const getCompanyCodeInfoRes = await ArchiveKickback.getCompanyCodeInfo(Dates.targetDateWithTimezone);
       const getRemoteControlNumberDataRes = await ArchiveKickback.getRemoteControlNumberData(Dates.targetDateWithTimezone);
 
       const getDataRes = await ArchiveKickback.insertByBatches(getTargetCDRRes, getCompanyCodeInfoRes, getRemoteControlNumberDataRes, null, null, 'raw_cdr', tableName);
- 
+
       const [updateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveKickback.updateBatchControl(dateId, Dates.targetDate));
       if (updateBatchControlErr) {
         throw new Error('Err: while updating target date');
@@ -52,16 +66,37 @@ module.exports = {
       if (tableNameErr) {
         throw new Error('Could not fetch table name');
       }
+
+      const [tableNameBillCDR, tableNameBillCDRErr] = await handleError(ArchiveKickback.getTableName(Dates.targetDate, 'billcdr'));
+      if (tableNameBillCDRErr) {
+        throw new Error('Could not fetch bill cdr table name');
+      }
+
       // console.log("table name=="+(tableNameRes));
 
-     
+
+      const checkTableExistRes = await ArchiveKickback.checkTableExist(tableNameBillCDR, 'ibs');
+      const targetDay = new Date(Dates.targetDate).getDate();
+
+      if (!checkTableExistRes) {
+        if (targetDay == 1) {
+          // create table here
+          const checkTableExistRes = await ArchiveKickback.createTableBillCDR(tableNameBillCDR);
+        } else {
+          //send email there is issue
+          const sendErrorEmail = await ArchiveKickback.sendErrorEmail(tableNameBillCDR, Dates.targetDate);
+          return ("Please check the batch control table and table name..! Table must be created!")
+        }
+      }
+
+
       /***** for billcdr main ******/
 
-      const deleteTargetDateBillableData = await ArchiveKickback.deleteTargetBillableCDR(Dates.targetDate, tableName);
+      const deleteTargetDateBillableData = await ArchiveKickback.deleteTargetBillableCDR(Dates.targetDate, tableNameBillCDR);
       const getTargetBillableCDRRes = await ArchiveKickback.getTargetBillableCDR(Dates.targetDate, tableName);
       const getCarrierInfoRes = await ArchiveKickback.getKickCompanyInfo();
       const getTerminalUseInfoRes = await ArchiveKickback.getTerminalUseInfo();
-      const getDataBillabeRes = await ArchiveKickback.insertByBatches(getTargetBillableCDRRes, null, null, getCarrierInfoRes, getTerminalUseInfoRes, 'bill_cdr', tableName);
+      const getDataBillabeRes = await ArchiveKickback.insertByBatches(getTargetBillableCDRRes, null, null, getCarrierInfoRes, getTerminalUseInfoRes, 'bill_cdr', tableNameBillCDR);
 
       const [updateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveKickback.updateBatchControl(dateId, Dates.targetDate));
       if (updateBatchControlErr) {

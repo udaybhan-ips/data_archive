@@ -147,6 +147,28 @@ module.exports = {
     // return res;
   },
 
+  queryBatchInsertSonusWithColumnSet: async function (data, ColumnSet, tableName) {
+
+    console.log("data length=" + data.length);
+    console.log("data length=" + JSON.stringify(data[0]));
+    //console.log("data length=" + JSON.stringify(ColumnSet));
+
+    let query;
+    try {
+      const ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSet, tableName)
+      query = await pgp.helpers.insert(data, ColumnSetValue);
+      res = await db_sonus_pgp.none(query)
+      return res;
+
+    } catch (e) {
+      console.log("error while bulk data inserting:" + e.message)
+    }
+
+
+    //console.log("3")
+    // return res;
+  },
+
   cdrDownloadQuery: async function (text, fileName, header, customerName) {
     const connectionString = config.DATABASE_URL_BYOKAKIN;
 

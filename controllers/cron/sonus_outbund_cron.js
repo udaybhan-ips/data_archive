@@ -20,7 +20,7 @@ var CDRController = require('../sonus_outbound/cdr.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var BillingControllerJob = new CronJob ('31 17 * * *',function(){
+// var BillingControllerJob = new CronJob ('15 14 * * *',function(){
 //     console.log('You will see this message every second');
 //     BillingController.getData();
 //     console.log('You will see this message every second');

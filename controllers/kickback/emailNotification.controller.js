@@ -21,7 +21,12 @@ module.exports = {
         throw new Error('Could not fetch table name');
       }
 
-      const [allKickComp, allKickCompErr] = await handleError(EmailNotification.getAllKickComp(Dates.targetDateWithTimezone));
+      const [tableNameBillCDR, tableNameBillCDRErr] = await handleError(EmailNotification.getTableName(Dates.targetDateWithTimezone, 'billcdr'));
+      if (tableNameBillCDRErr) {
+        throw new Error('Could not fetch table name');
+      }
+
+      const [allKickComp, allKickCompErr] = await handleError(EmailNotification.getAllKickComp(Dates.targetDateWithTimezone, tableNameBillCDR));
 
       if (allKickCompErr) {
         console.log("Could not get all kick company");
@@ -50,7 +55,7 @@ module.exports = {
           if (deleteTrafficSummErr) {
             throw new Error('error while deleting summary data');
           }
-          const [proDataRes, proDataErr] = await handleError(EmailNotification.getTrafficSummary(allKickComp[i]['customer_cd'], Dates.targetDateWithTimezone));
+          const [proDataRes, proDataErr] = await handleError(EmailNotification.getTrafficSummary(tableNameBillCDR, allKickComp[i]['customer_cd'], Dates.targetDateWithTimezone));
           if (proDataErr) {
             throw new Error('error while fetching data processed data');
           }
@@ -75,7 +80,7 @@ module.exports = {
             if (deleteTrafficSummErr) {
               throw new Error('error while deleting summary data');
             }
-            const [proDataRes, proDataErr] = await handleError(EmailNotification.getTrafficSummaryMultiple(allKickCompEmail[i]['customer_cd'], Dates.targetDateWithTimezone));
+            const [proDataRes, proDataErr] = await handleError(EmailNotification.getTrafficSummaryMultiple(tableNameBillCDR, allKickCompEmail[i]['customer_cd'], Dates.targetDateWithTimezone));
             if (proDataErr) {
               throw new Error('error while fetching data processed data');
             }
@@ -254,7 +259,7 @@ module.exports = {
         }
 
 
-        const [proDataAllRes, proDataAllErr] = await handleError(EmailNotification.getAllProTrafficSummary(Dates.targetDateWithTimezone));
+        const [proDataAllRes, proDataAllErr] = await handleError(EmailNotification.getAllProTrafficSummary(tableNameBillCDR, Dates.targetDateWithTimezone));
         if (proDataAllErr) {
           throw new Error('error while fetching data processed data');
         }
@@ -278,7 +283,7 @@ module.exports = {
         }
 
 
-        const [getCDRDailyTransitionSummaryRes, getCDRDailyTransitionSummaryErr] = await handleError(EmailNotification.getCDRDailyTransitionSummary(year, month));
+        const [getCDRDailyTransitionSummaryRes, getCDRDailyTransitionSummaryErr] = await handleError(EmailNotification.getCDRDailyTransitionSummary(tableNameBillCDR, year, month));
         if (getCDRDailyTransitionSummaryErr) {
           throw new Error('error while fetching data processed data');
         }
