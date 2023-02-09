@@ -14,6 +14,19 @@ module.exports = {
       });
     }    
   },
+  getSummaryByMonth: async function(req, res) {
+    try {
+        const [summaryRes,summaryErr] = await handleError(SummayLeafnet.getSummaryByMonth(req.body));
+        if(summaryErr) {
+             throw new Error('Could not fetch the summary');  
+        }
+        return res.status(200).json(summaryRes);
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
 }
 
 const handleError = (promise) => {

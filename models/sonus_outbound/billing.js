@@ -20,7 +20,7 @@ module.exports = {
           const query=`select  customer_name, customer_id, (select landline from sonus_outbound_rates 
             where sonus_outbound_rates.customer_id=sonus_outbound_customer.customer_id) as landline_rate ,
              (select mobile from sonus_outbound_rates where sonus_outbound_rates.customer_id=sonus_outbound_customer.customer_id) 
-             as mobile_rate   from sonus_outbound_customer  where deleted=false and customer_id!='00001288'
+             as mobile_rate   from sonus_outbound_customer  where deleted=false and customer_id in ('00001338','00001335')
              group by customer_name, customer_id order by customer_id`;
           
           const getAllSonusOutboundCustRes= await db.query(query,[], true);

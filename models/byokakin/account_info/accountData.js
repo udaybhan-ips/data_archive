@@ -12,7 +12,7 @@ module.exports = {
             }
 
           const query=`select dataid as id, carriername, comp_code__c, accountname, accountid, accountpassword, useddate, registerby, 
-          registerdate, modifyby, modifydate, deleted from free_call_account where deleted= false ${carrierWhere} order by  comp_code__c` ;
+          registerdate, modifyby, modifydate, deleted from free_call_account where deleted= false and usedflag = '1' ${carrierWhere} order by  comp_code__c` ;
 
         //  console.log("query.."+query)
 
@@ -75,9 +75,9 @@ addAccountInfo: async function(data) {
 
 
         const insertQuery = `insert into free_call_account (comp_code__c, accountname, carriername, accountid, accountpassword,
-                 useddate, registerdate, registerby) Values 
+                 useddate, registerdate, registerby, usedflag) Values 
                 ('${data.comp_code}','${data.compName}','${data.carriername}','${accountid}', '${accountpassword}',
-                '${data.useddate}',now(), '${data.added_by}')`;
+                '${data.useddate}',now(), '${data.added_by}', '1')`;
             
         const insertRes = await db.queryByokakin(insertQuery,[]);      
     

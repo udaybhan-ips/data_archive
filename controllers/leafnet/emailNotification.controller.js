@@ -4,27 +4,33 @@ var EmailNotification = require('../../models/leafnet/emailNotification');
 module.exports = {
   
   sendEmail: async function(req, res) {
-    const dateId='1';
+    const dateId='1', type_of_service = ['Leafnet_006751','Leafnet_0067745109'];
     try {
       const [Dates,targetDateErr] = await handleError(EmailNotification.getTargetDate(dateId));
       if(targetDateErr) {
            throw new Error('Could not fetch target date');  
       }
+
+      let createTableRes = "" , createTableErr="" ;
       
-        const [proDataRes,proDataErr] = await handleError(EmailNotification.getSummaryData(Dates.targetDateWithTimezone));
+      for(let i=0; i< type_of_service.length; i++){
+
+        const [proDataRes,proDataErr] = await handleError(EmailNotification.getSummaryData(Dates.targetDateWithTimezone, type_of_service[i]));
         if(proDataErr) {
              throw new Error('error while fetching data processed data');  
         }
 
-        const [rawDataRes,rawDataErr] = await handleError(EmailNotification.getSummaryDataMysql(Dates.targetDateWithTimezone));
+        const [rawDataRes,rawDataErr] = await handleError(EmailNotification.getSummaryDataMysql(Dates.targetDateWithTimezone, type_of_service[i]));
         if(rawDataErr) {
              throw new Error('error while fetching raw data');  
         }
         
-        const [createTableRes,createTableErr] = await handleError(EmailNotification.createTable(rawDataRes, proDataRes));
-        if(createTableErr) {
-             throw new Error('error while creating table');  
-        }
+        createTableRes += await EmailNotification.createTable(rawDataRes, proDataRes , type_of_service[i]);
+        
+
+      }
+
+        
 
         const [sendEmailRes,sendEmailErr] = await handleError(EmailNotification.sendEmail(createTableRes));
         if(sendEmailErr) {
