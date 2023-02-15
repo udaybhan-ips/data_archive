@@ -4,19 +4,19 @@ var billingController = require('../kickback/billing.controller');
 var CDRsController = require('../kickback/cdr.controller');
 var EmailController = require('../kickback/emailNotification.controller');
 
-// var archiverJob = new CronJob ('45 10 * * *',function(){
+// var archiverJob = new CronJob ('52 10 * * *',function(){
 //     console.log('This is kickback archiver start');
 //     archiveController.getData();
 //     console.log('This is kickback archiver End');  
 // },null, true, 'Asia/Tokyo');
   
-// var archiverProJob = new CronJob ('53 10 * * *',function(){
+// var archiverProJob = new CronJob ('6 11 * * *',function(){
 //     console.log('This is kickback Pro archiver start');
 //     archiveController.getProData();
 //     console.log('This is kickback Pro archiver End');  
 // },null, true, 'Asia/Tokyo');
 
-// var emailNotificationJob = new CronJob ('2 11 * * *',function(){
+// var emailNotificationJob = new CronJob ('31 11 * * *',function(){
 //     console.log('This is kickback email notification start');
 //     EmailController.sendEmail();
 //     console.log('This is kickback email notification end');

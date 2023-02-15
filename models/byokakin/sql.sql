@@ -47,3 +47,8 @@ select distinct(did) from byokakin_kddi_infinidata_202301 where did not  in ( se
 select distinct(did) from byokakin_kddi_raw_cdr_202301 where did not  in ( select distinct(freedialnumber) from byokakin_kddi_processedcdr_202301 where cdrclassification='OUTBOUND' ) ;
 select distinct(did) from byokakin_ntt_rawcdr_inbound_202301 where did not  in  ( select distinct( callingnumber)   from byokakin_ntt_processedcdr_202301 where cdrclassification='INBOUND' )
 select distinct(did) from byokakin_ntt_rawcdr_outbound_202301  where callcharge>0 and  did not  in  ( select distinct( freedialnumber)   from byokakin_ntt_processedcdr_202301 where cdrclassification='OUTBOUND' );
+
+select total_a, free, total_b, did, total_a-total_b from ( select count(*) as total_a,  ((regexp_replace(freedialnumber, '[^0-9]', '', 'g'))) as
+ free  from byokakin_kddi_processedcdr_202301 where cdrclassification='OUTBOUND' group by regexp_replace(freedialnumber, '[^0-9]', '', 'g')) as 
+ lj join ( select count(*) as total_b,  ((regexp_replace(did, '[^0-9]', '', 'g'))) as did  from byokakin_kddi_raw_cdr_202301 group by 
+ regexp_replace(did, '[^0-9]', '', 'g')) as rj on (lj.free=rj.did);

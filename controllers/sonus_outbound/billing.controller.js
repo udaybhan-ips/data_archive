@@ -12,8 +12,8 @@ module.exports = {
         const billingYear = new Date(Dates.target_billing_month).getFullYear();
         let billingMonth = new Date(Dates.target_billing_month).getMonth() + 1;
 
-        if(parseInt(billingMonth,10)<10){
-          billingMonth='0'+billingMonth;
+        if(parseInt(billingMonth,10)<10){ 
+          billingMonth='0'+ billingMonth;
         }
 
         const [customerListRes,customerListErr] = await handleError(BillingSonusOutbound.getAllSonusOutboundCustomer(dateId));

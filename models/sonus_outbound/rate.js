@@ -74,12 +74,18 @@ module.exports = {
       if (data.incallednumber) {
         updateData = updateData + `incallednumber= '${data.incallednumber}',`;
       }
+      if (data.start_date) {
+        updateData = updateData + `start_date= '${data.start_date}',`;
+      }
+      if (data.end_date) {
+        updateData = updateData + `end_date= '${data.end_date}',`;
+      }
 
       updateData = updateData + `updated_by= '${data.updated_by}', updated_date= 'now()'`;
 
       const query = `INSERT INTO sonus_outbound_rates_history (customer_id, landline, mobile, date_added ,updated_by , trunkport, incallednumber, start_date, end_date)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning customer_id`;
-      const value = [data.customer_cd, data.landline, data.mobile, 'now()', data.updated_by, data.trunkport, data.incallednumber, data.start_date, data.end_date];
+      const value = [data.customer_cd, checkRatesRes.rows[0].landline, checkRatesRes.rows[0].mobile, 'now()', checkRatesRes.rows[0].updated_by, checkRatesRes.rows[0].trunkport, checkRatesRes.rows[0].incallednumber, checkRatesRes.rows[0].start_date, checkRatesRes.rows[0].end_date];
       const res = await db.query(query, value, ipsPortal = true);
 
       //console.log("res==");

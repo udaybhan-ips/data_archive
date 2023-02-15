@@ -134,6 +134,68 @@ module.exports = {
     }
   },
 
+  async getKotehiData(req, res) {
+    try {
+      //const getKotehiDataRes = await ArchiveSonusOutbound.getKotehiData(req.body);
+      return res.status(200).json([]);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
+  async addKotehiData(req, res) {
+    try {
+      const addKotehiDataRes = await ArchiveSonusOutbound.addKotehiData(req.body);
+      return res.status(200).json(addKotehiDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
+  
+  async deleteKotehiProcessedData(req, res) {
+    try {
+      const deleteProcessedKotehiDataRes = await ArchiveSonusOutbound.deleteKotehiProcessedData(req.body);
+      return res.status(200).json(deleteProcessedKotehiDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
+  async getProcessedKotehiData(req, res) {
+    try {
+      const getProcessedKotehiDataRes = await ArchiveSonusOutbound.getProcessedKotehiData(req.body);
+      return res.status(200).json(getProcessedKotehiDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+  
+
+  async getLastMonthKotehiData(req, res) {
+    try {
+      const getLastMonthKotehiDataRes = await ArchiveSonusOutbound.getLastMonthKotehiData(req.body);
+      return res.status(200).json(getLastMonthKotehiDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
   async updateArchiveDate(req, res) {
     try {
       if (req.body.date_id && req.body.targetDate) {

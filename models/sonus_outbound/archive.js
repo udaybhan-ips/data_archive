@@ -1,11 +1,15 @@
 var db = require('./../../config/database');
 const { BATCH_SIZE } = require('../../config/config');
+const utility = require("../../public/javascripts/utility")
 const pgp = require('pg-promise')({
   capSQL: true
 });
 
 const ColumnSet = ['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound', 'dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_comp_code', 'billing_comp_name', 'trunk_port', 'sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_inani', 'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'register_date', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus', 'sonus_callingnumber', 'sonus_egcallednumber', 'sonus_egrprotovariant', 'landline_amount', 'mob_amount', 'bill_num'];
 const tableName ='cdr_sonus_outbound' ;
+let ColumnSetIPSKotehiBillDetail = ['companyname','bill_code', 'comp_acco__c',  'ips_product_name', 'amount', 'datebill', 'added_by', 'date_added'];
+let tableNameIPSKotehiBillDetail = { table: 'ips_kotehi_cdr_bill' };
+
 
 module.exports = {
 
@@ -24,7 +28,8 @@ module.exports = {
   },
   getSonusCustomerList: async function() {
     try {
-          const query=`select id,customer_name, customer_id, trunk_port, incallednumber from sonus_outbound_customer where deleted = false order by customer_name`;
+          const query=`select id,customer_name, customer_id, trunk_port, incallednumber from 
+          sonus_outbound_customer where deleted = false order by customer_name`;
           const sonusCustList= await db.query(query,[], true);
           //console.log(targetDateRes);
           if(sonusCustList.rows){
@@ -35,6 +40,130 @@ module.exports = {
           return error;
       }
   },
+
+
+  deleteKotehiProcessedData: async function ({ billing_month, customer_cd, deleted_by }) {
+    try {
+      //console.log("year, month .." + billing_month, customer_cd);
+
+      const query = `delete from ips_kotehi_cdr_bill where datebill::date='${billing_month}-01' and comp_acco__c='${customer_cd}' `;
+      const deleteKotehiProcessedDataRes = await db.queryByokakin(query, []);
+
+      console.log(JSON.stringify(deleteKotehiProcessedDataRes))
+
+      return deleteKotehiProcessedDataRes;
+    } catch (e) {
+      console.log("err in delete kotehi sonus/ips last month list=" + e.message);
+      return e;
+    }
+  },
+
+  getProcessedKotehiData: async function({ year, month, comCode }) {
+    try {
+      
+          const query=` select count(*), sum(amount) as amount,  comp_acco__c, companyname from ips_kotehi_cdr_bill 
+          where to_char(datebill::date, 'MM-YYYY')='${month}-${year}'
+          group by comp_acco__c, companyname `;
+          const processedKotehiData= await db.queryByokakin(query,[]);
+          //console.log(targetDateRes);
+          if(processedKotehiData && processedKotehiData.rows){
+              return processedKotehiData.rows ;              
+          }
+          throw new Error("Error!"+processedKotehiData)
+      } catch (error) {
+          throw new Error("Error!!"+error.message)
+      }
+  },
+  
+
+  addKotehiData: async function(reqData) {
+    console.log("data..." + JSON.stringify(reqData));
+    try {
+      const [{ data }, { currentUser }] = reqData;
+      let billingData, comCode = '', comCode4Dig = '';
+
+      if (data.length > 0) {
+        comCode = data[0]['comp_acco__c']
+        comCode4Dig = comCode.slice(comCode.length - 4);
+        billingData = data[0]['datebill'];
+      } else {
+        throw new Error('request data not available');
+      }
+
+      const year = new Date(billingData).getFullYear();
+      let month = new Date(billingData).getMonth() + 1;
+      if (parseInt(month, 10) < 10) {
+        month = '0' + month;
+      }
+
+      const query = ` select * from ips_kotehi_cdr_bill where   
+      to_char(datebill::date, 'MM-YYYY')='${month}-${year}' and  comp_acco__c = '${comCode}' `;
+
+      const getKotehiLastMonthDataRes = await db.queryByokakin(query, []);
+
+      if (getKotehiLastMonthDataRes.rows && getKotehiLastMonthDataRes.rows.length > 0) {
+        return 'alredy processed';
+      } else {
+
+        let tmpData = [];
+
+        const bill_numb__c = `IPS-FIX${comCode.slice(comCode.length - 4)}-${year}${month}-1`;
+
+        for (let i = 0; i < data.length; i++) {
+          let tmpObj = {};
+
+          //tmpObj['cdrid'] = data[i]['cdrid'];
+          tmpObj['companyname'] = data[i]['companyname'];
+          tmpObj['comp_acco__c'] = data[i]['comp_acco__c'];
+          tmpObj['bill_code'] = bill_numb__c;
+          tmpObj['datebill'] = `${year}-${month}-01`;
+          tmpObj['ips_product_name'] = data[i]['ips_product_name'];
+          tmpObj['added_by'] = currentUser;
+          tmpObj['amount'] = data[i]['amount'];
+          tmpObj['date_added'] = new Date();
+          tmpData.push(tmpObj);
+        }
+
+        console.log("Data..+"+JSON.stringify(data))
+
+        const insertKotehiDataRes = await cusInsertByBatches(tmpData, 'ips_kotehi_cdr_bill');
+
+        console.log("insertKotehiDataRes.." + JSON.stringify(insertKotehiDataRes));
+
+        if (insertKotehiDataRes.length > 0 && insertKotehiDataRes[0] == null) {
+          return 'done';
+        } else {
+          throw new Error(insertKotehiDataRes);
+        }
+      }
+
+    } catch (e) {
+      console.log("err in get kddi free account number list=" + e.message);
+      throw new Error(e.message);
+    }
+  },
+
+  
+  
+  getLastMonthKotehiData: async function({ year, month, comCode }) {
+    try {
+      let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
+
+      const lastYear = lastMonthDate.year;
+      const lastMonth = lastMonthDate.month;
+
+          const query=` select * from ips_kotehi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}'`;
+          const lastMonthKotehiDataRes= await db.queryByokakin(query,[]);
+          //console.log(targetDateRes);
+          if(lastMonthKotehiDataRes && lastMonthKotehiDataRes.rows){
+              return lastMonthKotehiDataRes.rows ;              
+          }
+          throw new Error("Error!"+lastMonthKotehiDataRes)
+      } catch (error) {
+          throw new Error("Error!!"+error.message)
+      }
+  },
+
   getRates: async function(customerId, customerName) {
     try {
         let where = "";
@@ -171,9 +300,11 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
     const dataSize=JSON_data.length;
     const chunkArray= await chunk(JSON_data,BATCH_SIZE);
     console.log(JSON.stringify(customerInfo));
+    
     let res=[];
     let resArr=[];
     const ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSet, { table: tableName })  
+
     for(let i=0;i<chunkArray.length;i++){
       const data = await getNextInsertBatch(chunkArray[i], customerInfo, ratesInfo);
       res=await db.queryBatchInsert(data,'sonus',ColumnSetValue);
@@ -184,6 +315,7 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
     return resArr;
 
   },
+
   updateBatchControl: async function(serviceId,targetDate,api) {
     let query;
     try {
@@ -193,7 +325,7 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
           query=`update batch_date_control set date_set='${targetDate}'::date + interval '1' day , last_update=now() where date_id='${serviceId}'`;
         }
         
-        const updateBatchControlRes= await db.query(query,[]);
+        const updateBatchControlRes = await db.query(query,[]);
         return updateBatchControlRes;
     } catch (error) {
         return error;
@@ -451,4 +583,19 @@ async function chunk(array, size) {
     chunked_arr.push(copied.splice(0, size));
   }
   return chunked_arr;
+}
+
+async function cusInsertByBatches(records, type, billingYear, billingMonth) {
+  const chunkArray = await chunk(records, BATCH_SIZE);
+  let res = [];
+  let resArr = [];
+
+  for (let i = 0; i < chunkArray.length; i++) {
+    res = await db.queryBatchInsertByokakin(chunkArray[i],ColumnSetIPSKotehiBillDetail , tableNameIPSKotehiBillDetail);    
+  }
+  resArr.push(res);
+  console.log("done" + new Date());
+  console.log(resArr);
+  return resArr;
+
 }

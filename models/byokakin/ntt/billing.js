@@ -65,8 +65,8 @@ module.exports = {
 
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
-      where customer_cd='00001166' and is_deleted = false and service_type ->> 'ntt_customer'  = 'true' 
-      
+      where  is_deleted = false and service_type ->> 'ntt_customer'  = 'true' 
+      and customer_cd in ('00001166','00000961')
        order by customer_code   `;
       // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getNTTCompListRes = await db.query(query, [], true);
@@ -84,11 +84,11 @@ module.exports = {
 
     try {
 
-      let where = `where raw_cdr.carriertype ='NTT'`; 
+      let where = `where raw_cdr.carriertype ='NTT' and raw_cdr.callcharge > 0 `; 
 
-     if(customer_code !=='00001166'){
-        where += `and raw_cdr.callcharge > 0`
-     }
+    //  if(customer_code !=='00001166'){
+    //     where += `and raw_cdr.callcharge > 0`
+    //  }
 
       const query = `select  raw_cdr.*, 0 as callcount104 from 
       byokakin_ntt_rawcdr_outbound_${billingYear}${billingMonth}  raw_cdr join ntt_kddi_freedial_c free_dial on 

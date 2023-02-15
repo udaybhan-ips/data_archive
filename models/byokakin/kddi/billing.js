@@ -62,7 +62,9 @@ module.exports = {
 
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
-      where is_deleted = false  and service_type ->> 'kddi_customer'  = 'true' 
+      where is_deleted = false 
+      and customer_cd!='00001076'
+      and service_type ->> 'kddi_customer'  = 'true' 
       order by customer_code`;
      // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getKDDICompListRes = await db.query(query, [], true);
@@ -83,7 +85,8 @@ module.exports = {
       const query = `select  raw_cdr.* from byokakin_kddi_raw_cdr_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
       (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g') = free_dial.free_numb__c 
       and free_dial.cust_code__c::int = '${customer_code}' and 
-      (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')   ) `;
+      (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00' OR
+      free_dial.stop_date__c='null' OR free_dial.stop_date__c::date > now()::date)   ) `;
 
       const getKDDIRAWDataRes = await db.queryByokakin(query, []);
 
@@ -104,7 +107,8 @@ module.exports = {
 
       const query = `select  raw_cdr.* from byokakin_kddi_infinidata_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
       (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g')=free_dial.free_numb__c  and 
-      (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')
+      (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00' OR 
+      free_dial.stop_date__c='null' OR free_dial.stop_date__c::date > now()::date)
       and free_dial.cust_code__c::int = '${customer_code}' )`;
 
 
