@@ -771,20 +771,22 @@ async function createInvoice(customerId, serviceType, billingYear, billingMonth,
 
 
   console.log("y=--" + y);
-  let compType;
+  let compType, compTypeJ;
   if (serviceType == 'rate_base') {
     drawLine(doc, y + 25);
     addTableHeader(doc, 50, y + 40, totalCallAmount, totalCallDuration, billingYear, billingMonth);
     y = customTable(doc, y + 85, invoice, MAXY);
-    compType = "IPS";
+    compType = "IPS Pro, Inc.";
+    compTypeJ= "アイ・ピー・エス・プロ";
   } else {
     addTableHeaderFC(doc, 50, y + 40, totalCallAmount, totalCallDuration, billingYear, billingMonth);
     y = await customTableFC(doc, y + 50, invoice, MAXY);
     compType = "ELI";
+    compTypeJ = "ELI";
   }
 
   y = await tableSummary(doc, 350, y, subTotal);
-  await generateFooter(doc, y, compType);
+  await generateFooter(doc, y, compType, compTypeJ);
   doc.end();
   doc.pipe(fs.createWriteStream(path));
 }
@@ -876,11 +878,11 @@ async function generateHeader(customerDetails, doc, totalCallAmount, serviceType
 
 }
 
-async function generateFooter(doc, y, compType) {
+async function generateFooter(doc, y, compType, compTypeJ) {
   console.log("in footer")
   doc
     .fontSize(8)
-    .text(`※この書類は㈱${compType}から御社にお支払いする手数料についての通知書です。`, 50, y + 50)
+    .text(`※この書類は㈱${compTypeJ}から御社にお支払いする手数料についての通知書です。`, 50, y + 50)
     .moveDown()
     .text("内容をご確認の上、請求書を上記住所までご送付くださいますようお願いいたします。")
     .moveDown()
@@ -1059,7 +1061,7 @@ function generateCustomerInformation(customerId, billingYear, billingMonth, doc,
     .text(`${customerId}`, 50, y + 30, { width: 100, align: "center" })
     .text(`${invoiceNo}`, 150, y + 30, { width: 100, align: "center" })
     .text(`${currentYear}/${currentMonthValue}/01`, 250, y + 30, { width: 100, align: "center" })
-    .text(`${billingYear}/${billingMonth}/1 ～ ${billingYear}/${billingMonth}/${daysInMonth(billingMonth, billingYear)}`, 350, y + 30, { width: 100, align: "center" })
+    .text(`${billingYear}/${billingMonth}/01 ～ ${billingYear}/${billingMonth}/${daysInMonth(billingMonth, billingYear)}`, 350, y + 30, { width: 100, align: "center" })
     .fontSize(12)
     .text(`¥${utility.numberWithCommas(totalAmount)}`, 450, y + 30, { width: 110, align: "center" })
     .fontSize(8)

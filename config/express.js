@@ -14,11 +14,12 @@ var initApp = function() {
   app.set('port', config.PORT);
 
   app.use(bodyParser.urlencoded({
-    limit: '50mb',
+    limit: '70mb',
     extended: true
   }));
+  app.use(bodyParser.json({limit: '70mb'}));
 
-  app.use(bodyParser.json({limit: '50mb'}));
+
   app.use(morgan('short'));
 
   app.set('views', './views');

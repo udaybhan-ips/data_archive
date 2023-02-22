@@ -140,6 +140,100 @@ module.exports = {
     }
   },
 
+  async getUnRegisteredKDDIKotehiNumberByUI(req, res) {
+    try {
+      const { year, month, comCode } = req.body;
+      const [checkUnRegistededKotehiNumberRes, checkUnRegistededKotehiNumberErr] = await handleError(ArchiveKDDI.checkUnRegistededKotehiNumber(year, month, comCode));
+      if (checkUnRegistededKotehiNumberErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: checkUnRegistededKotehiNumberErr.message
+        });
+      }
+      return res.status(200).json(checkUnRegistededKotehiNumberRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+  
+
+  async uploadKDDIKotehiDataByUI(req, res) {
+    
+      try {
+        
+  
+        //console.log("req.."+JSON.stringify(req.body));
+
+        
+  
+        const billingMonth = "01";
+        const billingYear ="2023";
+        const serviceType = "Kotehi";
+        const callType = ['free_number','d_number'];
+        const filePath = "C:"
+        const fileName ="" ;
+
+        const checkKotehiData = await ArchiveKDDI.checkTargetKotehiData(billingYear, billingMonth);
+
+        if(checkKotehiData === 'data is already there') {
+          return res.status(200).json({
+            message: checkKotehiData,
+          });
+        }
+        
+        const resKDDIFreeDialNumList = await ArchiveKDDI.getKDDIFreeDialNumList();
+        const resKDDIFreeAccountNumList = await ArchiveKDDI.getKDDIFreeAccountNumList();
+        const resKDDICustomerList = await ArchiveKDDI.getKDDICustomerList();
+
+         await ArchiveKDDI.insertKDDIKotehiDataByAPI(req.body.file_input, 
+           resKDDICustomerList, resKDDIFreeDialNumList,resKDDIFreeAccountNumList,billingYear, billingMonth);
+        
+           //const checkUnRegistededKotehiNumberRes = await checkUnRegistededKotehiNumber(billingYear, billingMonth)
+  
+        //const deleteTargetDateData = await ArchiveKDDI.deleteTargetDateCDR(billingYear, billingMonth, serviceType, callType);
+       
+  
+        // const resKDDIKotehiData = await ArchiveKDDI.insertKDDIKotehiData(filePath, fileName, 
+        //   resKDDICustomerList, resKDDIFreeDialNumList,resKDDIFreeAccountNumList,billingYear, billingMonth);
+        //console.log("data");
+       // console.log(JSON.stringify(resKDDIKotehiData));
+  
+        //const getDataRes = await ArchiveKDDI.insertByBatches(resKDDIKotehiData);
+        console.log("Done ...")
+        return res.status(200).json({
+          message: 'success! data inserted sucessfully',
+        });
+      } catch (error) {
+        return error;
+      }
+  
+  
+  },
+
+  
+
+  async deleteKDDIKotehiDataByUI(req, res) {
+    try {
+      const { year, month, comCode } = req.body;
+      const [deleteKDDIKotehiDataByUIRes, deleteKDDIKotehiDataByUIErr] = await handleError(ArchiveKDDI.deleteTargetKotehiData(year, month, comCode));
+      if (deleteKDDIKotehiDataByUIErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: deleteKDDIKotehiDataByUIErr.message
+        });
+      }
+      return res.status(200).json(deleteKDDIKotehiDataByUIRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
   async getLastMonthKDDIKotehiData(req, res) {
     try {
       const [kotehiLastMonthDataRes, kotehiLastMonthDataErr] = await handleError(ArchiveKDDI.getLastMonthKDDIKotehiData(req.body));

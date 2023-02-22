@@ -72,7 +72,7 @@ module.exports = {
 
   getNTTFreeDialNumList: async function () {
     try {
-      const query = `select data_idno, cust_code__c, carr_comp__c, free_numb__c from  ntt_kddi_freedial_c where carr_comp__c='NTT' `
+      const query = `select data_idno, cust_code__c, carr_comp__c, free_numb__c from  ntt_kddi_freedial_c where carr_comp__c='NTT' order by free_numb__c `
       const getNTTFreeDialNumListRes = await db.queryByokakin(query, []);
       return getNTTFreeDialNumListRes.rows;
     } catch (e) {

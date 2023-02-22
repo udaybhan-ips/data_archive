@@ -23,11 +23,51 @@ var fs = require('fs');
 const fsPromises = fs.promises;
 const path = require('path');
 var csv = require('fast-csv');
-const { exit } = require('process');
-//import { parse } from 'csv-parse';
 
 
 module.exports = {
+
+  checkTableExist: async function (tableName, database="byokakin") {
+    try {
+      let checkTableExistRes = false; 
+      const query = `SELECT EXISTS ( SELECT FROM information_schema.tables WHERE  table_schema ='public' AND table_name = '${tableName}' )` ;
+      if(database === "byokakin"){
+        checkTableExistRes = await db.queryByokakin(query,[]);
+      }else{
+        checkTableExistRes = await db.query(query,[]);
+      }
+      
+      if (checkTableExistRes && checkTableExistRes.rows) {
+        return checkTableExistRes.rows[0]['exists']
+      }
+      return checkTableExistRes;
+
+    } catch (e) {
+      console.log("err in get table=" + e.message);
+      throw new Error("Error in checking table exist!!"+e.message)
+    }
+  },
+
+  getTableName: async function (targetDate, __type) {
+    try {
+      const year = new Date(targetDate).getFullYear();
+      let month = new Date(targetDate).getMonth() + 1;
+
+      if (parseInt(month, 10) < 10) {
+        month = '0' + month;
+      }
+
+      if(__type ==='billcdr'){
+        return `billcdr_${year}${month}`;
+      }else{
+        return `cdr_${year}${month}`;
+      }      
+
+    } catch (e) {
+      console.log("err in get table=" + e.message);
+      return console.error(e);
+    }
+  },
 
   getTargetDate: async function (date_id) {
     try {
@@ -64,7 +104,7 @@ module.exports = {
   getKDDICustomerList: async function () {
     try {
       const query = `select customer_name, customer_cd, id from m_customer `
-      
+
       const getKDDICustomerList = await db.query(query, [], true);
       if (getKDDICustomerList && getKDDICustomerList.rows) {
         return getKDDICustomerList.rows;
@@ -111,7 +151,7 @@ module.exports = {
 
   getKDDIFreeDialNumList: async function () {
     try {
-      const query = `select data_idno, cust_code__c, carr_comp__c, free_numb__c from  ntt_kddi_freedial_c where carr_comp__c='KDDI' `
+      const query = `select data_idno, cust_code__c, carr_comp__c, free_numb__c from  ntt_kddi_freedial_c where carr_comp__c='KDDI' order by free_numb__c`
       const getKDDIFreeDialNumListRes = await db.queryByokakin(query, []);
       return getKDDIFreeDialNumListRes.rows;
     } catch (e) {
@@ -169,6 +209,10 @@ module.exports = {
       return e;
     }
   },
+
+ 
+
+  
 
   getLastMonthKDDIKotehiData: async function ({ year, month, comCode }) {
     try {
@@ -240,7 +284,7 @@ module.exports = {
       let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
       const lastYear = lastMonthDate.year;
       const lastMonth = lastMonthDate.month;
-      
+
       //const query = `select  substring(split_part(bill_numb__c, '-',2),4) as comp_code,  sum (amount) from kddi_kotei_bill_details 
       //where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_numb__c, '-',2),4) `;
 
@@ -480,6 +524,186 @@ module.exports = {
       return error;
     }
   },
+
+  
+  checkTargetKotehiData: async function (billingYear, billingMonth, serviceType) {
+
+    try {
+
+      const query =`select * from kddi_kotei_cdr_basic where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
+      const query1 =`select * from kddi_kotei_cdr_contents where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
+      const query2 =`select * from byokakin_kddi_infinidata_${billingYear}${billingMonth} limit 1`;
+
+      const qRes = await db.queryByokakin(query, []);
+      const qRes1 = await db.queryByokakin(query1, []);
+      const qRes2 = await db.queryByokakin(query2, []);
+
+      if(qRes && qRes.rows.length<=0 && qRes1 && qRes1.rows.length <=0 && qRes2 && qRes2.rows.length<=0){
+        return "data_not_available"
+      }else{
+        return "data is already there";
+      }      
+      
+
+    } catch (error) {
+      throw new Error("Error!!"+error.message)      
+    }
+  },
+
+  deleteTargetKotehiData: async function (billingYear, billingMonth, serviceType) {
+
+    try {
+
+      const query =`delete from kddi_kotei_cdr_basic where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
+      const query1 =`delete from kddi_kotei_cdr_contents where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
+      const query2 =`delete from byokakin_kddi_infinidata_${billingYear}${billingMonth}`;
+
+      const qRes = await db.queryByokakin(query, []);
+      const qRes1 = await db.queryByokakin(query1, []);
+      const qRes2 = await db.queryByokakin(query2, []);
+
+      if(qRes && qRes1 && qRes2){
+        return "record deleted"
+      }
+
+    } catch (error) {
+      throw new Error("Error!!"+error.message)      
+    }
+  },
+
+
+  checkUnRegistededKotehiNumber: async function (billingYear, billingMonth, serviceType) {
+
+    try {
+
+      let res = {message:'not_found', cdr_basic:[], cdr_contents:[]};
+      
+
+      const query1 =`select  distinct(freedialnumber) as freedialnumber from kddi_kotei_cdr_basic where datebill::date ='${billingYear}-${billingMonth}-01' and comp_acco__c='99999999' `;
+      const query2 =`select  distinct(billaccount) as billaccount from kddi_kotei_cdr_contents where datebill::date ='${billingYear}-${billingMonth}-01' and comp_acco__c='99999999' `;
+
+      const qRes1 = await db.queryByokakin(query1, []);
+      const qRes2 = await db.queryByokakin(query2, []);
+
+      if(qRes1 && qRes1.rows.length >0){
+        res.cdr_basic= qRes1.rows;
+        res.message= 'found';
+      } 
+      
+      if(qRes2 && qRes2.rows.length > 0){
+        res.message= 'found';
+        res.cdr_contents= qRes2.rows;            
+      }
+      return res;
+
+    } catch (error) {
+      throw new Error("Error!!"+error.message)      
+    }
+  },
+
+
+  insertKDDIKotehiDataByAPI: async function (data, resKDDICustomerList, resKDDIFreeDialNumList, resKDDIFreeAccountNumList, billingYear, billingMonth) {
+
+    try {
+      let csvData = [];
+      let csvDataContents = [];
+      let csvInfiniData = [];
+
+      console.log("type of .." + typeof (data));
+
+      if (data) {
+
+        for (let i = 0; i < data.length; i++) {
+
+          let obj = {};
+          let obj1 = {};
+          let obj2 = {};
+
+          if (parseInt(data[i][0]) == 22) {
+
+            let callToNum = data[i][4];
+            callToNum = callToNum.replace("-", "");
+            callToNum = callToNum.replace("_", "");
+            callToNum = callToNum.replace(" ", "");
+            const comCode = await getCompanyCode(resKDDIFreeDialNumList, callToNum);
+            const companyName = await getCompanyName(resKDDICustomerList, comCode);
+            obj['comp_acco__c'] = comCode;
+            obj['companyname'] = companyName;
+            obj['recordtype'] = parseInt(data[i][0]);
+            obj['account'] = data[i][1];
+            obj['groupcode'] = data[i][2];
+            obj['basicservicetype'] = data[i][3];
+            obj['freedialnumber'] = callToNum;
+            obj['basicchargedesc'] = data[i][5];
+            obj['amount'] = parseInt(data[i][6], 10);
+            obj['taxinclude'] = data[i][7];
+            obj['telcotype'] = data[i][8];
+            obj['datebill'] = `${billingYear}-${billingMonth}-01`;
+            csvData.push(obj);
+
+
+          } else if (parseInt(data[i][0]) === 24 || parseInt(data[i][0]) === 25) {
+
+            let callToNum = data[i][5];
+            callToNum = callToNum.replace("-", "");
+            callToNum = callToNum.replace("_", "");
+            callToNum = callToNum.replace(" ", "");
+
+            const comCode = await getCompanyCodeByAccount(resKDDIFreeAccountNumList, data[i][4]);
+            const companyName = await getCompanyName(resKDDICustomerList, comCode);
+            obj1['comp_acco__c'] = comCode;
+            obj1['companyname'] = companyName;
+            obj1['recordtype'] = parseInt(data[i][0]);
+            obj1['account'] = data[i][1];
+            obj1['groupcode'] = data[i][2];
+            obj1['basicservicetype'] = data[i][3];
+            obj1['billaccount'] = data[i][4];
+            obj1['freedialnumber'] = callToNum;
+            obj1['startdate'] = data[i][6];
+            obj1['enddate'] = data[i][7];
+            obj1['gendetaildesc'] = data[i][8];
+            obj1['basicchargedesc'] = data[i][9];
+            obj1['carriercode'] = data[i][10];
+            obj1['contentsnumber'] = data[i][11];
+            obj1['contentsprovider'] = data[i][12];
+            obj1['amount'] = parseInt(data[i][13]);
+            obj1['taxinclude'] = data[i][14];
+            obj1['datebill'] = `${billingYear}-${billingMonth}-01`;;
+
+            csvDataContents.push(obj1);
+
+          } else if (parseInt(data[i][0]) === 20) {
+
+            obj2['servicecode'] = data[i][3];
+            obj2['did'] = data[i][4];
+            obj2['usednumber'] = data[i][8];
+            obj2['cld'] = data[i][9];
+            obj2['calldate'] = data[i][10];
+            obj2['calltime'] = data[i][11];
+            obj2['callduration'] = parseInt(data[i][12], 10);
+            obj2['source'] = data[i][13];
+            obj2['destination'] = data[i][14];
+            obj2['terminaltype'] = data[i][15];
+            csvInfiniData.push(obj2);
+
+          }
+        }
+
+
+//        console.log("csvData..." + JSON.stringify(csvData))
+
+      await  insertByBatches(csvData);
+      await  insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
+      await  insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
+
+      }
+
+    } catch (error) {
+      console.log("Error" + error.message);
+      return error;
+    }
+  },
+
 
   insertKDDIRAWData: async function (filesPathtest, billingYear, billingMonth) {
 

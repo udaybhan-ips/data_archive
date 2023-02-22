@@ -707,7 +707,7 @@ function generateCustomerInformation(company_code, billingYear, billingMonth, do
     .text(`${company_code}`, 50, y + 30, { width: 100, align: "center" })
     .text(`${company_code}-${billingYear}${billingMonth}-1`, 150, y + 30, { width: 100, align: "center" })
     .text(`${currentYear}/${currentMonthValue}/01`, 250, y + 30, { width: 100, align: "center" })
-    .text(`${billingYear}/${billingMonth}/1 ～ ${billingYear}/${billingMonth}/${daysInMonth(billingMonth, billingYear)}`, 350, y + 30, { width: 100, align: "center" })
+    .text(`${billingYear}/${billingMonth}/01 ～ ${billingYear}/${billingMonth}/${daysInMonth(billingMonth, billingYear)}`, 350, y + 30, { width: 100, align: "center" })
     .text(paymentDueDate, 450, y + 30, { width: 110, align: "center" })
 
   doc.rect(50, y + 25, 100, 25).stroke()
