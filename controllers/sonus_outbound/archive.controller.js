@@ -13,10 +13,10 @@ module.exports = {
       }
       // console.log(JSON.stringify(Dates));
 
-      const deleteTargetDateData = await ArchiveSonusOutbound.deleteTargetDateCDR(Dates.targetDate);
+      //const deleteTargetDateData = await ArchiveSonusOutbound.deleteTargetDateCDR(Dates.targetDate);
 
       const getAllTrunkgroupRes = await ArchiveSonusOutbound.getAllTrunkgroup();
-      const getRatesRes = await ArchiveSonusOutbound.getRates();
+      //const getRatesRes = await ArchiveSonusOutbound.getRates();
 
       console.log(JSON.stringify(getAllTrunkgroupRes));
 
@@ -30,7 +30,7 @@ module.exports = {
             TGsWithIncalledNum.push(getAllTrunkgroupRes[i]);
 
           } else {
-            let trunkPorts = getAllTrunkgroupRes[i].trunk_port;
+            let trunkPorts = getAllTrunkgroupRes[i].trunkport;
             let trunkPortsArr = trunkPorts.split(",");
 
             for (let j = 0; j < trunkPortsArr.length; j++) {
@@ -50,15 +50,13 @@ module.exports = {
 
 
       let getTargetCDRTGRes = await ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, getAllTrunkgroupRes, trunkPortsVal);
-      const getTGDataRes = await ArchiveSonusOutbound.insertByBatches(getTargetCDRTGRes, getAllTrunkgroupRes, getRatesRes);
+      const getTGDataRes = await ArchiveSonusOutbound.insertByBatches(getTargetCDRTGRes, getAllTrunkgroupRes);
 
       // For incallednumber 
 
-      let getTargetCDRWithIncalledRes = await ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, TGsWithIncalledNum, null, "incallednumber");
+    //  let getTargetCDRWithIncalledRes = await ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, TGsWithIncalledNum, null, "incallednumber");
 
-      const getWithCalledDataRes = await ArchiveSonusOutbound.insertByBatches(getTargetCDRWithIncalledRes, TGsWithIncalledNum, getRatesRes);
-
-
+      //const getWithCalledDataRes = await ArchiveSonusOutbound.insertByBatches(getTargetCDRWithIncalledRes, TGsWithIncalledNum);
 
       const [udpateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveSonusOutbound.updateBatchControl(dateId, Dates.targetDate));
       if (updateBatchControlErr) {

@@ -16,19 +16,19 @@ module.exports = {
           billingMonth='0'+ billingMonth;
         }
 
-        const [customerListRes,customerListErr] = await handleError(BillingSonusOutbound.getAllSonusOutboundCustomer(dateId));
+        const [customerListRes,customerListErr] = await handleError(BillingSonusOutbound.getAllSonusOutboundCustomer('00000986'));
         if(customerListErr) {
           throw new Error('Could not fetch customer list');  
         }
 
         for(let i=0; i<customerListRes.length;i++){
  
-          const [deleteSummaryRes, deleteSummaryErr] = await handleError(BillingSonusOutbound.deleteSummaryData(customerListRes[i]['customer_name'],customerListRes[i]['customer_id'], billingYear, billingMonth));
+          const [deleteSummaryRes, deleteSummaryErr] = await handleError(BillingSonusOutbound.deleteSummaryData(customerListRes[i]['customer_id'], billingYear, billingMonth));
           if(deleteSummaryErr) {
             throw new Error('Error while delete summary data '+ deleteSummaryErr);  
           } 
 
-          const [createSummaryRes, createSummaryErr] = await handleError(BillingSonusOutbound.createSummaryData(customerListRes[i]['customer_name'], customerListRes[i]['customer_id'], billingYear, billingMonth, customerListRes[i]['landline_rate'], customerListRes[i]['mobile_rate']));
+          const [createSummaryRes, createSummaryErr] = await handleError(BillingSonusOutbound.createSummaryData(customerListRes[i]['customer_id'], billingYear, billingMonth, customerListRes[i]['landline_rate'], customerListRes[i]['mobile_rate']));
           if(createSummaryErr) {
             throw new Error('Error while creating summary data '+ createSummaryErr);  
           }
@@ -41,12 +41,13 @@ module.exports = {
         //     throw new Error('Error while sending motification '+ sendNotificationErr.message);  
         // }
 
+        console.log("done!!")
          
         
-        return {
-            message: 'success! data inserted sucessfully',
-            id: addRatesRes
-          };
+        // return {
+        //     message: 'success! data inserted sucessfully',
+        //     id: addRatesRes
+        //   };
     } catch (error) {
       console.log("Error!!"+error.message);
         return {

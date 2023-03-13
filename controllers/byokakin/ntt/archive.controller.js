@@ -60,6 +60,90 @@ module.exports = {
     }
   },
 
+
+
+  async uploadNTTKotehiDataByUI(req, res) {
+    
+    try {
+      const { year, month, comCode } = req.body;
+
+      //console.log("req.."+JSON.stringify(req.body));
+
+      const checkTableExistRes = await ArchiveNTT.checkTableExist(`byokakin_ntt_koteihi_${year}${month}`);
+      
+
+      if (!checkTableExistRes) {
+          // create table here
+          const createTableRes = await ArchiveNTT.createNTTTables(year, month);      
+      }
+      
+      const checkKotehiData = await ArchiveNTT.checkTargetKotehiData(year, month);
+
+      if(checkKotehiData === 'data is already there') {
+        return res.status(200).json({
+          message: checkKotehiData,
+        });
+      }
+   
+      const resNTTKotehiData = await ArchiveNTT.insertNTTKotehiDataByAPI(req.body.file_input, "fileName", year, month, 'NTT');
+      
+      const resNTTFreeDialNumList = await ArchiveNTT.getNTTFreeDialNumList();
+      const resCustomerList = await ArchiveNTT.getNTTCustomer();
+      const resChargeKotehiData = await ArchiveNTT.chargeKotehiData(year, month, resNTTFreeDialNumList, resCustomerList);
+
+       //await ArchiveNTT.insertNTTKotehiDataByAPI(req.body.file_input, 
+        // resNTTCustomerList, resNTTFreeDialNumList,resNTTFreeAccountNumList,year, month);
+      
+        
+      console.log("Done ...")
+      return res.status(200).json({
+        message: 'success! data inserted sucessfully',
+      });
+    } catch (error) {
+      return error;
+    }
+
+
+},
+
+async getUnRegisteredNTTKotehiNumberByUI(req, res) {
+  try {
+    const { year, month, comCode } = req.body;
+    const [checkUnRegistededKotehiNumberRes, checkUnRegistededKotehiNumberErr] = await handleError(ArchiveNTT.checkUnRegistededKotehiNumber(year, month, comCode));
+    if (checkUnRegistededKotehiNumberErr) {
+      //throw new Error('Could not fetch the summary');
+      return res.status(500).json({
+        message: checkUnRegistededKotehiNumberErr.message
+      });
+    }
+    return res.status(200).json(checkUnRegistededKotehiNumberRes);
+
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message
+    });
+  }
+},
+
+async deleteNTTKotehiDataByUI(req, res) {
+  try {
+    const { year, month, comCode } = req.body;
+    const [deleteNTTKotehiDataByUIRes, deleteNTTKotehiDataByUIErr] = await handleError(ArchiveNTT.deleteTargetKotehiData(year, month, comCode));
+    if (deleteNTTKotehiDataByUIErr) {
+      //throw new Error('Could not fetch the summary');
+      return res.status(500).json({
+        message: deleteNTTKotehiDataByUIErr.message
+      });
+    }
+    return res.status(200).json(deleteNTTKotehiDataByUIRes);
+
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message
+    });
+  }
+},
+
   async getNTTFreeAccountNumListDetails(req, res) {
     try {
       const [getNTTFreeAccountNumListRes, getNTTFreeAccountNumListErr] = await handleError(ArchiveNTT.getNTTFreeAccountNumList(req.body));

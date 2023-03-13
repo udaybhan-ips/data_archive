@@ -2,8 +2,9 @@ var router = require('express').Router();
 var NTTKotehiController = require('../../../../controllers/byokakin/ntt/archive.controller');
 
 router.post('/byokakin/ntt/kotehi',  NTTKotehiController.getNTTKotehiData);
-//router.post('/byokakin/ntt/kotehi/uploadKotehiData',  NTTKotehiController.upload);
-//router.post('/byokakin/ntt/kotehiLastMonth',  NTTKotehiController.getLastMonthNTTKotehiData);
+router.post('/byokakin/ntt/kotehi/upload_kotehi_data',  NTTKotehiController.uploadNTTKotehiDataByUI);
+router.post('/byokakin/ntt/kotehi/getUnRegisterdNumber',  NTTKotehiController.getUnRegisteredNTTKotehiNumberByUI);
+router.post('/byokakin/ntt/kotehi/delete_kotehi_data',  NTTKotehiController.deleteNTTKotehiDataByUI);
 
 router.post('/byokakin/ntt/kotehiPrevMonthData',  NTTKotehiController.getNTTKotehiLastMonthData);
 

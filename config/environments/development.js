@@ -48,8 +48,8 @@ const IBS={
 const Byokakin={
   host     : (process.env.POSTGRES_PORT || '10.168.11.41'),
   database : (process.env.POSTGRES_DATABASE || 'byokakin'),
-  user     : (process.env.POSTGRES_USER ||'ips'),
-  password : (process.env.POSTGRESL_PASSWORD || 'ips12345'),
+  user     : (process.env.POSTGRES_USER ||'postgres'),
+  password : (process.env.POSTGRESL_PASSWORD || ''),
   timezone: 'Z',
   pool: {
     max: 5,

@@ -182,17 +182,20 @@ module.exports = {
         return error; 
     }
   },
-  getAllTrunkgroup: async function(customerId, customerName) {
+  getAllTrunkgroup: async function(customerId) {
     try {
          let where = "";
 
-          if(customerId && customerName){
-              where = `WHERE customer_id= '${customerId}' AND customer_name = '${customerName}' and deleted= false ` ;
+          if(customerId ){
+            where = ` customer_id= '${customerId}' and deleted= false ` ;
           }else{
-            where =`WHERE  deleted = false  `;
+            where =` deleted = false  `;
           }
 
-          const query=`select trunk_port, customer_name, customer_id,incallednumber from sonus_outbound_customer ${where}`;
+          const query=`select customer_id, landline, mobile, trunkport, incallednumber from sonus_outbound_rates where 
+          customer_id in (select customer_cd from m_customer where service_type ->>'sonus_outbound' =  'true' and customer_cd='00000986') 
+          and ${where}
+          order by customer_id;`;
           const ipsPortal=true;
           const getTrunkportRes= await db.query(query,[],ipsPortal);
         //  console.log(getTrunkportRes);
@@ -228,7 +231,7 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo, trunkPortsVal
       if(type == 'incallednumber'){
         let wherePart="";
         for ( let i=0; i<customerInfo.length; i++){
-          wherePart = wherePart + ` (INGRPSTNTRUNKNAME in ('${customerInfo[i].trunk_port}') 
+          wherePart = wherePart + ` (INGRPSTNTRUNKNAME in ('${customerInfo[i].trunkport}') 
           AND incallednumber like '${customerInfo[i]['incallednumber']}' ) OR` ;
         }
         //remove last  value (OR)
@@ -246,7 +249,7 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo, trunkPortsVal
       
       }
 
-      //console.log("where="+where);
+      console.log("where="+where);
       //return null;
       const query=`SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME, 
       CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW, CALLSTATUS,
@@ -271,10 +274,10 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
       if(customerInfo['incallednumber']){ 
     //    where=` WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND 
         where=` WHERE  STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
-        INGRPSTNTRUNKNAME in ('${customerInfo.trunk_port}') AND incallednumber 
+        INGRPSTNTRUNKNAME in ('${customerInfo.trunkport}') AND incallednumber 
         like '${customerInfo['incallednumber']}' AND RECORDTYPEID = 3 order by STARTTIME `;
       }else{
-        let trunkPorts = customerInfo.trunk_port;
+        let trunkPorts = customerInfo.trunkport;
 
         where=`WHERE STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) 
          AND INGRPSTNTRUNKNAME in ('${trunkPorts}') AND RECORDTYPEID = 3 order by STARTTIME `;
@@ -294,7 +297,7 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
     }
 },
 
-  insertByBatches: async function(records, customerInfo, ratesInfo) {
+  insertByBatches: async function(records, customerInfo) {
   
     const JSON_data = Object.values(JSON.parse(JSON.stringify(records)));
     const dataSize=JSON_data.length;
@@ -306,7 +309,7 @@ getTargetCDRBYID: async function(targetDateWithTimezone, customerInfo) {
     const ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSet, { table: tableName })  
 
     for(let i=0;i<chunkArray.length;i++){
-      const data = await getNextInsertBatch(chunkArray[i], customerInfo, ratesInfo);
+      const data = await getNextInsertBatch(chunkArray[i], customerInfo);
       res=await db.queryBatchInsert(data,'sonus',ColumnSetValue);
       resArr.push(res);
     }
@@ -454,14 +457,13 @@ function utcToDate(utcDate){
         if(customerInfo[j]['incallednumber']){
           if(customerInfo[j]['incallednumber']===startDigitofInCallNum || customerInfo[j]['incallednumber']===startFiveDigitofInCallNum) {
             res['comp_code']=customerInfo[j]['customer_id'];
-            res['comp_name']=customerInfo[j]['customer_name'];
+            
             break;
           }
         }else {
-          let trunkPortsArr = customerInfo[j]['trunk_port'].split(",");
+          let trunkPortsArr = customerInfo[j]['trunkport'].split(",");
           if(trunkPortsArr.includes(trunkPort)){
-            res['comp_code']=customerInfo[j]['customer_id'];
-            res['comp_name']=customerInfo[j]['customer_name'];
+            res['comp_code']=customerInfo[j]['customer_id'];            
             break;
           }
         }
@@ -517,7 +519,7 @@ function utcToDate(utcDate){
     return {'mob_amount':mobAmount,'landline_amount':landlineAmount};    
   }
 
-  async function  getNextInsertBatch(data, customerInfo,ratesInfo) {
+  async function  getNextInsertBatch(data, customerInfo) {
     
     let valueArray=[];
     console.log("inserting data")
@@ -525,7 +527,7 @@ function utcToDate(utcDate){
     try {
      for(let i=0;i<data.length;i++){
        let compInfo = await getCompanyInfo(data[i]['INGRPSTNTRUNKNAME'], customerInfo, data[i]['INCALLEDNUMBER'] );
-       let amountDet = await getBillingAmount(compInfo, data[i]['EGCALLEDNUMBER'] ,ratesInfo, data[i]['DURATION']);
+       let amountDet = await getBillingAmount(compInfo, data[i]['EGCALLEDNUMBER'] ,customerInfo, data[i]['DURATION']);
 
        let obj={};
        obj['date_bill']=data[i]['ORIGDATE'];
@@ -542,7 +544,7 @@ function utcToDate(utcDate){
        obj['transit_carrier_id']='';
        obj['selected_carrier_id']=getSelectedCarrierID(data[i]['EGRPROTOVARIANT']);
        obj['billing_comp_code']= compInfo.comp_code;
-       obj['billing_comp_name']= compInfo.comp_name;
+       obj['billing_comp_name']= "";
        obj['trunk_port']=0;
        obj['sonus_session_id']=data[i]['SESSIONID'];
        obj['sonus_start_time']=data[i]['STARTTIME'];

@@ -27,16 +27,16 @@ var csv = require('fast-csv');
 
 module.exports = {
 
-  checkTableExist: async function (tableName, database="byokakin") {
+  checkTableExist: async function (tableName, database = "byokakin") {
     try {
-      let checkTableExistRes = false; 
-      const query = `SELECT EXISTS ( SELECT FROM information_schema.tables WHERE  table_schema ='public' AND table_name = '${tableName}' )` ;
-      if(database === "byokakin"){
-        checkTableExistRes = await db.queryByokakin(query,[]);
-      }else{
-        checkTableExistRes = await db.query(query,[]);
+      let checkTableExistRes = false;
+      const query = `SELECT EXISTS ( SELECT FROM information_schema.tables WHERE  table_schema ='public' AND table_name = '${tableName}' )`;
+      if (database === "byokakin") {
+        checkTableExistRes = await db.queryByokakin(query, []);
+      } else {
+        checkTableExistRes = await db.query(query, []);
       }
-      
+
       if (checkTableExistRes && checkTableExistRes.rows) {
         return checkTableExistRes.rows[0]['exists']
       }
@@ -44,9 +44,33 @@ module.exports = {
 
     } catch (e) {
       console.log("err in get table=" + e.message);
-      throw new Error("Error in checking table exist!!"+e.message)
+      throw new Error("Error in checking table exist!!" + e.message)
     }
   },
+
+  createKDDITables: async function (year, month) {
+    try {
+
+      const query1 = `CREATE TABLE IF NOT EXISTS byokakin_kddi_infinidata_${year}${month} (cdrid serial, servicecode varchar(30), did varchar(30), usednumber varchar(30), cld varchar(30), calldate varchar(15), calltime varchar(15), callduration varchar(15), source varchar, destination varchar, terminaltype varchar)`;
+      const query2 = `CREATE TABLE IF NOT EXISTS byokakin_kddi_processedcdr_${year}${month} (cdrid bigint, cdrclassification varchar(10), customercode varchar(10), terminaltype varchar(10),freedialnumber varchar(30), callingnumber varchar(30), calldate varchar(30), calltime varchar(15), callduration varchar(15), cld varchar(30), sourcearea varchar, destinationarea varchar, cdrcallcharge numeric(16,5), callrate  numeric(16,5),finalcallcharge numeric(16,5), vendorcallcharge numeric(16,5) )`;
+      const query3 = `CREATE TABLE IF NOT EXISTS byokakin_kddi_raw_cdr_${year}${month} (cdrid serial, did varchar(30), freedialnum varchar(30),   cld varchar(30), calldate timestamp without time zone, calltime varchar(15), callduration varchar(15), source varchar, destination varchar, callclassi varchar, calltype varchar, callcharge numeric(16,5), customercode varchar(10))`;
+
+
+      const tableCreationRes1 = await db.queryByokakin(query1, []);
+      const tableCreationRes2 = await db.queryByokakin(query2, []);
+      const tableCreationRes3 = await db.queryByokakin(query3, []);
+
+      if (tableCreationRes1 && tableCreationRes2 && tableCreationRes3) {
+        return tableCreationRes1;
+      }
+
+      throw new Error("Error while creating table..." + tableCreationRes1)
+
+    } catch (e) {
+      throw new Error("Error while creating table..." + e.message)
+    }
+  },
+
 
   getTableName: async function (targetDate, __type) {
     try {
@@ -57,11 +81,11 @@ module.exports = {
         month = '0' + month;
       }
 
-      if(__type ==='billcdr'){
+      if (__type === 'billcdr') {
         return `billcdr_${year}${month}`;
-      }else{
+      } else {
         return `cdr_${year}${month}`;
-      }      
+      }
 
     } catch (e) {
       console.log("err in get table=" + e.message);
@@ -210,9 +234,9 @@ module.exports = {
     }
   },
 
- 
 
-  
+
+
 
   getLastMonthKDDIKotehiData: async function ({ year, month, comCode }) {
     try {
@@ -525,28 +549,28 @@ module.exports = {
     }
   },
 
-  
+
   checkTargetKotehiData: async function (billingYear, billingMonth, serviceType) {
 
     try {
 
-      const query =`select * from kddi_kotei_cdr_basic where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
-      const query1 =`select * from kddi_kotei_cdr_contents where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
-      const query2 =`select * from byokakin_kddi_infinidata_${billingYear}${billingMonth} limit 1`;
+      const query = `select * from kddi_kotei_cdr_basic where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
+      const query1 = `select * from kddi_kotei_cdr_contents where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
+      const query2 = `select * from byokakin_kddi_infinidata_${billingYear}${billingMonth} limit 1`;
 
       const qRes = await db.queryByokakin(query, []);
       const qRes1 = await db.queryByokakin(query1, []);
       const qRes2 = await db.queryByokakin(query2, []);
 
-      if(qRes && qRes.rows.length<=0 && qRes1 && qRes1.rows.length <=0 && qRes2 && qRes2.rows.length<=0){
+      if (qRes && qRes.rows.length <= 0 && qRes1 && qRes1.rows.length <= 0 && qRes2 && qRes2.rows.length <= 0) {
         return "data_not_available"
-      }else{
+      } else {
         return "data is already there";
-      }      
-      
+      }
+
 
     } catch (error) {
-      throw new Error("Error!!"+error.message)      
+      throw new Error("Error!!" + error.message)
     }
   },
 
@@ -554,20 +578,20 @@ module.exports = {
 
     try {
 
-      const query =`delete from kddi_kotei_cdr_basic where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
-      const query1 =`delete from kddi_kotei_cdr_contents where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
-      const query2 =`delete from byokakin_kddi_infinidata_${billingYear}${billingMonth}`;
+      const query = `delete from kddi_kotei_cdr_basic where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
+      const query1 = `delete from kddi_kotei_cdr_contents where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
+      const query2 = `delete from byokakin_kddi_infinidata_${billingYear}${billingMonth}`;
 
       const qRes = await db.queryByokakin(query, []);
       const qRes1 = await db.queryByokakin(query1, []);
       const qRes2 = await db.queryByokakin(query2, []);
 
-      if(qRes && qRes1 && qRes2){
+      if (qRes && qRes1 && qRes2) {
         return "record deleted"
       }
 
     } catch (error) {
-      throw new Error("Error!!"+error.message)      
+      throw new Error("Error!!" + error.message)
     }
   },
 
@@ -576,28 +600,28 @@ module.exports = {
 
     try {
 
-      let res = {message:'not_found', cdr_basic:[], cdr_contents:[]};
-      
+      let res = { message: 'not_found', cdr_basic: [], cdr_contents: [] };
 
-      const query1 =`select  distinct(freedialnumber) as freedialnumber from kddi_kotei_cdr_basic where datebill::date ='${billingYear}-${billingMonth}-01' and comp_acco__c='99999999' `;
-      const query2 =`select  distinct(billaccount) as billaccount from kddi_kotei_cdr_contents where datebill::date ='${billingYear}-${billingMonth}-01' and comp_acco__c='99999999' `;
+
+      const query1 = `select  distinct(freedialnumber) as freedialnumber from kddi_kotei_cdr_basic where datebill::date ='${billingYear}-${billingMonth}-01' and comp_acco__c='99999999' `;
+      const query2 = `select  distinct(billaccount) as billaccount from kddi_kotei_cdr_contents where datebill::date ='${billingYear}-${billingMonth}-01' and comp_acco__c='99999999' `;
 
       const qRes1 = await db.queryByokakin(query1, []);
       const qRes2 = await db.queryByokakin(query2, []);
 
-      if(qRes1 && qRes1.rows.length >0){
-        res.cdr_basic= qRes1.rows;
-        res.message= 'found';
-      } 
-      
-      if(qRes2 && qRes2.rows.length > 0){
-        res.message= 'found';
-        res.cdr_contents= qRes2.rows;            
+      if (qRes1 && qRes1.rows.length > 0) {
+        res.cdr_basic = qRes1.rows;
+        res.message = 'found';
+      }
+
+      if (qRes2 && qRes2.rows.length > 0) {
+        res.message = 'found';
+        res.cdr_contents = qRes2.rows;
       }
       return res;
 
     } catch (error) {
-      throw new Error("Error!!"+error.message)      
+      throw new Error("Error!!" + error.message)
     }
   },
 
@@ -690,11 +714,11 @@ module.exports = {
         }
 
 
-//        console.log("csvData..." + JSON.stringify(csvData))
+        //        console.log("csvData..." + JSON.stringify(csvData))
 
-      await  insertByBatches(csvData);
-      await  insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
-      await  insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
+        await insertByBatches(csvData);
+        await insertByBatches(csvDataContents, 'contents', billingYear, billingMonth);
+        await insertByBatches(csvInfiniData, 'infini', billingYear, billingMonth);
 
       }
 

@@ -5,20 +5,6 @@ module.exports = {
   getData: async function (req, res) {
     try {
 
-
-      // console.log("ratesDetails="+JSON.stringify(ratesDetails));
-
-      const [getCompListRes, getCompListErr] = await handleError(BillingSougo.getAllCompCode());
-      if (getCompListErr) {
-        throw new Error('Could not fetch Sougo Company list details');
-      }
-      const [getCarrierInfoRes, getCarrierInfoErr] = await handleError(BillingSougo.getCarrierInfo());
-      if (getCarrierInfoErr) {
-        throw new Error('Could not fetch carrier list details');
-      }
-
-      console.log("length==" + getCompListRes.length);
-
       const [Dates, targetDateErr] = await handleError(BillingSougo.getTargetDate(dateId));
       if (targetDateErr) {
         throw new Error('Could not fetch target date');
@@ -29,6 +15,18 @@ module.exports = {
       let billingMonth = new Date(Dates.target_billing_month).getMonth() + 1;
       if (parseInt(billingMonth, 10) < 10) {
         billingMonth = '0' + billingMonth;
+      }
+
+      const [getCompListRes, getCompListErr] = await handleError(BillingSougo.getAllCompCode(billingYear, billingMonth));
+      if (getCompListErr) {
+        throw new Error('Could not fetch Sougo Company list details');
+      }
+
+      console.log("length==" + getCompListRes.length);
+
+      const [getCarrierInfoRes, getCarrierInfoErr] = await handleError(BillingSougo.getCarrierInfo());
+      if (getCarrierInfoErr) {
+        throw new Error('Could not fetch carrier list details');
       }
 
 

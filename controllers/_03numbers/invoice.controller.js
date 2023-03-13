@@ -6,11 +6,8 @@ module.exports = {
         const [invoiceRes,invoiceError] = await handleError(InvoiceKickback.getInvoiceData());
         if(invoiceError) {
              throw new Error('Could not fetch the invoice');  
-        }
-       
-        return res.status(200).json(invoiceRes);
-        
-        
+        }       
+        return res.status(200).json(invoiceRes);                
     } catch (error) {
         return res.status(400).json({
           message: error.message

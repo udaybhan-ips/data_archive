@@ -10,12 +10,20 @@ module.exports = {
 
       //console.log("req.."+JSON.stringify(req));
 
-      const billingMonth = "01";
+      const billingMonth = "02";
       const billingYear ="2023";
       const serviceType = "Kotehi";
       const callType = ['free_number','d_number'];
       const filePath = "C:"
       const fileName ="" ;
+
+      const checkTableExistRes = await ArchiveKDDI.checkTableExist(`byokakin_kddi_infinidata_${billingYear}${billingMonth}`);
+        
+  
+      if (!checkTableExistRes) {
+          // create table here
+          const createTableRes = await ArchiveKDDI.createKDDITables(billingYear, billingMonth);      
+      }
 
       //const deleteTargetDateData = await ArchiveKDDI.deleteTargetDateCDR(billingYear, billingMonth, serviceType, callType);
       const resKDDIFreeDialNumList = await ArchiveKDDI.getKDDIFreeDialNumList();
@@ -40,7 +48,7 @@ module.exports = {
 
   uploadKDDIRAW: async function (req, res) {
     try {
-      const billingMonth = "01";
+      const billingMonth = "02";
       const billingYear ="2023";
       const serviceType = "RAW";
       
@@ -163,20 +171,19 @@ module.exports = {
   async uploadKDDIKotehiDataByUI(req, res) {
     
       try {
-        
+        const { year, month, comCode } = req.body;
   
         //console.log("req.."+JSON.stringify(req.body));
 
+        const checkTableExistRes = await ArchiveKDDI.checkTableExist(`byokakin_kddi_infinidata_${year}${month}`);
         
   
-        const billingMonth = "01";
-        const billingYear ="2023";
-        const serviceType = "Kotehi";
-        const callType = ['free_number','d_number'];
-        const filePath = "C:"
-        const fileName ="" ;
-
-        const checkKotehiData = await ArchiveKDDI.checkTargetKotehiData(billingYear, billingMonth);
+        if (!checkTableExistRes) {
+            // create table here
+            const createTableRes = await ArchiveKDDI.createKDDITables(year, month);      
+        }
+        
+        const checkKotehiData = await ArchiveKDDI.checkTargetKotehiData(year, month);
 
         if(checkKotehiData === 'data is already there') {
           return res.status(200).json({
@@ -189,19 +196,9 @@ module.exports = {
         const resKDDICustomerList = await ArchiveKDDI.getKDDICustomerList();
 
          await ArchiveKDDI.insertKDDIKotehiDataByAPI(req.body.file_input, 
-           resKDDICustomerList, resKDDIFreeDialNumList,resKDDIFreeAccountNumList,billingYear, billingMonth);
+           resKDDICustomerList, resKDDIFreeDialNumList,resKDDIFreeAccountNumList,year, month);
         
-           //const checkUnRegistededKotehiNumberRes = await checkUnRegistededKotehiNumber(billingYear, billingMonth)
-  
-        //const deleteTargetDateData = await ArchiveKDDI.deleteTargetDateCDR(billingYear, billingMonth, serviceType, callType);
-       
-  
-        // const resKDDIKotehiData = await ArchiveKDDI.insertKDDIKotehiData(filePath, fileName, 
-        //   resKDDICustomerList, resKDDIFreeDialNumList,resKDDIFreeAccountNumList,billingYear, billingMonth);
-        //console.log("data");
-       // console.log(JSON.stringify(resKDDIKotehiData));
-  
-        //const getDataRes = await ArchiveKDDI.insertByBatches(resKDDIKotehiData);
+          
         console.log("Done ...")
         return res.status(200).json({
           message: 'success! data inserted sucessfully',

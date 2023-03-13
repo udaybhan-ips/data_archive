@@ -7,7 +7,7 @@ var fs = require("fs");
 module.exports = {
   getRates: async function () {
     try {
-      const query = `select carrier_code, date_start, date_expired, rate_setup, rate_second, rate_trunk_port, company_code from carrier where deleted =false`;
+      const query = `select carrier_code,term_carrier_code, date_start, date_expired, rate_setup, rate_second, rate_trunk_port, company_code from carrier where deleted =false`;
       const ratesRes = await db.queryIBS(query, []);
 
       // console.log("ratesRes="+JSON.stringify(ratesRes.rows));
@@ -24,7 +24,7 @@ module.exports = {
   },
   getCarrierInfo: async function () {
     try {
-      const query = `select carrier_code, carrier_name, company_code from carrier `;
+      const query = `select carrier_code, term_carrier_code, carrier_name, company_code from carrier where deleted = false`;
       const carrierRes = await db.queryIBS(query, []);
       if (carrierRes.rows) {
         return (carrierRes.rows);
@@ -48,10 +48,10 @@ module.exports = {
       return error;
     }
   },
-  getAllCompCode: async function () {
+  getAllCompCode: async function (year, month) {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from billcdr_main  
+      const query = `select distinct(company_code) as company_code from billcdr_${year}${month}  
        order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
@@ -78,12 +78,12 @@ module.exports = {
     }
   },
 
-  getTargetCDR: async function (company_code) {
+  getTargetCDR: async function (company_code, year, month) {
 
 
     try {
       query = `select count(*) as total_calls, sum(duration) as total_duration , carrier_code, term_carrier_id 
-          from billcdr_main where duration>1 and company_code='${company_code}' group by carrier_code, term_carrier_id 
+          from billcdr_${year}${month} where duration>1 and company_code='${company_code}' group by carrier_code, term_carrier_id 
           order by carrier_code, term_carrier_id `;
 
       console.log("query==" + query);
@@ -197,7 +197,7 @@ async function getResInfo(data, company_code, ratesInfo, carrierInfo, billingMon
   let res = [], case1 = {}, case2 = {}, case3 = {}, case4 = {}, case5 = {}, case6 = {};
   try {
 
-    let rate = await getSougoRates(ratesInfo, data['carrier_code'], company_code);
+    let rate = await getSougoRates(ratesInfo, data['carrier_code'], company_code, data['term_carrier_id']);
     let carrierName = await getCarrierName(carrierInfo, data['carrier_code']);
     let termCarrierName = await getCarrierName(carrierInfo, data['term_carrier_id']);
 
@@ -283,7 +283,6 @@ async function getCarrierName(data, carrier_code) {
         return data[i]['carrier_name'];
       }
     }
-
   } catch (err) {
     console.log("err in get carrier name=" + err.message)
   }
@@ -293,7 +292,7 @@ async function getCarrierName(data, carrier_code) {
 
 
 
-async function getSougoRates(data, carrier_code, company_code) {
+async function getSougoRates(data, carrier_code, company_code, term_carrier_code) {
   let res = {};
  let tmpObj = data.filter((obj) => {
     if (obj['carrier_code'] == carrier_code)
@@ -310,8 +309,16 @@ async function getSougoRates(data, carrier_code, company_code) {
   }
 
   try {
+
+    // if(company_code!='' && term_carrier_code !=''){
+
+    // }else if(){
+
+    // }
+
+
     for (let i = 0; i < tmpObj.length; i++) {
-      if (tmpObj[i]['carrier_code'] == carrier_code && tmpObj[i]['company_code'] == company_code) {
+      if (tmpObj[i]['term_carrier_code'] == term_carrier_code && tmpObj[i]['company_code'] == company_code) {
         res['rate_setup'] = tmpObj[i]['rate_setup'];
         res['rate_sec'] = tmpObj[i]['rate_second'];
         res['rate_trunk_port'] = tmpObj[i]['rate_trunk_port'];
@@ -319,6 +326,28 @@ async function getSougoRates(data, carrier_code, company_code) {
         return res;
       }
     }
+
+    for (let i = 0; i < tmpObj.length; i++) {
+      if (tmpObj[i]['company_code'] == company_code) {
+        res['rate_setup'] = tmpObj[i]['rate_setup'];
+        res['rate_sec'] = tmpObj[i]['rate_second'];
+        res['rate_trunk_port'] = tmpObj[i]['rate_trunk_port'];
+        console.log("res in side company code")
+        return res;
+      }
+    }
+
+    for (let i = 0; i < tmpObj.length; i++) {
+      if (tmpObj[i]['term_carrier_code'] == term_carrier_code) {
+        res['rate_setup'] = tmpObj[i]['rate_setup'];
+        res['rate_sec'] = tmpObj[i]['rate_second'];
+        res['rate_trunk_port'] = tmpObj[i]['rate_trunk_port'];
+        console.log("res in side term carrier code")
+        return res;
+      }
+    }
+
+
     for (let i = 0; i < tmpObj.length; i++) {
       if (tmpObj[i]['carrier_code'] == carrier_code && (tmpObj[i]['company_code'] == '' || tmpObj[i]['company_code'] == null)) {
         res['rate_setup'] = tmpObj[i]['rate_setup'];
@@ -422,7 +451,7 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
         paymentDueDate = `${currentYear}/05/01`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
-      paymentDueDate = `${currentYear }/02/28`;
+      paymentDueDate = `${currentYear }/03/31`;
     }
 
   await generateHeader(address, doc, totalCallAmount);

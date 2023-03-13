@@ -4,11 +4,11 @@ const iconv = require('iconv-lite');
 const utility = require("../../../public/javascripts/utility")
 
 
-let ColumnSetNTTKoteihi = ['did', 'carrier','carrier_name', 'service_name', 'amount', 'taxclassification', 'dailydisplay', 'date_added'];
-let ColumnSetNTTKoteihiCDR = ['companyname', 'comp_acco__c', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 
-'hiwarihyouji', 'datebill', 'linkedcdrid', 'carrier'];
+let ColumnSetNTTKoteihi = ['did', 'carrier', 'carrier_name', 'service_name', 'amount', 'taxclassification', 'dailydisplay', 'date_added'];
+let ColumnSetNTTKoteihiCDR = ['companyname', 'comp_acco__c', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun',
+  'hiwarihyouji', 'datebill', 'linkedcdrid', 'carrier'];
 let ColumnSetNTTKoteihiCDRBILL = ['cdrid', 'bill_code', 'comp_acco__c', 'bill_count', 'companyname', 'kaisenbango', 'riyougaisya',
- 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'datebill'];
+  'seikyuuuchiwake', 'kingaku', 'zeikubun', 'datebill'];
 let ColumnSetNTTInbound = ['customername', 'did', 'calldate', 'calltime', 'callduration', 'callcharge', 'callcount104',
   'freedialnum', 'source', 'division', 'terminaltype', 'carriertype'];
 let ColumnSetNTTOutbound = ['customername', 'parentdid', 'calltype', 'calldate', 'calltime', 'cld', 'destination', 'callduration',
@@ -26,6 +26,103 @@ const { exit } = require('process');
 
 
 module.exports = {
+
+  deleteTargetKotehiData: async function (billingYear, billingMonth, serviceType) {
+
+    try {
+
+      const query = `delete from ntt_koteihi_cdr where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
+      const query1 = `delete from byokakin_ntt_koteihi_${billingYear}${billingMonth}`;
+
+      const qRes = await db.queryByokakin(query, []);
+      const qRes2 = await db.queryByokakin(query1, []);
+
+      if (qRes && qRes2) {
+        return "record deleted"
+      }
+
+    } catch (error) {
+      throw new Error("Error!!" + error.message)
+    }
+  },
+  checkTargetKotehiData: async function (billingYear, billingMonth, serviceType) {
+
+    try {
+
+      const query1 = `select * from ntt_koteihi_cdr where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
+      const query2 = `select * from byokakin_ntt_koteihi_${billingYear}${billingMonth} limit 1`;
+
+
+      const qRes1 = await db.queryByokakin(query1, []);
+      const qRes2 = await db.queryByokakin(query2, []);
+
+      if (qRes1 && qRes1.rows && qRes1.rows.length <= 0 && qRes2 && qRes2.rows && qRes2.rows.length <= 0) {
+        return "data_not_available"
+      } else {
+        return "data is already there";
+      }
+
+
+    } catch (error) {
+      throw new Error("Error!!" + error.message)
+    }
+  },
+
+  createNTTTables: async function (year, month) {
+    try {
+
+      const query1 = `CREATE TABLE IF NOT EXISTS byokakin_ntt_Koteihi_${year}${month} (cdrid serial, did varchar(30), carrier varchar, service_name varchar, amount numeric(16,0),
+      TAXCLASSIFICATION varchar, DAILYDISPLAY varchar, date_added timestamp without time zone, carrier_name varchar)`;
+
+      const query2 = `CREATE TABLE IF NOT EXISTS byokakin_ntt_rawcdr_inbound_${year}${month} (cdrid serial, customername varchar, did varchar(30), calldate timestamp without time zone,
+      calltime varchar, callduration varchar(30), callcharge numeric(16,5), callcount104 int, freedialnum varchar(30), 
+      source varchar, division varchar,  terminaltype varchar, carriertype varchar)`;
+
+      const query3 = `CREATE TABLE IF NOT EXISTS byokakin_ntt_rawcdr_outbound_${year}${month} (cdrid serial, customername varchar, parentdid varchar(30), calltype varchar,
+      calldate timestamp without time zone, calltime varchar, cld varchar, destination varchar,  callduration varchar(30), callcharge numeric(16,5),
+       callcount104 int, did varchar(30) , carriertype varchar )`;
+
+      const query4 = `CREATE TABLE IF NOT EXISTS byokakin_ntt_processedcdr_${year}${month}  (cdrid bigint, cdrclassification varchar(10), customercode varchar(10), terminaltype varchar(10),
+      freedialnumber varchar(30), callingnumber varchar(30), calldate varchar(40), calltime varchar(15), callduration varchar(15), cld varchar(30),
+      sourcearea varchar, destinationarea varchar, cdrcallcharge numeric(16,5), callrate  numeric(16,5),finalcallcharge numeric(16,5), 
+      vendorcallcharge numeric(16,5) , callcount104 int, carriertype varchar )`
+
+      const tableCreationRes1 = await db.queryByokakin(query1, []);
+      const tableCreationRes2 = await db.queryByokakin(query2, []);
+      const tableCreationRes3 = await db.queryByokakin(query3, []);
+      const tableCreationRes4 = await db.queryByokakin(query4, []);
+
+      if (tableCreationRes1 && tableCreationRes2 && tableCreationRes3 && tableCreationRes4) {
+        return tableCreationRes1;
+      }
+
+      throw new Error("Error while creating table..." + tableCreationRes1)
+
+    } catch (e) {
+      throw new Error("Error while creating table..." + e.message)
+    }
+  },
+
+  checkTableExist: async function (tableName, database = "byokakin") {
+    try {
+      let checkTableExistRes = false;
+      const query = `SELECT EXISTS ( SELECT FROM information_schema.tables WHERE  table_schema ='public' AND table_name = '${tableName}' )`;
+      if (database === "byokakin") {
+        checkTableExistRes = await db.queryByokakin(query, []);
+      } else {
+        checkTableExistRes = await db.query(query, []);
+      }
+
+      if (checkTableExistRes && checkTableExistRes.rows) {
+        return checkTableExistRes.rows[0]['exists']
+      }
+      return checkTableExistRes;
+
+    } catch (e) {
+      console.log("err in get table=" + e.message);
+      throw new Error("Error in checking table exist!!" + e.message)
+    }
+  },
 
   getTargetDate: async function (date_id) {
     try {
@@ -70,6 +167,26 @@ module.exports = {
     }
   },
 
+
+  checkUnRegistededKotehiNumber: async function (billingYear, billingMonth, serviceType) {
+
+    try {
+
+      let res = { message: 'not_found', cdr_basic: [] };
+      const query = `select  distinct(kaisenbango) as freedialnumber from ntt_koteihi_cdr  where  datebill::date ='${billingYear}-${billingMonth}-01' and comp_acco__c='99999999' `;
+      const qRes = await db.queryByokakin(query, []);
+      if (qRes && qRes.rows && qRes.rows.length > 0) {
+        res.cdr_basic = qRes.rows;
+        res.message = 'found';
+      }
+      return res;
+
+    } catch (error) {
+      throw new Error("Error!!" + error.message)
+    }
+  },
+
+
   getNTTFreeDialNumList: async function () {
     try {
       const query = `select data_idno, cust_code__c, carr_comp__c, free_numb__c from  ntt_kddi_freedial_c where carr_comp__c='NTT' order by free_numb__c `
@@ -85,14 +202,14 @@ module.exports = {
     try {
       const query = `select id as data_idno, n_number as free_numb__c from ntt_n_number`
       const getNTT_N_NumListRes = await db.queryByokakin(query, []);
-      if(getNTT_N_NumListRes.rows)
+      if (getNTT_N_NumListRes.rows)
         return getNTT_N_NumListRes.rows;
-      else 
+      else
         throw new Error(getNTT_N_NumListRes);
     } catch (e) {
       console.log("err in get ntt free dial number list=" + e.message);
       throw new Error(e.message)
-      
+
     }
   },
 
@@ -180,7 +297,7 @@ module.exports = {
       group by substring(split_part(bill_code, '-',2),4)) as last_month 
       on (lj.comp_code= last_month.prev_comp_code) `;
 
-      console.log("query..."+query)
+      console.log("query..." + query)
 
       const getNTTKotehiProcessedDataRes = await db.queryByokakin(query, []);
       return getNTTKotehiProcessedDataRes.rows;
@@ -301,6 +418,8 @@ module.exports = {
       if (kotehiData && kotehiData.rows) {
         let tmpData = [];
 
+        console.log("kotehiData...data.. length"+kotehiData.rows.length)
+
         for (let i = 0; i < kotehiData.rows.length; i++) {
           let tmpObj = {};
           const comp_acco__c = await getCompanyCode(freeDialNumList, kotehiData.rows[i]['did']);
@@ -319,7 +438,8 @@ module.exports = {
 
           tmpData.push(tmpObj);
         }
-        insertByBatches(tmpData, 'ntt_koteihi_charge', billingYear, billingMonth);
+        console.log("here..."+JSON.stringify(tmpData[0]))
+        await insertByBatches(tmpData, 'ntt_koteihi_charge', billingYear, billingMonth);
       }
 
 
@@ -339,6 +459,54 @@ module.exports = {
       return e;
     }
   },
+
+
+  insertNTTKotehiDataByAPI: async function (data, fileName1, billingYear, billingMonth, carrierName) {
+
+    try {
+
+      let csvData = [];
+      let DID = null;
+      let carrier = null;
+
+      for (let i = 0; i < data.length; i++) {
+
+        let obj = {};
+
+        let tmpDID = data[i][0] != null ? data[i][0].trim() : null;
+        let tmpCarrier = data[i][1] != null ? data[i][1].trim() : null;
+
+        if (tmpDID != null && tmpDID != "") {
+          if (tmpDID.indexOf("合計") == -1) {
+            DID = tmpDID;
+          }
+        } else if (tmpCarrier != null && tmpCarrier != "") {
+          if (tmpCarrier.indexOf("合計") == -1) {
+            carrier = tmpCarrier;
+          }
+        } else {
+          if (data[i][3] != null && data[i][3].trim() != "") {
+            obj['did'] = DID;
+            obj['carrier'] = carrier;
+            obj['carrier_name'] = carrierName;
+            obj['service_name'] = data[i][2];
+            obj['amount'] = data[i][3].trim().replaceAll(",", "");
+            obj['taxclassification'] = data[i][4];
+            obj['date_added'] = `${billingYear}-${billingMonth}-01`;
+            obj['dailydisplay'] = data[i][5].trim();
+            csvData.push(obj);
+          }
+        }
+      }
+
+      await insertByBatches(csvData, 'ntt_koteihi', billingYear, billingMonth);
+      //  return csvData;
+    } catch (error) {
+      console.log("Error" + error.message);
+      return error;
+    }
+  },
+
 
   insertNTTKotehiData: async function (filePath1, fileName1, billingYear, billingMonth, carrierName) {
 
@@ -482,7 +650,7 @@ module.exports = {
                     if (recordType == 'VoIP') {
                       DID = parentDID;
                     } else {
-                      
+
                       let prefix = parentDID.substring(parentDID.indexOf("(") + 1, parentDID.lastIndexOf(")"));
                       parentDID = parentDID.replace("(", "").replace(")", "").replaceAll("-", "");
 
@@ -493,10 +661,10 @@ module.exports = {
                       }
                     }
 
-                    if(DID ==''){
-                      console.log("tempRecord"+tempRecord);
-                      console.log("recordType"+recordType);
-                      console.log("parentDID"+parentDID);                     
+                    if (DID == '') {
+                      console.log("tempRecord" + tempRecord);
+                      console.log("recordType" + recordType);
+                      console.log("parentDID" + parentDID);
                     }
 
 
