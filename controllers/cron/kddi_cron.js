@@ -16,14 +16,14 @@ var billingController = require('../byokakin/kddi/billing.controller');
 //     console.log('This is byokakin archiver End');  
 // },null, true, 'Asia/Tokyo');
 
-// var CDRProcessingControllerJob = new CronJob ('35 14 * * *',function(){
+// var CDRProcessingControllerJob = new CronJob ('36 10 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.cdrProcessing();
 //     console.log('This is byokakin email notification end');
 
 // },null, true, 'Asia/Tokyo');
 
-// var billingControllerJob = new CronJob ('52 14 * * *',function(){
+// var billingControllerJob = new CronJob ('46 10 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.getData();
 //     console.log('This is byokakin email notification end');

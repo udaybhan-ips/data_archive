@@ -25,8 +25,7 @@ module.exports = {
         }
 
         if(ratesDetails.length <=0){
-          console.log("Rates are not defined for this company..");
-          
+          console.log("Rates are not defined for this company..");          
         }
 
         const [getOutboundRAWCDRRes, getOutboundRAWCDRError] = await handleError(BillingByokakin.getKDDIOutboundRAWData(billingYear, billingMonth, getKDDICompListRes[i]['customer_code']));
@@ -73,7 +72,7 @@ module.exports = {
   getData: async function (req, res) {
     try {
 
-      const billingMonth = '01', billingYear = "2023";
+      const billingMonth = '02', billingYear = "2023";
 
       // console.log("ratesDetails="+JSON.stringify(ratesDetails));
 
