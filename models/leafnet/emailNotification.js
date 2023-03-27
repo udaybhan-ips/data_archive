@@ -96,18 +96,29 @@ module.exports = {
         let proDataLen = processData.length;
         let rawDataLen = rawData.length;
         let html = '';
-        let table = '';
+        let tableDiv = '';
 
         console.log("proData=" + proDataLen);
         console.log("rawData=" + rawDataLen);
         if (rawDataLen > 0 && proDataLen > 0)
-            html = tableCreate(rawData, processData, type_of_service);
+            tableDiv = tableCreate(rawData, processData, type_of_service);
         //console.log("html");
         //console.log(html);
 
-        return html;
+        return tableDiv;
     },
-    sendEmail: async function (html) {
+    sendEmail: async function (tableDiv) {
+
+        let html = '';
+         let h4 = `Hi, <br /> This is the daily Leafnet CDR Report!! <br /><br />`;
+        //let h1 = `<br />  ${type_of_service} <br /><br />`;
+        //let h3 = `${locSA[0]} ~ ${locEA[0]} !! `;
+         let h2 = `<h2 align="center"> LEAFNET CDR BALANCE CHECK </h2>`;
+        html += h4;
+         //html += h3;
+        html += h2;
+        html += tableDiv;
+        html += "Thank you";
 
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
@@ -148,14 +159,7 @@ function tableCreate(rawData, processData, type_of_service) {
         tableRows += `<td style="text-align:right" class="Difference">${diff}</td>`;
         tableRows = tableRows + '</tr>'
     }
-    let html = '';
-    let h4 = `Hi, <br /> This is the daily Leafnet CDR Report!! <br /><br />`;
-    let h1 = `<br />  ${type_of_service} <br /><br />`;
-    let h3 = `${locSA[0]} ~ ${locEA[0]} !! `;
-    let h2 = `<h2 align="center"> LEAFNET CDR BALANCE CHECK </h2>`;
-    html += h4;
-    html += h3;
-    html += h2;
+    
     let table = '';
     const style = `thead { text-align: left;background-color: #4CAF50; color: white; }`
 
@@ -171,10 +175,13 @@ function tableCreate(rawData, processData, type_of_service) {
     } catch (err) {
         throw Error("Error !" + err);
     }
-    let div = `<div style="margin: auto;width: 50%;padding: 10px;">${table}</div>`;
-    html += div;
-    html += "Thank you";
+    let h1 = `<h2> Service Type ${type_of_service} </h2>`
+
+    let div = h1 + `<div style="margin: auto;width: 50%;padding: 10px;">${table}</div>`;
+    
+    //html += div;
+    //html += "Thank you";
     // console.log("sdfsdf"+html);
 
-    return html;
+    return div;
 }

@@ -373,9 +373,6 @@ module.exports = {
 
           amount = amount + (parseInt(info[ii]['amount'], 10));
 
-
-
-
           let query = `insert into kickback_detail_irregular (bill_no,line_no, item_type , item_name, call_count, call_sec,rate,
                 amount, remarks, date_update, name_update, date_insert, name_insert) VALUES('${bill_no}', '${info[ii]['line_no']}', 
                 '${info[ii]['item_type']}', '${info[ii]['item_name']}',${info[ii]['call_count']}, ${info[ii]['call_sec']}, ${info[ii]['rate']} 

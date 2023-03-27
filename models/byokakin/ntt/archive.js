@@ -31,8 +31,15 @@ module.exports = {
 
     try {
 
-      const query = `delete from ntt_koteihi_cdr where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
-      const query1 = `delete from byokakin_ntt_koteihi_${billingYear}${billingMonth}`;
+      let where = "" , where1 ="" ;
+
+      if(serviceType ==='NTT_ORIX'){
+        where = ` AND carrier='NTT_ORIX' `
+        where1 = ` where carrier_name = 'NTT_ORIX' `
+      }
+
+      const query = `delete from ntt_koteihi_cdr where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' ${where} `;
+      const query1 = `delete from byokakin_ntt_koteihi_${billingYear}${billingMonth} ${where1}`;
 
       const qRes = await db.queryByokakin(query, []);
       const qRes2 = await db.queryByokakin(query1, []);
@@ -49,8 +56,15 @@ module.exports = {
 
     try {
 
-      const query1 = `select * from ntt_koteihi_cdr where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' `;
-      const query2 = `select * from byokakin_ntt_koteihi_${billingYear}${billingMonth} limit 1`;
+      let where = "" , where1 = "";
+
+      if(serviceType === 'NTT_ORIX'){
+        where = `AND carrier='NTT_ORIX' ` ;
+        where1 = ` WHERE carrier_name !='NTT' `
+      }
+
+      const query1 = `select * from ntt_koteihi_cdr where to_char(datebill::date, 'MM-YYYY')= '${billingMonth}-${billingYear}' ${where} `;
+      const query2 = `select * from byokakin_ntt_koteihi_${billingYear}${billingMonth} ${where1} limit 1`;
 
 
       const qRes1 = await db.queryByokakin(query1, []);

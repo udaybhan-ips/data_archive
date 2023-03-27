@@ -1,9 +1,11 @@
 var ArchiveNTTORIX = require('../../../models/byokakin/ntt_orix/archive');
+var ArchiveNTT = require('../../../models/byokakin/ntt/archive');
+
 module.exports = {
 
   uploadKotehiNTTORIX: async function (req, res) {
     try {
-      const billingMonth = "01";
+      const billingMonth = "02";
       const billingYear ="2023";
       
       const carrier = 'NTTORIX';
@@ -20,10 +22,12 @@ module.exports = {
     }
   },
 
+
+
   NTTORIXKotehiCharge: async function(req, res){
 
     try{
-      const billingMonth = "01";
+      const billingMonth = "02";
       const billingYear ="2023";
       
       const resNTTORIXFreeDialNumList = await ArchiveNTTORIX.getNTTORIXFreeDialNumList();
@@ -43,7 +47,7 @@ module.exports = {
 
   uploadNTTORIXRAW: async function (req, res) {
     try {
-      const billingMonth = "01";
+      const billingMonth = "02";
       const billingYear ="2023";
       const carrier = 'NTTORIX';
       //const deleteTargetDateData = await ArchiveNTTORIX.deleteTargetDateCDR(billingMonth, serviceType, callType);
@@ -337,6 +341,89 @@ module.exports = {
       });
     }
   },
+
+  async uploadNTTORIXKotehiDataByUI(req, res) {
+    
+    try {
+      const { year, month, comCode } = req.body;
+
+      //console.log("req.."+JSON.stringify(req.body));
+
+      const checkTableExistRes = await ArchiveNTT.checkTableExist(`byokakin_ntt_koteihi_${year}${month}`);
+      
+
+      if (!checkTableExistRes) {
+          // create table here
+          const createTableRes = await ArchiveNTT.createNTTTables(year, month);      
+      }
+      
+      // const checkKotehiData = await ArchiveNTT.checkTargetKotehiData(year, month, 'NTT_ORIX');
+
+      // if(checkKotehiData === 'data is already there') {
+      //   return res.status(200).json({
+      //     message: checkKotehiData,
+      //   });
+      // }
+   
+      const resNTTKotehiData = await ArchiveNTTORIX.insertNTTORIXKotehiDataByAPI(req.body.file_input, "fileName", year, month, 'NTT_ORIX');
+      
+      const resNTTFreeDialNumList = await ArchiveNTT.getNTTFreeDialNumList();
+      const resCustomerList = await ArchiveNTTORIX.getNTTORIXCustomer();
+      const resChargeKotehiData = await ArchiveNTTORIX.chargeKotehiData(year, month, resNTTFreeDialNumList, resCustomerList);
+
+       //await ArchiveNTT.insertNTTKotehiDataByAPI(req.body.file_input, 
+        // resNTTCustomerList, resNTTFreeDialNumList,resNTTFreeAccountNumList,year, month);
+      
+        
+      console.log("Done ...")
+      return res.status(200).json({
+        message: 'success! data inserted sucessfully',
+      });
+    } catch (error) {
+      return error;
+    }
+
+
+},
+
+async getUnRegisteredNTTORIXKotehiNumberByUI(req, res) {
+  try {
+    const { year, month, comCode } = req.body;
+    const [checkUnRegistededKotehiNumberRes, checkUnRegistededKotehiNumberErr] = await handleError(ArchiveNTT.checkUnRegistededKotehiNumber(year, month, comCode));
+    if (checkUnRegistededKotehiNumberErr) {
+      //throw new Error('Could not fetch the summary');
+      return res.status(500).json({
+        message: checkUnRegistededKotehiNumberErr.message
+      });
+    }
+    return res.status(200).json(checkUnRegistededKotehiNumberRes);
+
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message
+    });
+  }
+},
+
+async deleteNTTORIXKotehiDataByUI(req, res) {
+  try {
+    const { year, month, comCode } = req.body;
+    const [deleteNTTKotehiDataByUIRes, deleteNTTKotehiDataByUIErr] = await handleError(ArchiveNTT.deleteTargetKotehiData(year, month, 'NTT_ORIX'));
+    if (deleteNTTKotehiDataByUIErr) {
+      //throw new Error('Could not fetch the summary');
+      return res.status(500).json({
+        message: deleteNTTKotehiDataByUIErr.message
+      });
+    }
+    return res.status(200).json(deleteNTTKotehiDataByUIRes);
+
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message
+    });
+  }
+},
+
 
 }
 

@@ -1,11 +1,15 @@
 var config = require('./../../../config/config');
 var db = require('./../../../config/database');
+const utility = require('../../../public/javascripts/utility')
 
 module.exports = {
   findAll: async function (data) {
     try {
      // console.log("in rate_KDDI"+JSON.stringify(data));
-      const query = "select * from ntt_kddi_rate_c where serv_name='KDDI' order by customer_code asc";
+      const query = ` select * from (select * from ntt_kddi_rate_c where serv_name='KDDI') as lj 
+      left join (select * from byokakin_rate_approval_status where (step1_status ='pending' OR  step2_status ='pending' ) ) as rj
+      on (lj.customer_code = rj.customer_cd) order by customer_code asc`;
+      
       const nttRateList = await db.queryByokakin(query, []);
       if (nttRateList && nttRateList.rows) {
         return nttRateList.rows;
@@ -51,6 +55,9 @@ module.exports = {
       throw new Error(error);
     }
   },
+
+
+
   updateRates: async function (data) {
     console.log(data);
     let updateData = '';
@@ -118,7 +125,44 @@ module.exports = {
       updateData = updateData + 'date_modified= now()';
 
       const queryUpdate = `update ntt_kddi_rate_c set ${updateData} where  customer_code='${data.customer_cd}' and serv_name='KDDI' `;
+
       const resUpdate = await db.queryByokakin(queryUpdate, []);
+
+
+      const checkApprovalStatus = `select * from byokakin_rate_approval_status where customer_cd ='${data.customer_cd}' ` ;
+      const checkApprovalStatusRes  = await db.queryByokakin(checkApprovalStatus, []);
+
+      if(checkApprovalStatusRes && checkApprovalStatusRes.rows && checkApprovalStatusRes.rows.length>0 ){
+        const updateApprovalStatus = `update byokakin_rate_approval_status set step1_status='${pending}' , added_date=now(), 
+        added_by='${data.modified_by}' where customer_cd ='${data.customer_cd}' `
+
+        const updateApprovalStatusRes = await db.queryByokakin(updateApprovalStatus, []);
+
+      }else{
+        const approvalInsertQuery = `insert into byokakin_rate_approval_status (customer_cd, added_by, added_date, step1_status, step1_approver, 
+          step1_approved_time, step2_status, step2_approver, step2_approved_time, comment_1, comment_2, carrier) VALUES 
+          ('${data.customer_cd}','${data.modified_by}',now(), 'pending' ,'', null, '','',null,'','','KDDI' ) ` ;
+  
+        const approvalRes = await db.queryByokakin(approvalInsertQuery, []);
+      }
+
+      const subject =`Change Request in Byokakin Rate : ${data.customer_cd}` ;
+      const html = `Hi \\n 
+      There is change Request in Byokakin Rate for below company : ${data.customer_cd} \\n
+      Thank you
+      `;
+      const mailOption = {
+        from: 'ips_tech@sysmail.ipsism.co.jp',
+        to: 'uday@ipsism.co.jp',
+        //cc: 'y_ito@ipsism.co.jp',
+        //     cc:'gaurav@ipsism.co.jp,abhilash@ipsism.co.jp,vijay@ipsism.co.jp',
+        subject,
+        html
+      }
+      utility.sendEmail(mailOption);
+
+
+
       if (resUpdate.rows)
         return resUpdate.rows[0];
       else

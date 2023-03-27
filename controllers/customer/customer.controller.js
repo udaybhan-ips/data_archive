@@ -1,6 +1,20 @@
 var Customer = require('../../models/customer/customer');
 
 module.exports = {
+
+  updateByokiakinRateApproveStep1: function(req, res) {
+    Customer.updateByokiakinRateApproveStep1(req.body)
+      .then(function(result) {
+        return res.status(200).json(result);
+      })
+      .catch(function(err) {
+        return res.status(400).json({
+          message: err.message
+        });
+      });
+  },
+
+
   createUser: function(req, res) {
     
     Customer.create(req.body)

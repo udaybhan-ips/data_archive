@@ -65,8 +65,8 @@ module.exports = {
 
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
-      where  is_deleted = false and service_type ->> 'ntt_customer'  = 'true' 
-      
+      where  is_deleted = false       and service_type ->> 'ntt_customer'  = 'true' 
+      and customer_cd in ('00001339','00001196')
        order by customer_code   `;
       // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getNTTCompListRes = await db.query(query, [], true);
@@ -187,7 +187,7 @@ module.exports = {
 
       if(data[0]['cdr_amount'] !==undefined && data[0]['cdr_amount']  !=null && data[0]['cdr_amount']!='' ){
         cdrAmount = data[0]['cdr_amount']
-     }
+      }
 
       subtotal = parseInt(cdrAmount, 10) + parseInt(koteiAmount, 10);
       tax = (subtotal * .1);
@@ -198,8 +198,8 @@ module.exports = {
 
       let query = `insert into byokakin_billing_history (bill_no , customercode , carrier , cdrmonth , billtype , count , fixed_cost_subtotal ,
         cdr_cost_subtotal , subtotal , tax , total , remarks , date_insert , name_insert , date_update , name_update, cdr_cost_total, cdr_cost_tax )
-         VALUES('1', '${customer_id}', 'NTT', '${year}-${month}-1', 'R' , 1, '${koteiAmount}', '${cdrAmount}',
-            '${subtotal}' , '${tax}','${total}','ntt billing by system','now()','System','now()','System', '${totalCDR}', '${taxCDR}' )`;
+        VALUES('1', '${customer_id}', 'NTT', '${year}-${month}-1', 'R' , 1, '${koteiAmount}', '${cdrAmount}',
+        '${subtotal}' , '${tax}','${total}','ntt billing by system','now()','System','now()','System', '${totalCDR}', '${taxCDR}' )`;
       console.log("query==" + query);
       await db.queryByokakin(query, []);
 
@@ -517,9 +517,6 @@ async function getNextInsertBatch(cdrType, data, rates, customerId, billingYear,
   try {
     for (let i = 0; i < data.length; i++) {
       let obj = {}, terminalType, freedialNumber, callingNumber, callDuration, destinationArea, chargeAmt, callDate, callTime, sourceArea, callCharge;
-
-
-
 
       if (cdrType === 'OUTBOUND') {
         terminalType = await getTerminalType(data[i]['cld'], data[i]['destination'], data[i]['calltype']);

@@ -3,6 +3,9 @@ var customerController = require('./../../../controllers/customer/customer.contr
 
 router.get('/customer',  customerController.listCustomers);
 router.post('/customer/addCustomer', customerController.createUser);
+
+router.post('/customer/updateByokakinRateApproveStep1', customerController.updateByokiakinRateApproveStep1);
+
 // router.get('/users/me',  usersController.getSelfUser);
 // router.get('/users/:id', usersController.getOneUser);
 // router.put('/users/:id/name', usersController.changeName);
@@ -10,6 +13,7 @@ router.post('/customer/addCustomer', customerController.createUser);
 // router.put('/users/:id/email', usersController.changeEmail);
 router.post('/customer/deleteCustomer', customerController.deleteUser);
 router.post('/customer/updateCustomerInfo', customerController.udpateCustomerInfo);
+
 router.get('/customer/users_list',  customerController.listUsers);
 
 

@@ -337,6 +337,63 @@ module.exports = {
     }
   },
 
+  insertNTTORIXKotehiDataByAPI: async function (data, fileName1, billingYear, billingMonth, carrierName) {
+
+    try {
+
+      let csvData = [];
+      let DID = null;
+      let carrier = null;
+
+      console.log("data.."+JSON.stringify(data[0]))
+      console.log("data.."+JSON.stringify(data[1]))
+
+      for (let i = 0; i < data.length; i++) {
+
+        let obj = {};
+
+        // let tmpDID = data[i][0] != null ? data[i][0].trim() : null;
+        // let tmpCarrier = data[i][1] != null ? data[i][1].trim() : null;
+
+        // if (tmpDID != null && tmpDID != "") {
+        //   if (tmpDID.indexOf("合計") == -1) {
+        //     DID = tmpDID;
+        //   }
+        // } else if (tmpCarrier != null && tmpCarrier != "") {
+        //   if (tmpCarrier.indexOf("合計") == -1) {
+        //     carrier = tmpCarrier;
+        //   }
+        // } else {
+          //if (data[i][3] != null && data[i][3].trim() != "") {
+
+          console.log("data..."+data[i][0])
+
+          if(data[i][0] !=='回線番号'){
+            obj['did'] = data[i][0];
+            obj['carrier'] = data[i][1];
+            obj['service_name'] = data[i][2];
+            obj['amount'] = data[i][3];
+            obj['taxclassification'] = data[i][4];
+            obj['date_added'] = `${billingYear}-${billingMonth}-01`;
+            obj['dailydisplay'] = data[i][5];
+            obj['carrier_name'] = 'NTT_ORIX';
+            csvData.push(obj);
+          }
+          //}
+        //}
+      }
+
+      console.log("csvData..."+csvData.length)
+
+      await insertByBatches(csvData, 'ntt_koteihi', billingYear, billingMonth);
+      //  return csvData;
+    } catch (error) {
+      console.log("Error" + error.message);
+      return error;
+    }
+  },
+
+
   insertNTTORIXKotehiData: async function (filePath, fileName, billingYear, billingMonth, carrier) {
 
     try {

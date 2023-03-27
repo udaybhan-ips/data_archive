@@ -72,7 +72,7 @@ module.exports = {
   getData: async function (req, res) {
     try {
 
-      const billingMonth = '01', billingYear = "2023";
+      const billingMonth = '02', billingYear = "2023";
       const carrier = 'NTT'
 
       // console.log("ratesDetails="+JSON.stringify(ratesDetails));

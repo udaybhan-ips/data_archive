@@ -5,7 +5,7 @@ var archiveController = require('../dms/archive.controller');
 // var EmailController = require('../dms/emailNotification.controller');
 
 
-// var archiverJob = new CronJob ('29 16 * * *',function(){
+// var archiverJob = new CronJob ('28 16 * * *',function(){
 //     console.log('This is dms archiver start');
 //     archiveController.getData();
 //     console.log('This is dms archiver End');

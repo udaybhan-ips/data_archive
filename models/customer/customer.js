@@ -2,7 +2,8 @@ var config = require('./../../config/config');
 var db = require('./../../config/database');
 var KDDIRate = require('../byokakin/kddi/rate');
 var NTTRate = require('../byokakin/ntt/rate');
- 
+const utility = require('../../public/javascripts/utility')
+
 module.exports = {
   findAll: async function () {
     try {
@@ -47,29 +48,30 @@ module.exports = {
 
 
       const query = `INSERT INTO m_customer (customer_cd, customer_name, address, tel_number, email, staff_name, 
-        logo, upd_id, upd_date, post_number, fax_number, pay_type, 
-         service_type, commission ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
-                $10, $11, $12, $13, $14 ) returning customer_cd`;
+      logo, upd_id, upd_date, post_number, fax_number, pay_type, service_type, commission ) VALUES 
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14 ) returning customer_cd`;
+
       const value = [customer_cd, data.customer_name, data.address, data.tel_number,
         data.email, data.staff_name, data.logo, data.upd_id, 'now()', data.post_number,
         data.fax_number, data.pay_type, JSON.stringify(data.service_type), data.commission];
-      const res = await db.query(query, value, true);
+      const res = await db.query``(query, value, true);
+
       if (res.rows) {
         if (data.service_type && data.service_type.kddi_customer && data.service_type.kddi_customer == true) {
           const rateData = { ...data.kddi_customer, customer_cd, serv_name: 'KDDI' };
           const res = await KDDIRate.create(rateData);
-          if (res && res.length <=0) {
+          if (res && res.length <= 0) {
             throw new Error(res);
           }
         }
         if (data.service_type && data.service_type.ntt_customer && data.service_type.ntt_customer == true) {
           const rateData = { ...data.ntt_customer, customer_cd, serv_name: 'NTT' };
           const res = await NTTRate.create(rateData);
-          if (res && res.length <=0) {
+          if (res && res.length <= 0) {
             throw new Error(res);
           }
         }
-        return {'res':'insert success'};
+        return { 'res': 'insert success' };
       }
       else
         throw new Error(res);
@@ -79,14 +81,98 @@ module.exports = {
     }
   },
 
+  updateByokiakinRateApproveStep1: async function (data) {
+
+    console.log("data ..." + JSON.stringify(data))
+    //{"step1_status":"approve","comments":"comment","modified_by":"test@gmail.com","updated_by":"test@gmail.com"}
+
+    try {
+
+      if (data.customer_cd === undefined || data.customer_cd === null) {
+        throw new Error('Invalid Request')
+      }
+
+      if (data && data.step && data.step !== '2') {
+
+
+        let updateStep2 = ""
+
+        if (data.step1_status === 'approve') {
+          updateStep2 = `, step2_status='pending'`;
+
+          const subject = `Change Request in Byokakin Rate Step 2 : ${data.customer_cd}`;
+          const html = `Hi \\n 
+        There is change Request in Byokakin Rate for step 2 below company : ${data.customer_cd} \\n
+        Thank you
+        `;
+          const mailOption = {
+            from: 'ips_tech@sysmail.ipsism.co.jp',
+            to: 'uday@ipsism.co.jp',
+            //cc: 'y_ito@ipsism.co.jp',
+            subject,
+            html
+          }
+          utility.sendEmail(mailOption);
+
+        }
+
+        const updateStatusStep1 = `update byokakin_rate_approval_status set step1_status ='${data.step1_status}', 
+          step1_approver='${data.modified_by}', step1_approved_time=now(),comment_1='${data.comments1}' ${updateStep2}
+          where customer_cd='${data.customer_cd}'`;
+
+        const res = await db.queryByokakin(updateStatusStep1, []);
+
+
+
+
+        return res;
+
+      } else {
+
+        if (data.step2_status === 'approve') {
+
+          const subject = `Approve !!!  Change Request in Byokakin Rate Step 2 of : ${data.customer_cd}` ;
+          const html = `Hi \\n 
+        There is change Request in Byokakin Rate for step 2 below company : ${data.customer_cd} has been finished.
+        
+        \\n
+        Thank you
+        `;
+          const mailOption = {
+            from: 'ips_tech@sysmail.ipsism.co.jp',
+            to: 'uday@ipsism.co.jp',
+            //cc: 'y_ito@ipsism.co.jp',
+            subject,
+            html
+          }
+          utility.sendEmail(mailOption);
+
+        }
+
+        const updateStatusStep2 = `update byokakin_rate_approval_status set step2_status ='${data.step2_status}', 
+          step2_approver='${data.modified_by}', step2_approved_time=now(),comment_2='${data.comments2}' 
+          where customer_cd='${data.customer_cd}'`;
+
+        const res = await db.queryByokakin(updateStatusStep2, []);
+        return res;
+
+      }
+    } catch (error) {
+      console.log("Error..." + error.message)
+      throw new Error("Error !" + error.message)
+    }
+
+  },
+
+
+
   updateCustomerInfo: async function (data) {
-    console.log("data"+JSON.stringify(data));
+    console.log("data" + JSON.stringify(data));
     let updateData = '';
     try {
       const query = `INSERT INTO m_customer_history (customer_cd, customer_name, address, tel_number, email, staff_name, 
-        logo, upd_id, upd_date, post_number, fax_number, pay_type, 
-        is_deleted, service_type ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
-                $10, $11, $12, $13, $14 ) returning customer_cd`;
+      logo, upd_id, upd_date, post_number, fax_number, pay_type, is_deleted, service_type ) VALUES 
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14 ) returning customer_cd`;
 
       const value = [data.customer_cd, data.customer_name, data.address, data.tel_number,
       data.email, data.staff_name, data.logo, data.upd_id, 'now()', data.post_number,
@@ -100,27 +186,18 @@ module.exports = {
       if (data.address) {
         updateData = updateData + `address= '${data.address}',`;
       }
-
       if (data.tel_number) {
         updateData = updateData + `tel_number= '${data.tel_number}',`;
       }
-
       if (data.email) {
         updateData = updateData + `email= '${data.email}',`;
       }
-
       if (data.staff_name) {
         updateData = updateData + `staff_name= '${data.staff_name}',`;
-
       }
-
-      
-      
-
       if (data.post_number) {
         updateData = updateData + `post_number= '${data.post_number}',`;
       }
-
       if (data.fax_number) {
         updateData = updateData + `fax_number= '${data.fax_number}',`;
       }
@@ -131,7 +208,7 @@ module.exports = {
         updateData = updateData + `service_type ='${JSON.stringify(data.service_type)}',`;
       }
 
-      
+
       updateData = updateData + `upd_date= now(), commission=${data.commission} , upd_id= '${data.updated_by}' `;
 
       const queryUpdate = `update m_customer set ${updateData} where  id='${data.id}'`;

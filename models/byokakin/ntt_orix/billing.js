@@ -124,7 +124,7 @@ module.exports = {
   getSummaryData: async function (customerId, year, month) {
     try {
       const query = `select customercode, trunc(cdr_amount::numeric,0) as cdr_amount, kotei_amount  from ( select customercode,
-         sum (finalcallcharge) as cdr_amount  from  byokakin_ntt_processedcdr_${year}${month} 
+       sum (finalcallcharge) as cdr_amount  from  byokakin_ntt_processedcdr_${year}${month} 
        where customercode='${customerId}' and carriertype ='NTTORIX'  group by customercode) as bkpc full join 
        (select sum(kingaku) kotei_amount, comp_acco__c 
        from ntt_koteihi_cdr_bill where datebill::date ='${year}-${month}-01' and comp_acco__c = '${customerId}' 
@@ -206,8 +206,6 @@ module.exports = {
 
   genrateInvoice: async function (company_code, customer_name, billingYear, billingMonth, carrier) {
     try {
-
-      
 
       const invoiceData = await getInvoiceData(company_code, billingYear, billingMonth);
       const customerAddress = await getCustomerInfo(company_code);
