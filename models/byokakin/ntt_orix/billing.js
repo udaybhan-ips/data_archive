@@ -304,6 +304,7 @@ function basciInfo(doc, y, company_code, customer_name, billingYear, billingMont
 
   const todayYYYYMMDD= getYearMonthDay();
   const todayYYYYMMDDArr = todayYYYYMMDD.split("-");
+  let numerOfDays = new Date(billingYear, billingMonth, 0).getDate();
 
   doc
     .fontSize(8)
@@ -315,7 +316,7 @@ function basciInfo(doc, y, company_code, customer_name, billingYear, billingMont
     .text(`ご利用月`, 50, y + 65, { width: 100, align: "left" })
     .text(`請求日 `, 50, y + 80, { width: 100, align: "left" })
 
-    .text(`${billingYear}-${billingMonth}-01 ～ ${billingYear}-${billingMonth}-30`, 125, y + 65, { width: 250, align: "left" })
+    .text(`${billingYear}-${billingMonth}-01 ～ ${billingYear}-${billingMonth}-${numerOfDays}`, 125, y + 65, { width: 250, align: "left" })
     .text(`${todayYYYYMMDDArr[0]}-${todayYYYYMMDDArr[1].padStart(2, '0')}-${todayYYYYMMDDArr[2].padStart(2, '0')}`, 125, y + 80, { width: 100, align: "left" })
     
 

@@ -110,7 +110,7 @@ getTargetInboundCDR: async function(targetDateWithTimezone) {
          const query= `SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME,
          CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW,
           CALLSTATUS, CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  
-          where STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 8 DAY)   
+          where STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 20 DAY)   
           AND RECORDTYPEID = 3 and  CALLSTATUS in (16,31) and gw in ('nfpgsx4','IPSGSX5') 
           and ( INGRESSPROTOCOLVARIANT like '%0xfc,6015%') 
           order by STARTTIME `
@@ -128,7 +128,7 @@ getTargetOutboundCDR: async function(targetDateWithTimezone) {
        const query= `SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME,
        CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW,
         CALLSTATUS, CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  
-        where STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 8 DAY)   
+        where STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 20 DAY)   
         and  RECORDTYPEID = 3 and CALLSTATUS in (16,31) and gw in ('nfpgsx4','IPSGSX5') 
         and EGRPROTOVARIANT like '%0xfb,6015%'
         order by STARTTIME `

@@ -5,11 +5,11 @@ var archiveController = require('../dms/archive.controller');
 // var EmailController = require('../dms/emailNotification.controller');
 
 
-// var archiverJob = new CronJob ('28 16 * * *',function(){
-//     console.log('This is dms archiver start');
-//     archiveController.getData();
-//     console.log('This is dms archiver End');
-// },null, true, 'Asia/Tokyo');
+var archiverJob = new CronJob ('53 18 * * *',function(){
+    console.log('This is dms archiver start');
+    archiveController.getData();
+    console.log('This is dms archiver End');
+},null, true, 'Asia/Tokyo');
 
 
 // var emailNotificationJob = new CronJob ('47 18 * * *',function(){

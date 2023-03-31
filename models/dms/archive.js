@@ -10,6 +10,8 @@ module.exports = {
     try {
           const query=`SELECT date_id , date_set::date + interval '1' day as next_run_time  ,  (date_set)::date + interval '0 HOURS' as target_date , (date_set)::date - interval '9 HOURS'  as target_date_with_timezone FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
           const targetDateRes= await db.query(query,[]);
+
+          console.log("targetDateRes..."+ JSON.stringify(targetDateRes))
           
           if(targetDateRes.rows){
               return  {'id':(targetDateRes.rows[0].date_id), 'next_run_time': (targetDateRes.rows[0].next_run_time) , 'targetDate' : (targetDateRes.rows[0].target_date),'targetDateWithTimezone' : (targetDateRes.rows[0].target_date_with_timezone)} ;              
@@ -105,26 +107,49 @@ module.exports = {
     }
 },
 
-getTargetCDR: async function(targetDateWithTimezone) {
+
+getDIDs: async function(targetDate, customer_cd) {
+  try {
+      const query=`select substring(_03_numbers, 2, 10) as _03_numbers, customer_cd from _03numbers where customer_cd ='00000138' `;
+      const getDIDRes= await db.queryIBS(query,[]);
+      return getDIDRes.rows;
+  } catch (error) {
+      return error;
+  }
+},
+
+
+getTargetCDR: async function(targetDateWithTimezone, _03_numbers_arr) {
     
   try {
+
+    let _03_numbers ="" ;
+
+    for (let i = 0; i < _03_numbers_arr.length; i++) {
+      _03_numbers = _03_numbers + `  '${_03_numbers_arr[i]['_03_numbers']}' ,`;
+    }
+    // //remove last , from string
+    if (_03_numbers.substr(_03_numbers.length - 1) == ',') {
+      _03_numbers = _03_numbers.substring(0, _03_numbers.length - 1);
+    }
+    
        const query= `SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME,
        CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW,
         CALLSTATUS, CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  
-        where STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY) 
+        where STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 28 DAY) 
         AND (CALLDURATION > 0)
-        AND (SERVICEPROVIDER ='IPS')  
+        AND (SERVICEPROVIDER ='IPS')
         and  RECORDTYPEID = 3 
-        And (INCALLEDNUMBER LIKE '%3505030%' OR INCALLEDNUMBER LIKE '%3505031%' OR INCALLEDNUMBER LIKE '%3505032%' 
-        OR INCALLEDNUMBER LIKE '%3505033%' OR INCALLEDNUMBER LIKE '%3505034%' 
-        OR INCALLEDNUMBER LIKE '%3611000%' OR INCALLEDNUMBER LIKE '%3611014%' OR INCALLEDNUMBER LIKE '%3611022%'
-        OR INCALLEDNUMBER LIKE '%3611024%' OR INCALLEDNUMBER LIKE '%3611033%' OR INCALLEDNUMBER LIKE '%3611042%'
-        OR INCALLEDNUMBER LIKE '%3611044%' OR INCALLEDNUMBER LIKE '%3611075%' OR INCALLEDNUMBER LIKE '%3611090%'
-        ) 
         AND (OUTGOING <> 'UNKNOWN')
+        And (INCALLEDNUMBER LIKE '0032%' OR INCALLEDNUMBER LIKE '0031%'
+        ) 
+        
         order by STARTTIME `
 
       const data = await db.mySQLQuery(query);
+
+      console.log(JSON.stringify(data))
+
       return data;
   } catch (error) {
       return error;
@@ -245,7 +270,7 @@ function utcToDate(utcDate){
        obj['term_carrier_id']=getTermCarrierID(data[i]['INGRESSPROTOCOLVARIANT']);
        obj['transit_carrier_id']=getTransistCarrierID(data[i]['INGRESSPROTOCOLVARIANT']);
        obj['selected_carrier_id']=getSelectedCarrierID(data[i]['INGRESSPROTOCOLVARIANT']);
-       obj['billing_company_code']="DMS";
+       obj['billing_company_code']= data[i]['INCALLEDNUMBER'].substring(0, 4) == '0032' ? 'DMS_1' : 'DMS_2' ;
        obj['trunk_port']=0;       
        obj['sonus_session_id']=data[i]['SESSIONID'];
        obj['sonus_start_time']=data[i]['STARTTIME'];

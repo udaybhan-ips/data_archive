@@ -94,7 +94,8 @@ module.exports = {
 
   get03Numbers: async function (customer_id) {
     try {
-      const query = `select substring(_03_numbers, 2, 10) as _03_numbers, customer_cd from _03numbers where customer_cd='${customer_id}' order by _03_numbers asc `;
+      const query = `select substring(_03_numbers, 2, 10) as _03_numbers, customer_cd from _03numbers 
+      where customer_cd='${customer_id}' order by _03_numbers asc `;
       const get03NumRes = await db.queryIBS(query, []);
       console.log("query==" + query);
       if (get03NumRes.rows) {

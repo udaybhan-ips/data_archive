@@ -193,7 +193,7 @@ module.exports = {
           }
 
           const query=`select customer_id, landline, mobile, trunkport, incallednumber from sonus_outbound_rates where 
-          customer_id in (select customer_cd from m_customer where service_type ->>'sonus_outbound' =  'true' and customer_cd='00000986') 
+          customer_id in (select customer_cd from m_customer where service_type ->>'sonus_outbound' =  'true' ) 
           and ${where}
           order by customer_id;`;
           const ipsPortal=true;
@@ -245,7 +245,7 @@ getTargetCDR: async function(targetDateWithTimezone, customerInfo, trunkPortsVal
       }else{
       
         where=`WHERE   STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD ("${targetDateWithTimezone}", INTERVAL 1 DAY) AND
-        INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND  RECORDTYPEID = 3        `;
+        INGRPSTNTRUNKNAME in (${trunkPortsVal}) AND  RECORDTYPEID = 3 `;
       
       }
 

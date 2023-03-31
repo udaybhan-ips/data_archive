@@ -123,7 +123,7 @@ module.exports = {
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
             to: 'uday@ipspro.co.jp',
-            //cc:'y_ito@ipspro.co.jp',
+            cc:'y_ito@ipspro.co.jp',
             subject: 'LEAFNET CDR CHECK',
             html
         }

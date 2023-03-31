@@ -28,8 +28,8 @@ module.exports = {
           }
         }
         const deleteTargetDateData = await ArchiveDMS.deleteTargetDateCDR(Dates.targetDate, getTableNameRes);
-      
-        const getTargetCDRRes = await ArchiveDMS.getTargetCDR(Dates.targetDateWithTimezone);
+        const getDIDsRes = await ArchiveDMS.getDIDs(Dates.targetDateWithTimezone);
+        const getTargetCDRRes = await ArchiveDMS.getTargetCDR(Dates.targetDateWithTimezone, getDIDsRes);
         const getDataRes = await ArchiveDMS.insertByBatches(getTableNameRes, getTargetCDRRes);
 
        // console.log(JSON.stringify(getTargetCDRRes));        
