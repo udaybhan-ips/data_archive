@@ -1,6 +1,6 @@
 var BillingLeafnet = require('../../models/leafnet/billing');
 const dateId=1;
-const customerId='00000594';
+const customerId='00000594', type_of_service = ['Leafnet_006751','Leafnet_0067745109'] ;
 module.exports = {
   getData: async function(req, res) {
     try {

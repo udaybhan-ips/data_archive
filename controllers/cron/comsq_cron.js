@@ -5,11 +5,11 @@ var archiveController = require('../comsq/archive.controller');
 // var EmailController = require('../comsq/emailNotification.controller');
 
 
-var archiverJob = new CronJob ('43 21 * * *',function(){
-    console.log('This is comsq archiver start');
-    archiveController.getData();
-    console.log('This is comsq archiver End');
-},null, true, 'Asia/Tokyo');
+// var archiverJob = new CronJob ('16 14 * * *',function(){
+//     console.log('This is comsq archiver start');
+//     archiveController.getData();
+//     console.log('This is comsq archiver End');
+// },null, true, 'Asia/Tokyo');
 
 
 // var emailNotificationJob = new CronJob ('47 18 * * *',function(){

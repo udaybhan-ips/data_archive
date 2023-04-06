@@ -2,7 +2,7 @@ var db = require('../../config/database');
 const { BATCH_SIZE } = require('../../config/config');
 const utility = require('../../public/javascripts/utility')
 
-let ColumnSetDMS = ['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound','dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_company_code', 'trunk_port','sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus','sonus_callingnumber', 'sonus_egcallednumber','sonus_egrprotovariant'];
+let ColumnSetDMS = ['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound','dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_company_code', 'trunk_port','sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_incallednumber', 'sonus_ingressprotocolvariant', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus','sonus_callingnumber', 'sonus_egcallednumber','sonus_egrprotovariant', 'sonus_callingpartycategory'];
 
 module.exports = {
 
@@ -48,7 +48,8 @@ module.exports = {
       "sonus_call_duration_second" VARCHAR, "sonus_anani" VARCHAR, "sonus_incallednumber" VARCHAR, "sonus_ingressprotocolvariant" VARCHAR,
       "registerdate" TIMESTAMP WITHOUT TIME ZONE, "sonus_ingrpstntrunkname" VARCHAR, "sonus_gw" VARCHAR, "sonus_callstatus" VARCHAR,
       "sonus_callingnumber" VARCHAR, "sonus_egcallednumber" VARCHAR, "sonus_egrprotovariant" VARCHAR, "createdAt" TIMESTAMP WITHOUT TIME ZONE ,
-      "updatedAt" TIMESTAMP WITHOUT TIME ZONE , in_outbound integer, term_carrier_id varchar, transit_carrier_id varchar, PRIMARY KEY ("cdr_id")) ` ;
+      "updatedAt" TIMESTAMP WITHOUT TIME ZONE , in_outbound integer, term_carrier_id varchar, sonus_callingpartycategory varchar,
+       transit_carrier_id varchar, PRIMARY KEY ("cdr_id")) ` ;
 
       const tableCreationRes = db.query(query, []);
       if(tableCreationRes ){
@@ -135,8 +136,8 @@ getTargetCDR: async function(targetDateWithTimezone, _03_numbers_arr) {
     
        const query= `SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME,
        CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW,
-        CALLSTATUS, CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT FROM COLLECTOR_73  
-        where STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 28 DAY) 
+        CALLSTATUS, CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT, CALLINGPARTYCATEGORY FROM COLLECTOR_73  
+        where STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY) 
         AND (CALLDURATION > 0)
         AND (SERVICEPROVIDER ='IPS')
         and  RECORDTYPEID = 3 
@@ -148,7 +149,7 @@ getTargetCDR: async function(targetDateWithTimezone, _03_numbers_arr) {
 
       const data = await db.mySQLQuery(query);
 
-      console.log(JSON.stringify(data))
+      //console.log(JSON.stringify(data))
 
       return data;
   } catch (error) {
@@ -286,7 +287,8 @@ function utcToDate(utcDate){
        obj['sonus_callstatus']=data[i]['CALLSTATUS'];
        obj['sonus_callingnumber']=data[i]['CALLINGNUMBER'];
        obj['sonus_egcallednumber']=data[i]['EGCALLEDNUMBER'];
-       obj['sonus_egrprotovariant']=data[i]['EGRPROTOVARIANT'];  
+       obj['sonus_egrprotovariant']=data[i]['EGRPROTOVARIANT'];
+       obj['sonus_callingpartycategory']  = data[i]['CALLINGPARTYCATEGORY'] ;
        valueArray.push(obj);
        
      }

@@ -52,7 +52,10 @@ module.exports = {
     try {
       console.log("in get all comp code");
       const query = `select distinct(company_code) as company_code from billcdr_${year}${month}  
-       order by company_code `;
+
+      where company_code ='1011000001'
+
+      order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
     } catch (error) {
@@ -338,7 +341,18 @@ async function getSougoRates(data, carrier_code, company_code, term_carrier_code
     }
 
     for (let i = 0; i < tmpObj.length; i++) {
-      if (tmpObj[i]['term_carrier_code'] == term_carrier_code) {
+      if (tmpObj[i]['carrier_code'] == carrier_code && (tmpObj[i]['company_code'] == '' || tmpObj[i]['company_code'] == null)) {
+        res['rate_setup'] = tmpObj[i]['rate_setup'];
+        res['rate_sec'] = tmpObj[i]['rate_second'];
+        res['rate_trunk_port'] = tmpObj[i]['rate_trunk_port'];
+        console.log("res in side not company code")
+        return res;
+      }
+    }
+
+    for (let i = 0; i < tmpObj.length; i++) {
+      
+      if (tmpObj[i]['term_carrier_code'] == term_carrier_code ) {
         res['rate_setup'] = tmpObj[i]['rate_setup'];
         res['rate_sec'] = tmpObj[i]['rate_second'];
         res['rate_trunk_port'] = tmpObj[i]['rate_trunk_port'];
@@ -348,15 +362,7 @@ async function getSougoRates(data, carrier_code, company_code, term_carrier_code
     }
 
 
-    for (let i = 0; i < tmpObj.length; i++) {
-      if (tmpObj[i]['carrier_code'] == carrier_code && (tmpObj[i]['company_code'] == '' || tmpObj[i]['company_code'] == null)) {
-        res['rate_setup'] = tmpObj[i]['rate_setup'];
-        res['rate_sec'] = tmpObj[i]['rate_second'];
-        res['rate_trunk_port'] = tmpObj[i]['rate_trunk_port'];
-        console.log("res in side not company code")
-        return res;
-      }
-    }
+  
 
   } catch (err) {
     console.log("error in get rates");
@@ -451,12 +457,12 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
         paymentDueDate = `${currentYear}/05/01`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
-      paymentDueDate = `${currentYear }/03/31`;
+      paymentDueDate = `${currentYear }/05/01`;
     }
 
   await generateHeader(address, doc, totalCallAmount);
 
-  let y = generateCustomerInformation(company_code, billingYear, billingMonth, doc, invoice, 200, currentMonth, totalCallAmount, paymentDueDate);
+  let y = generateCustomerInformation(company_code, billingYear, billingMonth, doc, invoice, 210, currentMonth, totalCallAmount, paymentDueDate);
 
   //drawLine(doc, 198);
 
@@ -554,8 +560,10 @@ async function generateHeader(customerDetails, doc, totalCallAmount) {
     .text("TEL : 03-3549-7626", 10, 149, { align: "right" })
     .text("FAX : 03-3545-7331", 10, 162, { align: "right" })
 
+    .text("株式会社アイ・ピー・エス・プロ", 10, 175, { align: "right" })
+    .text("登録番号：T5010001227842", 10, 188, { align: "right" })
 
-    .text("請 求 書", 0, 173, { align: "center" })
+    .text("請 求 書", 0, 188, { align: "center" })
 
 
     // .text("下記のとおりご請求申し上げます。", 50, 170)

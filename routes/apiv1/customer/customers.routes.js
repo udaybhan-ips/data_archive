@@ -5,6 +5,7 @@ router.get('/customer',  customerController.listCustomers);
 router.post('/customer/addCustomer', customerController.createUser);
 
 router.post('/customer/updateByokakinRateApproveStep1', customerController.updateByokiakinRateApproveStep1);
+router.post('/customer/getUpdateApprovalHistory', customerController.getUpdateApprovalHistory);
 
 // router.get('/users/me',  usersController.getSelfUser);
 // router.get('/users/:id', usersController.getOneUser);

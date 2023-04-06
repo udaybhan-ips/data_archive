@@ -133,8 +133,19 @@ module.exports = {
       const checkApprovalStatusRes  = await db.queryByokakin(checkApprovalStatus, []);
 
       if(checkApprovalStatusRes && checkApprovalStatusRes.rows && checkApprovalStatusRes.rows.length>0 ){
+
+        const addHistory = `insert into byokakin_rate_approval_status_history 
+        (customer_cd, added_by, added_date, step1_status, step1_approver, step1_approved_time, step2_status,
+         step2_approver, step2_approved_time, comment_1, comment_2, carrier) select customer_cd, added_by, 
+         added_date, step1_status, step1_approver, step1_approved_time, step2_status, step2_approver, 
+         step2_approved_time, comment_1, comment_2, carrier from byokakin_rate_approval_status where customer_cd ='${data.customer_cd}' ` ; 
+
+         const addHistoryRes = await db.queryByokakin(addHistory, []);
+
         const updateApprovalStatus = `update byokakin_rate_approval_status set step1_status='pending' , added_date=now(), 
         added_by='${data.modified_by}' where customer_cd ='${data.customer_cd}' `
+
+
 
         const updateApprovalStatusRes = await db.queryByokakin(updateApprovalStatus, []);
 
@@ -150,6 +161,7 @@ module.exports = {
       const subject =`Change Request in Byokakin Rate : ${data.customer_cd}` ;
       const html = `Hi \\n 
       There is change Request in Byokakin Rate for below company : ${data.customer_cd} \\n
+      URL : http://billing.toadm.com/company
       Thank you
       `;
       const mailOption = {

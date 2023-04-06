@@ -41,7 +41,7 @@ getTargetCDR: async function(year, month) {
 
     try {
         const query=`SELECT billing_comp_code, term_carrier_id, duration_use, cdr_id  from 
-        CDR_SONUS where to_char(start_time, 'MM-YYYY') = '${month}-${year}'` ;
+        CDR_SONUS where to_char(start_time, 'MM-YYYY') = '${month}-${year}' and type_of_service='Leafnet_006751'`  ;
         const data= await db.query(query);
         return data.rows;
     } catch (error) {

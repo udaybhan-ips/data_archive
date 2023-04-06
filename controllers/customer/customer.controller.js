@@ -14,6 +14,18 @@ module.exports = {
       });
   },
 
+  getUpdateApprovalHistory: function(req, res) {
+    Customer.getUpdateApprovalHistory(req.body)
+      .then(function(result) {
+        return res.status(200).json(result);
+      })
+      .catch(function(err) {
+        return res.status(400).json({
+          message: err.message
+        });
+      });
+  },
+  
 
   createUser: function(req, res) {
     
