@@ -23,6 +23,33 @@ module.exports = {
     }
   },
 
+  ratesHistory: async function (data) {
+    try {
+      let where = "" ;
+
+      if ( data && data.customer_cd!=undefined ) {
+        where = `where customer_cd='${data.customer_cd}'`;
+      }
+    
+
+     // console.log("in rate_KDDI"+JSON.stringify(data));
+      const query = `  select * from ntt_kddi_rate_c_history ${where} order by id desc  `;
+      
+      const nttKDDIRateList = await db.queryByokakin(query, []);
+      if (nttKDDIRateList && nttKDDIRateList.rows) {
+        return nttKDDIRateList.rows;
+      }
+      else {
+        throw new Error(nttKDDIRateList)
+      }
+
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  
+
   create: async function (data) {
     console.log("data is "+ JSON.stringify(data));
     try {
@@ -56,7 +83,7 @@ module.exports = {
     }
   },
 
-
+  
 
   updateRates: async function (data) {
     console.log(data);

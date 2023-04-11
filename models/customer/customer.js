@@ -51,6 +51,32 @@ module.exports = {
   },
   
 
+  getCustomerHistory: async function (data) {
+    try {
+
+      console.log(JSON.stringify(data))
+
+      let where = "" ;
+
+      if ( data && data.customer_cd!=undefined ) {
+        where = `where customer_cd='${data.customer_cd}'`;
+      }
+      const query = `select * from m_customer_history ${where}  order by id desc`;
+
+      const customerHistory = await db.query(query, [], true);
+      if (customerHistory && customerHistory.rows) {
+        return customerHistory.rows;
+      }
+      else {
+        throw new Error(customerHistory)
+      }
+
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
+
   create: async function (data) {
     console.log("data is " + JSON.stringify(data));
     try {

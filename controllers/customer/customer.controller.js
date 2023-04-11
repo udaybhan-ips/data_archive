@@ -25,7 +25,17 @@ module.exports = {
         });
       });
   },
-  
+  getCustomerHistory: function(req, res) {
+    Customer.getCustomerHistory(req.body)
+      .then(function(result) {
+        return res.status(200).json(result);
+      })
+      .catch(function(err) {
+        return res.status(400).json({
+          message: err.message
+        });
+      });
+  },
 
   createUser: function(req, res) {
     
