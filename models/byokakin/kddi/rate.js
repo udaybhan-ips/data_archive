@@ -33,7 +33,18 @@ module.exports = {
     
 
      // console.log("in rate_KDDI"+JSON.stringify(data));
-      const query = `  select * from ntt_kddi_rate_c_history ${where} order by id desc  `;
+      const query = `   select customer_code, serv_name, fixed_rate->> 'sale_rate' as  fixed_sale_rate, 
+      fixed_rate->> 'ips_rate' as  fixed_ips_rate, fixed_rate->> 'billing_type' as  fixed_billing_type, 
+      fixed_rate->> 'billing_second' as  fixed_billing_second, mobile_rate->> 'sale_rate' as  mobile_sale_rate,
+       mobile_rate->> 'ips_rate' as  mobile_ips_rate, mobile_rate->> 'billing_type' as  mobile_billing_type, 
+       mobile_rate->> 'billing_second' as  mobile_billing_second, public_rate->> 'sale_rate' as  public_rate_sale_rate, 
+       public_rate->> 'ips_rate' as  public_rate_ips_rate, public_rate->> 'billing_type' as  public_rate_billing_type, 
+       public_rate->> 'billing_second' as  public_rate_billing_second, navi_dial_rate->> 'sale_rate' as  fixed_sale_rate, 
+       navi_dial_rate->> 'ips_rate' as  fixed_ips_rate, navi_dial_rate->> 'billing_type' as  fixed_billing_type, 
+       navi_dial_rate->> 'billing_second' as  fixed_billing_second, sonota_rate->> 'sale_rate' as  fixed_sale_rate, 
+       sonota_rate->> 'ips_rate' as  fixed_ips_rate, sonota_rate->> 'billing_type' as  fixed_billing_type, 
+       sonota_rate->> 'billing_second' as  fixed_billing_second, date_added, date_modified, added_by , 
+       modified_by, start_date, end_date, id from ntt_kddi_rate_c_history ${where} order by id desc  `;
       
       const nttKDDIRateList = await db.queryByokakin(query, []);
       if (nttKDDIRateList && nttKDDIRateList.rows) {
