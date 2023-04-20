@@ -5,7 +5,7 @@ module.exports = {
   cdrProcessing: async function (req, res) {
     try {
 
-      const billingMonth = '02', billingYear = "2023";
+      const billingMonth = '03', billingYear = "2023";
 
       // console.log("ratesDetails="+JSON.stringify(ratesDetails));
 
@@ -16,6 +16,13 @@ module.exports = {
       console.log("getKDDICompListRes==" + JSON.stringify(getKDDICompListRes));
 
       for (let i = 0; i < getKDDICompListRes.length; i++) {
+
+        //delete processed data
+
+        const [deleteProcessedDataRes, deleteProcessedDataErr] = await handleError(BillingByokakin.deleteProcessedData(getKDDICompListRes[i]['customer_code'],billingYear, billingMonth));
+        if (deleteProcessedDataErr) {
+          throw new Error('Could not delete processed data!!');
+        }
 
         // outbound data processing
 
@@ -72,7 +79,7 @@ module.exports = {
   getData: async function (req, res) {
     try {
 
-      const billingMonth = '02', billingYear = "2023";
+      const billingMonth = '03', billingYear = "2023";
 
       // console.log("ratesDetails="+JSON.stringify(ratesDetails));
 

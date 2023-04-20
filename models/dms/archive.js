@@ -137,13 +137,19 @@ getTargetCDR: async function(targetDateWithTimezone, _03_numbers_arr) {
        const query= `SELECT ADDTIME(STARTTIME,'09:00:00') AS ORIGDATE, INANI, INCALLEDNUMBER,ADDTIME(DISCONNECTTIME,'09:00:00') AS STOPTIME,
        CALLDURATION*0.01 AS DURATION, SESSIONID, STARTTIME, DISCONNECTTIME, CALLDURATION, INGRESSPROTOCOLVARIANT , INGRPSTNTRUNKNAME, GW,
         CALLSTATUS, CALLINGNUMBER, EGCALLEDNUMBER, EGRPROTOVARIANT, CALLINGPARTYCATEGORY FROM COLLECTOR_73  
-        where STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY) 
+        where STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 28 DAY) 
         AND (CALLDURATION > 0)
-        AND (SERVICEPROVIDER ='IPS')
+        
         and  RECORDTYPEID = 3 
-        AND (OUTGOING <> 'UNKNOWN')
-        And (INCALLEDNUMBER LIKE '0032%' OR INCALLEDNUMBER LIKE '0031%'
-        ) 
+        
+        And (incallednumber like '00326397%' OR  incallednumber like '00326396%' OR  incallednumber like '00326395%' OR incallednumber like '00326372%'
+        OR incallednumber like '00326368%' OR  incallednumber like '00326367%' OR  incallednumber like '00326364%' OR incallednumber like '00326361%'
+        OR incallednumber like '00326360%' OR  incallednumber like '00326357%' OR  incallednumber like '00326356%' OR incallednumber like '00326349%'
+        OR incallednumber like '00326348%' OR  incallednumber like '00326346%' OR  incallednumber like '00326341%' OR incallednumber like '00326339%'
+        OR incallednumber like '00326338%' OR  incallednumber like '00326337%' OR  incallednumber like '00326334%' OR incallednumber like '00326329%'
+        OR incallednumber like '00326326%' OR  incallednumber like '00326325%' OR  incallednumber like '00326324%' OR incallednumber like '00326319%'
+        OR incallednumber like '00326318%' OR  incallednumber like '00326317%' OR  incallednumber like '00326309%' OR incallednumber like '00322703%'
+        OR incallednumber like '00322702%' OR  incallednumber like '00322701%' OR  incallednumber like '361103335%') 
         
         order by STARTTIME `
 

@@ -63,6 +63,7 @@ module.exports = {
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
       where is_deleted = false 
+      
       and service_type ->> 'kddi_customer'  = 'true' 
       order by customer_code`;
      // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
@@ -77,6 +78,25 @@ module.exports = {
       return error;
     }
   },
+
+
+  deleteProcessedData: async function (customerId, year, month) {
+    try {
+
+      const query = `delete from byokakin_kddi_processedcdr_${year}${month} where customercode='${customerId}' `;
+
+      const deleteRes = await db.queryByokakin(query, []);
+      if (!deleteRes) {
+        throw new Error('not found')
+      }
+      return deleteRes;
+
+    } catch (error) {
+      console.log("error in deleting processed  data.." + error.message);
+      throw new Error("error in deleting processed data.." + error.message);
+    }
+  },
+
   getKDDIOutboundRAWData: async function (billingYear, billingMonth, customer_code) {
 
     try {

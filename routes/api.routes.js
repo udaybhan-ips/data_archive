@@ -43,6 +43,13 @@ router.use('/v1', require('./apiv1/addi_service/addiServiceInfo.routes'));
 
 /**********End */
 
+/** DMS Services **/
+
+router.use('/v1', require('./apiv1/dms/dmsInfo.routes'));
+
+
+/**********End */
+
 /** DID Number details **/
 
 router.use('/v1', require('./apiv1/did_number/didNumber.routes'));

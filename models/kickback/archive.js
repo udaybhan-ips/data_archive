@@ -205,6 +205,7 @@ module.exports = {
   insertByBatches: async function (records, getCompanyCodeInfoRes, getRemoteControlNumberDataRes, carrierInfo, companyInfo, __type, tableName) {
 
     const chunkArray = chunk(records, BATCH_SIZE);
+    
     let res = [], ColumnSetValue;
     let resArr = [];
     
