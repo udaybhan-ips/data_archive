@@ -23,13 +23,13 @@ var CDRsController = require('../byokakin/ntt/cdr.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var CDRProcessingControllerJob = new CronJob ('1 13 * * *',function(){
+// var CDRProcessingControllerJob = new CronJob ('51 17 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.cdrProcessing();
 //     console.log('This is byokakin email notification end');
 // },null, true, 'Asia/Tokyo');
 
-// var billingControllerJob = new CronJob ('20 10 * * *',function(){
+// var billingControllerJob = new CronJob ('53 17 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.getData();
 //     console.log('This is byokakin email notification end');

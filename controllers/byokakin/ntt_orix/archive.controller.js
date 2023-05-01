@@ -1,16 +1,17 @@
 var ArchiveNTTORIX = require('../../../models/byokakin/ntt_orix/archive');
 var ArchiveNTT = require('../../../models/byokakin/ntt/archive');
 
+
+const billingMonth = "03";
+const billingYear ="2023";
+const carrier = 'NTTORIX';
+
 module.exports = {
+  
 
   uploadKotehiNTTORIX: async function (req, res) {
     try {
-      const billingMonth = "02";
-      const billingYear ="2023";
-      
-      const carrier = 'NTTORIX';
-
-      console.log("here")
+     
       const resNTTORIXKotehiData = await ArchiveNTTORIX.insertNTTORIXKotehiData("filePath", "fileName", billingYear, billingMonth, carrier);
       console.log("Done ...")
       // return res.status(200).json({
@@ -27,8 +28,6 @@ module.exports = {
   NTTORIXKotehiCharge: async function(req, res){
 
     try{
-      const billingMonth = "02";
-      const billingYear ="2023";
       
       const resNTTORIXFreeDialNumList = await ArchiveNTTORIX.getNTTORIXFreeDialNumList();
       const resCustomerList = await ArchiveNTTORIX.getCustomerList();
@@ -47,9 +46,6 @@ module.exports = {
 
   uploadNTTORIXRAW: async function (req, res) {
     try {
-      const billingMonth = "02";
-      const billingYear ="2023";
-      const carrier = 'NTTORIX';
       //const deleteTargetDateData = await ArchiveNTTORIX.deleteTargetDateCDR(billingMonth, serviceType, callType);
       //const resNTTORIXFreeDialNumList = await ArchiveNTTORIX.getNTTORIXFreeDialNumList();
       //const resNTTORIXFreeAccountNumList = await ArchiveNTTORIX.getNTTORIXFreeAccountNumList();

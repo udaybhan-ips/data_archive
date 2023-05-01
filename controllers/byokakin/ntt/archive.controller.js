@@ -1,11 +1,13 @@
 var ArchiveNTT = require('../../../models/byokakin/ntt/archive');
+const billingMonth = "03";
+const billingYear ="2023";
+const carrier = 'NTT';
+
 module.exports = {
 
   uploadKotehiNTT: async function (req, res) {
     try {
-      const billingMonth = "03";
-      const billingYear ="2023";
-      const carrier = 'NTT';
+     
       console.log("here")
       const resNTTKotehiData = await ArchiveNTT.insertNTTKotehiData("filePath", "fileName", billingYear, billingMonth, carrier);
       console.log("Done ...")
@@ -21,8 +23,7 @@ module.exports = {
   NTTKotehiCharge: async function(req, res){
 
     try{
-      const billingMonth = "03";
-      const billingYear ="2023";
+      
       
       const resNTTFreeDialNumList = await ArchiveNTT.getNTTFreeDialNumList();
       const resCustomerList = await ArchiveNTT.getNTTCustomer();
@@ -40,9 +41,8 @@ module.exports = {
 
   uploadNTTRAW: async function (req, res) {
     try {
-      const billingMonth = "03";
-      const billingYear ="2023";
-      const carrier = 'NTT';
+
+ 
       //const deleteTargetDateData = await ArchiveNTT.deleteTargetDateCDR(billingMonth, serviceType, callType);
       //const resNTTFreeDialNumList = await ArchiveNTT.getNTTFreeDialNumList();
       //const resNTTFreeAccountNumList = await ArchiveNTT.getNTTFreeAccountNumList();

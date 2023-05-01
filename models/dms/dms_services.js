@@ -11,7 +11,7 @@ module.exports = {
     let billNo = 1000;
     const getNumberOfDaysInMonth = utility.daysInMonth(month, year);
 
-    try {
+    
       if (comp_code == undefined || comp_code == '') {
         throw new Error('Invalid Request')
       }
@@ -36,11 +36,18 @@ module.exports = {
         throw new Error("DMS rate is not defined!!!")
       }
 
+
+      try {
+
       const getBillNoQuery = `select max(bill_no) as max_bill_no from dms_billing_history `;
       const billNoRes = await db.queryIBS(getBillNoQuery, []);
       if (billNoRes.rows && billNoRes.rows.length > 0 && billNoRes.rows[0].max_bill_no !== null && billNoRes.rows[0].max_bill_no !== 'null') {
         billNo = parseInt(billNoRes.rows[0].max_bill_no, 10) + 1;
       }
+
+
+
+
       let where = "";
 
       for (let ii = 0; ii < dmsPrefix.rows.length; ii++) {
@@ -54,19 +61,31 @@ module.exports = {
       let res = [];
       let  totalMobileAmount =0 ,totalLandLineAmount =0,   totalMobileDuration=0, totalLandlineDuration=0, totalQuantity = 0, tax = 0, totalAmount = 0;
 
-      let queryData = `select  count(*),  sum(duration::numeric) AS duration,  sum(case when (left(sonus_callingnumber, 3) ='070' OR 
-      left(sonus_callingnumber, 3) ='080' OR left(sonus_callingnumber, 3) ='090' OR left(sonus_callingnumber, 3) ='550' OR 
-      left(sonus_callingnumber, 3) ='660' OR left(sonus_callingnumber, 3) ='770' OR left(sonus_callingnumber, 3) ='880' ) 
-      then CEIL(duration::numeric) else 0 end) as total_mobile_duration, sum(case when (left(sonus_callingnumber, 3) !='070' 
-      and left(sonus_callingnumber, 3) !='080' and left(sonus_callingnumber, 3) !='090' and left(sonus_callingnumber, 3) !='550' 
-      and left(sonus_callingnumber, 3) !='660' and left(sonus_callingnumber, 3) !='770' and left(sonus_callingnumber, 3) !='880' ) 
-      then CEIL(duration::numeric) else 0 end) as total_landline_duration, orig_carrier_id from cdr_${year}${month} where 
-        ${where} group by orig_carrier_id `;
+      // let queryData = `select  count(*),  sum(duration::numeric) AS duration,  sum(case when (left(sonus_callingnumber, 3) ='070' OR 
+      // left(sonus_callingnumber, 3) ='080' OR left(sonus_callingnumber, 3) ='090' OR left(sonus_callingnumber, 3) ='550' OR 
+      // left(sonus_callingnumber, 3) ='660' OR left(sonus_callingnumber, 3) ='770' OR left(sonus_callingnumber, 3) ='880' ) 
+      // then CEIL(duration::numeric) else 0 end) as total_mobile_duration, sum(case when (left(sonus_callingnumber, 3) !='070' 
+      // and left(sonus_callingnumber, 3) !='080' and left(sonus_callingnumber, 3) !='090' and left(sonus_callingnumber, 3) !='550' 
+      // and left(sonus_callingnumber, 3) !='660' and left(sonus_callingnumber, 3) !='770' and left(sonus_callingnumber, 3) !='880' ) 
+      // then CEIL(duration::numeric) else 0 end) as total_landline_duration, orig_carrier_id from cdr_${year}${month} where 
+      //   ${where} group by orig_carrier_id `;
+
+
+        let queryData = `select  count(*),  sum(duration::numeric) AS duration,  sum(case when (lpad((left(sonus_anani, 2))::text,3,'0') ='070' 
+        OR lpad((left(sonus_anani, 2))::text,3,'0') ='080' OR lpad((left(sonus_anani, 2))::text,3,'0') ='090' OR 
+        lpad((left(sonus_anani, 2))::text,3,'0') ='550' OR lpad((left(sonus_anani, 2))::text,3,'0') ='660' OR 
+        lpad((left(sonus_anani, 2))::text,3,'0') ='770' OR lpad((left(sonus_anani, 2))::text,3,'0') ='880' ) then 
+        CEIL(duration::numeric) else 0 end) as total_mobile_duration, sum(case when (lpad((left(sonus_anani, 2))::text,3,'0') !='070' 
+        and lpad((left(sonus_anani, 2))::text,3,'0') !='080' and lpad((left(sonus_anani, 2))::text,3,'0') !='090' and 
+        lpad((left(sonus_anani, 2))::text,3,'0') !='550' and lpad((left(sonus_anani, 2))::text,3,'0') !='660' 
+        and lpad((left(sonus_anani, 2))::text,3,'0') !='770' and lpad((left(sonus_anani, 2))::text,3,'0') !='880' ) 
+        then CEIL(duration::numeric) else 0 end) as total_landline_duration, orig_carrier_id from cdr_${year}${month}
+        where ${where}  group by orig_carrier_id`
 
 
       console.log("query ..." + queryData);
 
-      const queryDataRes = await db.query(queryData, []);
+      //const queryDataRes = await db.query(queryData, []);
 
       for (let i = 0; i < queryDataRes.rows.length; i++) {
 
@@ -203,7 +222,7 @@ module.exports = {
       const insertQuery = `insert into rate_dms_history (company_code, carrier_code, carrier_name, date_start, date_expired, landline_rate, mobile_rate
         ,added_by, date_added, updated_by, update_date) VALUES ('${data.company_code}', '${data.carrier_code}', '${data.carrier_name}', 
         '${data.date_start}', '${data.date_expired}', '${data.landline_rate}', '${data.mobile_rate}'  ,'${data.added_by}', '${data.date_added}',
-         '${data.edit_by}', '${data.update_date}' )  `
+         '${data.edit_by}', now() )  `
 
       const insertHistoty = await db.queryIBS(insertQuery, []);
 

@@ -52,9 +52,6 @@ module.exports = {
     try {
       console.log("in get all comp code");
       const query = `select distinct(company_code) as company_code from billcdr_${year}${month}  
-
-      where company_code ='1011000001'
-
       order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
@@ -116,6 +113,7 @@ module.exports = {
         let info = await getResInfo(data[i], company_code, ratesDetails, carrierInfo, month, i);
 
         for (let ii = 0; ii < info.length; ii++) {
+
           call_count = call_count + parseInt(info[ii]['call_count'], 10);
           duration = duration + parseInt(info[ii]['call_sec'], 10);
           if (parseInt(info[ii]['amount'], 10) >= 1) {

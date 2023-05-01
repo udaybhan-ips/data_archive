@@ -1,13 +1,13 @@
 var BillingByokakin = require('../../../models/byokakin/ntt_orix/billing');
 const dateId = 3;
+const billingMonth = '03', billingYear = "2023";
+const carrier = 'NTTORIX'
 
 module.exports = {
 
+
   cdrProcessing: async function (req, res) {
     try {
-
-      const billingMonth = '02', billingYear = "2023";
-      const carrier = 'NTTORIX'
 
       // console.log("ratesDetails="+JSON.stringify(ratesDetails));
 
@@ -80,8 +80,6 @@ module.exports = {
   getData: async function (req, res) {
     try {
 
-      const billingMonth = '02', billingYear = "2023";
-      const carrier = 'NTTORIX'
 
       // console.log("ratesDetails="+JSON.stringify(ratesDetails));
 

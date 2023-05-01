@@ -52,3 +52,5 @@ select total_a, free, total_b, did, total_a-total_b from ( select count(*) as to
  free  from byokakin_kddi_processedcdr_202303 where cdrclassification='OUTBOUND' group by regexp_replace(freedialnumber, '[^0-9]', '', 'g')) as 
  lj join ( select count(*) as total_b,  ((regexp_replace(did, '[^0-9]', '', 'g'))) as did  from byokakin_kddi_raw_cdr_202303 group by 
  regexp_replace(did, '[^0-9]', '', 'g')) as rj on (lj.free=rj.did);
+
+ copy (select customercode, cdr_cost_subtotal, round(cdr_cost_subtotal+(cdr_cost_subtotal*.1)) as cdr_cost_subtotal_with_tax from byokakin_billing_history where cdrmonth='2023-03-1' and carrier ='KDDI') to '/tmp/kddi_202303.csv'  WITH (FORMAT CSV, HEADER);  ;

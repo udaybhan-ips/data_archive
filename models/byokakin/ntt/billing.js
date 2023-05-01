@@ -66,7 +66,7 @@ module.exports = {
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
       where  is_deleted = false       and service_type ->> 'ntt_customer'  = 'true' 
-   
+      and customer_cd not in ('00000846','00001112')
        order by customer_code   `;
       // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getNTTCompListRes = await db.query(query, [], true);
@@ -217,8 +217,7 @@ module.exports = {
 
     try {
       chunkArray = chunk(records, BATCH_SIZE);
-      let tableName = `byokakin_ntt_processedcdr_${billingYear}${billingMonth}`;
-      let tableNameNTTProcessedData = { table: tableName };
+      let tableNameNTTProcessedData = { table:  `byokakin_ntt_processedcdr_${billingYear}${billingMonth}` };
 
       for (let i = 0; i < chunkArray.length; i++) {
         const data = await getNextInsertBatch(callType, chunkArray[i], rates, customerId, billingYear, billingMonth);
