@@ -64,10 +64,8 @@ module.exports = {
             throw new Error('Invalid request');
         }
 
-        
-
       const query=`update _03numbers set customer_cd='${param.customer_cd}', modi_name='${updatedBy}', 
-      date_update='${param.date_update}', start_date='${param.start_date}' where id in (${ids.toString()}) `;
+      date_update='${param.date_update}', stop_date='${param.stop_date}' where id in (${ids.toString()}) `;
       const summaryRes= await db.queryIBS(query,[]);
       
       if(summaryRes.rows){

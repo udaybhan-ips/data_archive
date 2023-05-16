@@ -52,6 +52,7 @@ module.exports = {
     try {
       console.log("in get all comp code");
       const query = `select distinct(company_code) as company_code from billcdr_${year}${month}  
+      
       order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
@@ -318,6 +319,8 @@ async function getSougoRates(data, carrier_code, company_code, term_carrier_code
     // }
 
 
+    
+
     for (let i = 0; i < tmpObj.length; i++) {
       if (tmpObj[i]['term_carrier_code'] == term_carrier_code && tmpObj[i]['company_code'] == company_code) {
         res['rate_setup'] = tmpObj[i]['rate_setup'];
@@ -328,15 +331,26 @@ async function getSougoRates(data, carrier_code, company_code, term_carrier_code
       }
     }
 
+    // for (let i = 0; i < tmpObj.length; i++) {
+    //   if (tmpObj[i]['company_code'] == company_code) {
+    //     res['rate_setup'] = tmpObj[i]['rate_setup'];
+    //     res['rate_sec'] = tmpObj[i]['rate_second'];
+    //     res['rate_trunk_port'] = tmpObj[i]['rate_trunk_port'];
+    //     console.log("res in side company code")
+    //     return res;
+    //   }
+    // }
+
     for (let i = 0; i < tmpObj.length; i++) {
-      if (tmpObj[i]['company_code'] == company_code) {
+      if (tmpObj[i]['term_carrier_code'] == term_carrier_code && (tmpObj[i]['company_code'] == '' || tmpObj[i]['company_code'] == null)) {
         res['rate_setup'] = tmpObj[i]['rate_setup'];
         res['rate_sec'] = tmpObj[i]['rate_second'];
         res['rate_trunk_port'] = tmpObj[i]['rate_trunk_port'];
-        console.log("res in side company code")
+        console.log("res in side not company code")
         return res;
       }
     }
+
 
     for (let i = 0; i < tmpObj.length; i++) {
       if (tmpObj[i]['carrier_code'] == carrier_code && (tmpObj[i]['company_code'] == '' || tmpObj[i]['company_code'] == null)) {
@@ -359,6 +373,16 @@ async function getSougoRates(data, carrier_code, company_code, term_carrier_code
       }
     }
 
+
+    for (let i = 0; i < tmpObj.length; i++) {
+      if (tmpObj[i]['company_code'] == company_code) {
+        res['rate_setup'] = tmpObj[i]['rate_setup'];
+        res['rate_sec'] = tmpObj[i]['rate_second'];
+        res['rate_trunk_port'] = tmpObj[i]['rate_trunk_port'];
+        console.log("res in side company code")
+        return res;
+      }
+    }
 
   
 
@@ -439,23 +463,23 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
   let lastMonthDay  = new Date(currentYear, currentMonthValue, 0).getDate();
   
     if (tmpPaymentDate == 'yearly') {
-      if (parseInt(billingMonth) > 4){
+      if (parseInt(billingMonth) >= 4){
         console.log("IF")
-        paymentDueDate = `${billingYear +1}/05/01`;
+        paymentDueDate = `${billingYear +1}/04/30`;
       }        
       else{
         console.log("ELSE")
-        paymentDueDate = `${currentYear }/05/01`;
+        paymentDueDate = `${currentYear }/04/30`;
       }
         
     } else if (tmpPaymentDate == 'half_yearly') {
       if (parseInt(billingMonth) > 10 && parseInt(billingMonth) <=3 )
-        paymentDueDate = `${billingYear +1}/05/01`;
+        paymentDueDate = `${billingYear +1}/10/31`;
       else
-        paymentDueDate = `${currentYear}/05/01`;
+        paymentDueDate = `${currentYear}/10/31`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
-      paymentDueDate = `${currentYear }/05/01`;
+      paymentDueDate = `${currentYear }/05/31`;
     }
 
   await generateHeader(address, doc, totalCallAmount);
