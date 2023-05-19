@@ -10,7 +10,8 @@ module.exports = {
             const lastMonth = lastMonthDate.month;
             const query = `select * from (select  id||customer_id as ids, customer_name, customer_id, billing_month, billing_year, billing_date, duration, landline_amt, mobile_amt, 
                 total_amt, invoice_no, mobile_duration, landline_duration, mobile_count, landline_count, total_count from cdr_sonus_outbound_summary 
-                where billing_date::date ='${year}-${month}-01') as lj left join  (select customer_name as prev_customer_name, customer_id as prev_customer_id, 
+                where billing_date::date ='${year}-${month}-01') as lj left join  
+                (select customer_name as prev_customer_name, customer_id as prev_customer_id, 
                 billing_month as prev_billing_month, billing_year as prev_billing_year, billing_date as prev_billing_date, duration as prev_duration, 
                 landline_amt as prev_landline_amt, mobile_amt as prev_mobile_amt, total_amt as prev_total_amt, invoice_no as prev_invoice_no, 
                 mobile_duration as prev_mobile_duration, landline_duration as prev_landline_duration, mobile_count as prev_mobile_count, 

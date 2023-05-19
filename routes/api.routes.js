@@ -128,7 +128,9 @@ router.use('/v1', require('./apiv1/mvno/archive.data.routes'));
 //router.use('/v1', require('./apiv1/sougo/carrier.routes'))
 router.use('/v1', require('./apiv1/mvno/approval.routes'));
 
+/***** Data Analysis */
 
+router.use('/v1', require('./apiv1/data_analysis/analysis_info.routes'));
 
 // API Error routes
 router.use(function(req, res) {

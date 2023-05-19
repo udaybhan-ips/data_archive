@@ -70,10 +70,19 @@ module.exports = {
         if(param.stop_date__c != undefined && param.stop_date__c!='' && param.stop_date__c!=null) {
             stopDate =  param.stop_date__c;
         }
+    
+        const insertHistoryQuery =`insert into ntt_kddi_freedial_history_c(cust_code__c, carr_comp__c, free_numb__c, regi_name__c, upda_name__c, 
+            cust_code, reuse_count, data_idno, id, used_star__c,date_upda__c, stop_date__c, rema_info__c, date_regi__c)  
+             ( select cust_code__c, carr_comp__c, free_numb__c, regi_name__c, upda_name__c, cust_code, reuse_count, data_idno, id, 
+                used_star__c,date_upda__c, stop_date__c, rema_info__c, date_regi__c from ntt_kddi_freedial_c where id in (${ids.toString()}))` ;
         
+       const insertHistoryQueryRes = await db.queryByokakin(insertHistoryQuery, []);
+    
 
       const query=`update ntt_kddi_freedial_c set cust_code__c='${param.customer_cd}', upda_name__c='${updatedBy}', 
       used_star__c='${param.modified_date}', stop_date__c='${stopDate}',  date_upda__c=now() , rema_info__c='${remark}' where id in (${ids.toString()}) `;
+
+
       const summaryRes= await db.queryByokakin(query,[]);
       
       if(summaryRes.rows){

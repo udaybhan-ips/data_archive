@@ -102,6 +102,11 @@ module.exports = {
 
       }
 
+      if (data.start_date) {
+        updateData = updateData + 'start_date=' + `'${data.start_date}'` + ',';
+      }
+
+
       if (data.end_date) {
         updateData = updateData + 'end_date=' + `'${data.end_date}'` + ',';
       }
