@@ -36,7 +36,7 @@ module.exports = {
       as ips_rate, 
       sale_price, ips_price, sale_price-ips_price as diff, totol_calls, total_duration,
        callchargebykddi
-         from (select '2023-03' as cdrmonth, customercode, 
+         from (select '${year}-${month}' as cdrmonth, customercode, 
       (select customer_name from m_customer where customer_cd=customercode) as customer_name,  terminaltype as calltype , 
       sum(finalcallcharge) as sale_price, sum(vendorcallcharge) as ips_price , count(*) as totol_calls, sum(callduration::int) as total_duration, sum(cdrcallcharge) as callchargebykddi 
       from byokakin_kddi_processedcdr_${year}${month}   group by customercode, terminaltype, cdrmonth) as kddi
@@ -54,7 +54,7 @@ module.exports = {
        end) end) end )
       as ips_rate,
       sale_price, ips_price, sale_price-ips_price as diff, totol_calls, total_duration,  callchargebyntt
-         from (select '2023-03' as cdrmonth, customercode,
+         from (select '${year}-${month}' as cdrmonth, customercode,
       (select customer_name from m_customer where customer_cd=customercode) as customer_name,  terminaltype as calltype ,
       sum(finalcallcharge) as sale_price, sum(vendorcallcharge) as ips_price , count(*) as totol_calls, sum(callduration::int) as total_duration, sum(cdrcallcharge) as callchargebyntt, carriertype
       from byokakin_ntt_processedcdr_${year}${month}  group by customercode,carriertype, terminaltype, cdrmonth) as ntt
@@ -86,7 +86,7 @@ module.exports = {
       const querySonusOutboundMobileDataRes = await db.query(querySonusOutboundMobileData, []);
 
       const sonusOutboundKotehi = `select 'SonusOutbound' as  carrier , sum(amount) as sale_price, 'kotehi' as  calltype , 
-          comp_acco__c as customercode, to_char(datebill::date, 'YYYY-MM') as cdrmonth from ips_kotehi_cdr_bill
+          comp_acco__c as customercode, '${year}-${month}' as cdrmonth from ips_kotehi_cdr_bill
           where to_char(datebill::date, 'MM-YYYY')='${month}-${year}'
           group by comp_acco__c, companyname`
       
