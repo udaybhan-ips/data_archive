@@ -302,6 +302,25 @@ module.exports.createFolder=function createFolder(folderName){
     }       
 
 }
+function pad(n){return n<10 ? '0'+n : n}
+
+module.exports.getCurrentYearMonthDay = function (date){
+  var d;
+  
+  if(date){
+    d = new Date(date);
+  }else{
+    d = new Date();
+  }
+  
+  let month = pad(d.getMonth() + 1);
+  let day =  pad(d.getDate());
+  let year = d.getFullYear();
+
+  return `${year}-${month}-${day}`;
+
+}
+function pad(n){return n<10 ? '0'+n : n}
 
 module.exports.getCurrentDayMonthYear = function (date){
   var d;

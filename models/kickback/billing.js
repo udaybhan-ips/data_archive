@@ -48,6 +48,7 @@ module.exports = {
       return console.error(e);
     }
   },
+  
   getRatesFC: async function () {
     try {
       const query = `select * from rate_kickback  `;
@@ -153,7 +154,7 @@ module.exports = {
     console.log("get calls info of " + customer_id);
 
     try {
-      const query = `select count(*) as total, sum(duration)/60 as total_duration ,kick_company from billcdr_202304 
+      const query = `select count(*) as total, sum(duration)/60 as total_duration ,kick_company from billcdr_202305 
       where kick_company='${customer_id}' group by kick_company`;
       const getKickCompCallsInfoRes = await db.queryIBS(query, []);
 
@@ -185,7 +186,7 @@ module.exports = {
     const limitSec = parseInt(customerInfo.cell_phone_limit, 10) * 60;
     try {
       const query = ` select max(start_time) as limit_date_time, sum(duration) as total_duration, count(*) from (select start_time, duration,  sum(duration) 
-      OVER (order by start_time asc) as cum_sum from billcdr_202304 where kick_company='${customerInfo.customer_id}' and term_use=2 ) as t
+      OVER (order by start_time asc) as cum_sum from billcdr_202305 where kick_company='${customerInfo.customer_id}' and term_use=2 ) as t
        where cum_sum <= ${limitSec}`;
       console.log(query);
       const targetDateByTermUseRes = await db.queryIBS(query, []);
@@ -217,24 +218,24 @@ module.exports = {
       }
       if (service_type == 'rate_base') {
         query = `select count(*) as total_calls, sum(duration) as total_duration , term_ani 
-      from billcdr_202304 where term_ani in (${_03_numbers}) and duration>1 and call_status in (16, 31) group by term_ani order by term_ani  `;
+      from billcdr_202305 where term_ani in (${_03_numbers}) and duration>1 and call_status in (16, 31) group by term_ani order by term_ani  `;
       } else {
         if (isExceed || kickCompany == '00000697') {
           let queryTermUse1 = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
-          from billcdr_202304 where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers 
+          from billcdr_202305 where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers 
           from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=1 group by   company_code, carrier_code, term_carrier_id 
           order by  company_code, carrier_code, term_carrier_id`;
           let queryTermUse2 = "";
 
           if (isExceed) {
             queryTermUse2 = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
-            from billcdr_202304 where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
+            from billcdr_202305 where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
              from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=2 and start_time<='${exceedLimitTime}' group by   company_code, carrier_code, term_carrier_id 
             order by  company_code, carrier_code, term_carrier_id`;
 
           } else {
             queryTermUse2 = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
-            from billcdr_202304 where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
+            from billcdr_202305 where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
              from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=2 group by   company_code, carrier_code, term_carrier_id 
             order by  company_code, carrier_code, term_carrier_id`;
 
@@ -256,7 +257,7 @@ module.exports = {
 
         } else {
           query = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
-          from billcdr_202304 where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
+          from billcdr_202305 where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
            from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) group by   company_code, carrier_code, term_carrier_id 
           order by  company_code, carrier_code, term_carrier_id `;
         }
@@ -293,7 +294,7 @@ module.exports = {
         where = `where term_ani in (${_03_numbers})  and term_use=1`;
       }
 
-      const query = `select  * from  billcdr_202304 ${where} `;
+      const query = `select  * from  billcdr_202305 ${where} `;
       console.log("query==" + query);
       const data = await db.queryIBS(query);
 
@@ -523,7 +524,7 @@ module.exports = {
       <div> Hi Team, </div>
       <div> Below is the billing status of ${reqData.customer_name} Sonus Outbound. This is approved by ${reqData.approved_by}.</div>
       <div> Thank you </div>
-  </div>`;
+      </div>`;
 
     let mailOption = {
       from: 'ips_tech@sysmail.ipsism.co.jp',

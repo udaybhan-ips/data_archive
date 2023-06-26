@@ -568,13 +568,15 @@ module.exports = {
             .on('end', function () {
               //csvDataInbound.shift();
               csvDataOutbound.shift();
-              const res = insertByBatches(csvDataInbound, 'RAWCDR_INB', billingYear, billingMonth);
+              const res =  insertByBatches(csvDataInbound, 'RAWCDR_INB', billingYear, billingMonth);
               const resOut = insertByBatches(csvDataOutbound, 'RAWCDR_OUT', billingYear, billingMonth);
               resData.push(res);
             })
           console.log("res.." + resData.length);
         }
       }
+
+      console.log("out of loop!!")
 
     } catch (error) {
       console.log("Error" + error.message);

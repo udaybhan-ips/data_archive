@@ -85,7 +85,7 @@ module.exports = {
 
       console.log("query ..." + queryData);
 
-      //const queryDataRes = await db.query(queryData, []);
+      const queryDataRes = await db.query(queryData, []);
 
       for (let i = 0; i < queryDataRes.rows.length; i++) {
 

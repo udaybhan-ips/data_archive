@@ -4,7 +4,7 @@ var customerController = require('./../../../controllers/customer/customer.contr
 router.get('/customer',  customerController.listCustomers);
 router.post('/customer/addCustomer', customerController.createUser);
 
-router.post('/customer/updateByokakinRateApproveStep1', customerController.updateByokiakinRateApproveStep1);
+router.post('/customer/updateByokakinRateApproveStep1', customerController.updateByokiakinRateApproval);
 router.post('/customer/getUpdateApprovalHistory', customerController.getUpdateApprovalHistory);
 
 router.post('/customer/getCompanyHistory', customerController.getCustomerHistory);

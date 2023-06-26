@@ -555,8 +555,8 @@ module.exports = {
             let emailTO = `${customerInfo['mail_address']}`;
             let emailCC = `${customerInfo['east_link_address']}`;
 
-            //  emailTO = 'uday@ipspro.co.jp';
-            //  emailCC = 'uday@ipspro.co.jp';
+              //emailTO = 'uday@ipspro.co.jp';
+              //emailCC = 'uday@ipspro.co.jp';
             //  emailCC = 'y_ito@ipspro.co.jp';
 
             if (!emailTO) {
@@ -584,7 +584,7 @@ module.exports = {
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
             to: 'telecom@ipspro.co.jp',
-           // to: 'uday@ipspro.co.jp',
+            //to: 'uday@ipspro.co.jp',
             cc: 'y_ito@ipspro.co.jp,uday@ipspro.co.jp',
             //cc: 'uday@ipspro.co.jp',
             subject,

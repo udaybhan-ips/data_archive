@@ -43,7 +43,6 @@ module.exports = {
           const query=`select * from ntt_kddi_freedial_c ${where} order by free_numb__c`;
 
         //  console.log("query.."+query)
-
           const summaryRes= await db.queryByokakin(query,[]);
           
           if(summaryRes.rows){
@@ -60,8 +59,12 @@ module.exports = {
   updateFreeDialNumberList: async function({param, ids, updatedBy, remark}) {
 
     try {
-        //console.log("data.."+ JSON.stringify(data))
+        console.log("data.."+ JSON.stringify(param))
         if(param.customer_cd == undefined || param.customer_cd == '' || ids.length <=0 ){
+            throw new Error('Invalid request');
+        }
+
+        if(param.carrier_type == undefined || param.carrier_type == '' || param.carrier_type == null){
             throw new Error('Invalid request');
         }
 
@@ -79,7 +82,7 @@ module.exports = {
        const insertHistoryQueryRes = await db.queryByokakin(insertHistoryQuery, []);
     
 
-      const query=`update ntt_kddi_freedial_c set cust_code__c='${param.customer_cd}', upda_name__c='${updatedBy}', 
+      const query=`update ntt_kddi_freedial_c set cust_code__c='${param.customer_cd}', upda_name__c='${updatedBy}', carr_comp__c='${param.carrier_type}',
       used_star__c='${param.modified_date}', stop_date__c='${stopDate}',  date_upda__c=now() , rema_info__c='${remark}' where id in (${ids.toString()}) `;
 
 
@@ -117,7 +120,8 @@ addFreeDialNumberList: async function(data) {
 
 
         const searchQuery = `select * from ntt_kddi_freedial_c where 
-        free_numb__c in (${freeDialNumbers}) and carr_comp__c='${data.carrier}' `;
+        free_numb__c in (${freeDialNumbers})  `;
+        
         console.log("searchQuery.."+ (searchQuery))
 
         const searchRes = await db.queryByokakin(searchQuery);
@@ -130,6 +134,7 @@ addFreeDialNumberList: async function(data) {
         let res = [];
 
         for(let i= 0; i< freeDialNumberArr.length; i++){
+
             insertQuery = `insert into ntt_kddi_freedial_c (cust_code__c, carr_comp__c, free_numb__c, regi_name__c, 
                  cust_code, used_star__c, rema_info__c, date_regi__c) Values 
                 ('${data.comp_code}','${data.carrier}','${freeDialNumberArr[i]}', '${data.updatedBy}','${parseInt(data.comp_code)}'

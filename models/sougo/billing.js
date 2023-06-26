@@ -52,7 +52,7 @@ module.exports = {
     try {
       console.log("in get all comp code");
       const query = `select distinct(company_code) as company_code from billcdr_${year}${month}  
-      
+    
       order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
@@ -341,6 +341,19 @@ async function getSougoRates(data, carrier_code, company_code, term_carrier_code
     //   }
     // }
 
+    /************* when  term carrier id is blank but company code is present */
+
+    for (let i = 0; i < tmpObj.length; i++) {
+      if (tmpObj[i]['company_code'] == company_code && (tmpObj[i]['term_carrier_code'] == '' || tmpObj[i]['term_carrier_code'] == null)) {
+        res['rate_setup'] = tmpObj[i]['rate_setup'];
+        res['rate_sec'] = tmpObj[i]['rate_second'];
+        res['rate_trunk_port'] = tmpObj[i]['rate_trunk_port'];
+        console.log("res in side not company code")
+        return res;
+      }
+    }
+
+
     for (let i = 0; i < tmpObj.length; i++) {
       if (tmpObj[i]['term_carrier_code'] == term_carrier_code && (tmpObj[i]['company_code'] == '' || tmpObj[i]['company_code'] == null)) {
         res['rate_setup'] = tmpObj[i]['rate_setup'];
@@ -479,7 +492,7 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
         paymentDueDate = `${currentYear}/10/31`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
-      paymentDueDate = `${currentYear }/05/31`;
+      paymentDueDate = `${currentYear }/06/30`;
     }
 
   await generateHeader(address, doc, totalCallAmount);
@@ -508,11 +521,11 @@ function tableSummary(doc, x, y, subTotal) {
   doc
     .fontSize(8)
 
-    .text(`小合計 (Sub-Total)`, x + 50, y + 20, { width: 100, align: "left" })
+    .text(`小合計(10%対象)(Sub-Total)`, x+30, y + 20, { width: 150, align: "left" })
 
-    .text(`消費税 (Tax)`, x + 50, y + 35, { width: 100, align: "left" })
+    .text(`消費税 (Tax)`, x+30 , y + 35, { width: 150, align: "left" })
     // drawLine(doc, y + 48, x + 50, 500)
-    .text(`合計 (Total Amount)`, x + 50, y + 50, { width: 100, align: "left" })
+    .text(`合計 (Total Amount)`, x+30 , y + 50, { width: 150, align: "left" })
     .text(`¥${utility.numberWithCommas(subTotal)}`, x + 100, y + 20, { width: 100, align: "right" })
     .text(`¥${utility.numberWithCommas(tax)}`, x + 100, y + 35, { width: 100, align: "right" })
     .text('¥' + utility.numberWithCommas(totalCallAmount), x + 100, y + 50, { width: 100, align: "right" })

@@ -26,6 +26,7 @@ var jobDMS = require('./controllers/cron/dms_cron');
 const dbSqlz = require("./models");
 
 
+
 // Create server
 var app = express();
 
@@ -40,7 +41,7 @@ app.use(cors());
 // //console.log("test");
 // Start listening
 
-
+console.error("testing!")
 
 
 const server = app.listen(config.PORT, function() {

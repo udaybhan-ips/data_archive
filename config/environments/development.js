@@ -75,6 +75,19 @@ const SONUSDB={
     idle: 10000
   }
 }
+const SONUSDBWITHOUTTIMEZONE={
+  host     : (process.env.POSTGRES_PORT || '10.168.11.41'),
+  database : (process.env.POSTGRES_DATABASE || 'sonus_db'),
+  user     : (process.env.POSTGRES_USER ||'postgres'),
+  password : (process.env.POSTGRESL_PASSWORD || ''),
+  dialect : (process.env.POSTGRESL_PASSWORD || 'postgres'),
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  }
+}
 
 module.exports = {
 	PORT: (process.env.PORT || 3000),
@@ -87,6 +100,7 @@ module.exports = {
   MYSQL_DATABASE_URL:MYSQL,
   MSSQLServer,
   MYSQL_DATABASE_URL_WITHOUT_TIMEZONE:MYSQL_WITHOUT_TIMEZONE,
+  SONUSDBWITHOUTTIMEZONE:SONUSDBWITHOUTTIMEZONE,
   BATCH_SIZE:100000
 };
 

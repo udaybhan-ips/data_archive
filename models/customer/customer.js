@@ -134,16 +134,23 @@ module.exports = {
 
 
 
-  updateByokiakinRateApproveStep1: async function (data) {
+  updateByokiakinRateApproval: async function (data) {
 
     console.log("data ..." + JSON.stringify(data))
-    //{"step1_status":"approve","comments":"comment","modified_by":"test@gmail.com","updated_by":"test@gmail.com"}
+    //{"step2_status":"reject","customer_cd":"00001280","comments2":"reject","modified_by":"approver@gmail.com","step":"2","typeOfCompany":["sonus_outbound"]}
 
     try {
 
       if (data.customer_cd === undefined || data.customer_cd === null) {
         throw new Error('Invalid Request')
       }
+
+      const {typeOfCompany} = data ;
+
+      let sonusOutbound = false ,  byokakin = false;
+
+      sonusOutbound = typeOfCompany.filter((ele)=>(ele == 'sonus_outbound' ? true : false))
+      byokakin = typeOfCompany.filter((ele)=>((ele == 'kddi_customer' || ele == 'ntt_customer' ) ? true : false))
 
       if (data && data.step && data.step !== '2') {
 
@@ -154,19 +161,33 @@ module.exports = {
           updateStep2 = `, step2_status='pending'`;
 
           subject = `Change Request in Byokakin Rate Step 2 : ${data.customer_cd}`;
-          html = `Hi \\n 
-        There is change Request in Byokakin Rate for step 2 below company : ${data.customer_cd} \\n
-        Notes: ${data.comments1}
-        Thank you
+          html = `Hi 
+          <br> 
+          There is change Request in Byokakin Rate for step 2 below company : ${data.customer_cd} 
+          <br>
+          Comments : ${data.comments1}
+          <br>
+          Approved By: ${data.modified_by}
+          <br>
+          Thank you
         `;
 
 
         } else if (data.step1_status === 'reject') {
+
+          /*** reverse the last changes!! */
+         await reverseLastChanges(data, sonusOutbound, byokakin);
+
           subject = `Change Request in Byokakin Rate Step 1 : ${data.customer_cd} is Rejected`;
-          html = `Hi \\n 
-        There is change Request in Byokakin Rate for step 1 below company : ${data.customer_cd} has been rejected by ${data.modified_by} \\n
-        and reason is ${data.comments1}
-        Thank you
+          html = `Hi 
+          <br>
+          There is change Request in Byokakin Rate for step 1 below company : ${data.customer_cd} has been rejected by ${data.modified_by} 
+          <br>
+           and reason is ${data.comments1}
+          <br>
+          Note: Request is rejected so we are going to update the original data. Please check.
+          <br>
+          Thank you
         `;
         }
 
@@ -193,9 +214,6 @@ module.exports = {
 
         const res = await db.queryByokakin(updateStatusStep1, []);
 
-
-
-
         return res;
 
       } else {
@@ -203,19 +221,32 @@ module.exports = {
         if (data.step2_status === 'approve') {
 
           subject = `Approve !!!  Change Request in Byokakin Rate Step 2 of : ${data.customer_cd}`;
-          html = `Hi \\n 
+          html = `Hi 
+          <br>
         There is change Request in Byokakin Rate for step 2 below company : ${data.customer_cd} has been finished.
-        Note: ${data.comments1}
-        \\n
+        <br>
+        Comment: ${data.comments1}
+        <br>
+        Approve By: ${data.modified_by}
+        <br>
         Thank you
         `;
 
 
         } else if (data.step2_status === 'reject') {
+
+          /*** reverse the last changes!! */
+
+         await reverseLastChanges(data, sonusOutbound, byokakin);
+
           subject = `Change Request in Byokakin Rate Step 2 : ${data.customer_cd} is Rejected`;
-          html = `Hi \\n 
-        There is change Request in Byokakin Rate for step 2 below company : ${data.customer_cd} has been rejected by ${data.modified_by} \\n
+          html = `Hi 
+          <br> 
+        There is change Request in Byokakin Rate for step 2 below company : ${data.customer_cd} has been rejected by ${data.modified_by} 
         and reason is ${data.comments1}
+        <br>
+        Note: Request is rejected so we are going to update the original data. Please check.
+        <br>
         Thank you
         `;
         }
@@ -329,5 +360,44 @@ module.exports = {
       throw new Error(error.message);
     }
   },
+
+}
+
+
+async function reverseLastChanges(data, sonusOutbound, byokakin) {
+
+  if(sonusOutbound==true ){
+    const queryGetPrevValue = `select * from sonus_outbound_rates_history where  customer_id='${data.customer_cd}' order by id desc limit 2` ;
+    const queryGetPrevValueRes = await db.query(queryGetPrevValue, [], true);
+    if (queryGetPrevValueRes && queryGetPrevValueRes.rows && queryGetPrevValueRes.rows.length >= 2) {
+
+      const queryUpdatePrevValue = `update sonus_outbound_rates set landline='${queryGetPrevValueRes.rows[1].landline}', 
+      mobile='${queryGetPrevValueRes.rows[1].mobile}',trunkport='${queryGetPrevValueRes.rows[1].trunkport}', 
+      incallednumber='${queryGetPrevValueRes.rows[1].incallednumber}', start_date='${queryGetPrevValueRes.rows[1].start_date}', 
+      end_date='${queryGetPrevValueRes.rows[1].end_date}' where customer_id='${data.customer_cd}' `;
+
+      const queryUpdatePrevValueRes = await db.query(queryUpdatePrevValue, [], true);
+
+    }
+
+
+  }else if(byokakin==true) {
+
+  const queryGetPrevValue = `select * from ntt_kddi_rate_c_history where customer_code='${data.customer_cd}' order by id desc limit 2`;
+  const queryGetPrevValueRes = await db.queryByokakin(queryGetPrevValue, []);
+
+  if (queryGetPrevValueRes && queryGetPrevValueRes.rows && queryGetPrevValueRes.rows.length >= 2) {
+
+    const queryUpdatePrevRates = `update ntt_kddi_rate_c set fixed_rate='${JSON.stringify(queryGetPrevValueRes.rows[1].fixed_rate)}', 
+    mobile_rate='${JSON.stringify(queryGetPrevValueRes.rows[1].mobile_rate)}', public_rate='${JSON.stringify(queryGetPrevValueRes.rows[1].public_rate)}', 
+    navi_dial_rate='${JSON.stringify(queryGetPrevValueRes.rows[1].navi_dial_rate)}', sonota_rate='${JSON.stringify(queryGetPrevValueRes.rows[1].sonota_rate)}', 
+    modified_by='${queryGetPrevValueRes.rows[1].modified_by}', start_date='${queryGetPrevValueRes.rows[1].start_date}',
+    end_date='${queryGetPrevValueRes.rows[1].end_date}' where customer_code='${data.customer_cd}'  `;
+
+    const queryUpdatePrevRatesRes = await db.queryByokakin(queryUpdatePrevRates, []);
+
+  }
+  }
+
 
 }

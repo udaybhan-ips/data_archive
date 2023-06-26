@@ -1,11 +1,32 @@
 var db = require('./../../config/database');
+var utility = require('../../public/javascripts/utility')
 
 module.exports = {
   findAll: async function () {
     try {
-      const query = `select * from sonus_outbound_rates where deleted=false`;
+      const query = `select * from sonus_outbound_rates where deleted=false `;
       const rateListRes = await db.query(query, [], ipsPortal = true);
-      return rateListRes.rows;
+
+      const approvalDetailsQuery = `select * from byokakin_rate_approval_status where (step1_status ='pending' OR  step2_status ='pending' ) and carrier='SonusOutbound'` ;
+
+      const approvalDetailsQueryRes = await db.queryByokakin(approvalDetailsQuery, []);
+
+
+
+      let res = []
+
+      res = rateListRes.rows.map((obj)=>{
+        const ind = approvalDetailsQueryRes.rows.findIndex((ele)=> (obj.customer_id==ele.customer_cd ? true : false))
+
+        if(ind!== -1) {
+          return {...obj, ...approvalDetailsQueryRes.rows[ind]}
+        }else{
+          return {...obj}
+        }
+      })
+
+
+      return res;
     } catch (error) {
       return error;
     }
@@ -14,7 +35,26 @@ module.exports = {
     try {
       const query = "select * from sonus_outbound_rates where deleted=false";
       const rateListRes = await db.query(query, [], ipsPortal = true);
-      return rateListRes.rows;
+      const approvalDetailsQuery = `select * from byokakin_rate_approval_status where (step1_status ='pending' OR  step2_status ='pending' ) and carrier='SonusOutbound'` ;
+
+      const approvalDetailsQueryRes = await db.queryByokakin(approvalDetailsQuery, []);
+
+      let res = []
+
+      res = rateListRes.rows.map((obj)=>{
+        const ind = approvalDetailsQueryRes.rows.findIndex((ele)=> (obj.customer_id==ele.customer_cd ? true : false))
+
+        if(ind!== -1) {
+          return {...obj, ...approvalDetailsQueryRes.rows[ind]}
+        }else{
+          return {...obj}
+        }
+      })
+
+
+
+
+      return res;
     } catch (error) {
       return error;
     }
@@ -93,6 +133,10 @@ module.exports = {
 
       const queryUpdate = `update sonus_outbound_rates set ${updateData} where customer_id = '${data.customer_cd}'`;
       const resUpdate = await db.query(queryUpdate, [], ipsPortal = true);
+
+
+      await checkApprovalStatus(data, 'SonusOutbound') ;
+
       if (resUpdate && resUpdate.rows) {
         return resUpdate.rows[0];
       }
@@ -168,4 +212,63 @@ function verifyPassword(password, user) {
       }
     });
   });
+}
+
+
+async function checkApprovalStatus(data, carrier) {
+
+  const checkApprovalStatus = `select * from byokakin_rate_approval_status where customer_cd ='${data.customer_cd}' and carrier ='${carrier}' ` ;
+  const checkApprovalStatusRes  = await db.queryByokakin(checkApprovalStatus, []);
+
+  if(checkApprovalStatusRes && checkApprovalStatusRes.rows && checkApprovalStatusRes.rows.length>0 ){
+
+    const addHistory = `insert into byokakin_rate_approval_status_history 
+    (customer_cd, added_by, added_date, step1_status, step1_approver, step1_approved_time, step2_status,
+     step2_approver, step2_approved_time, comment_1, comment_2, carrier) select customer_cd, added_by, 
+     added_date, step1_status, step1_approver, step1_approved_time, step2_status, step2_approver, 
+     step2_approved_time, comment_1, comment_2, carrier from byokakin_rate_approval_status 
+     where customer_cd ='${data.customer_cd}' and carrier ='${carrier}' ` ; 
+
+     const addHistoryRes = await db.queryByokakin(addHistory, []);
+
+    const updateApprovalStatus = `update byokakin_rate_approval_status set step1_status='pending' , added_date=now(), 
+    added_by='${data.modified_by}' where customer_cd ='${data.customer_cd}' and carrier ='${carrier}' `
+
+
+
+    const updateApprovalStatusRes = await db.queryByokakin(updateApprovalStatus, []);
+
+  }else{
+    const approvalInsertQuery = `insert into byokakin_rate_approval_status
+     (customer_cd, added_by, added_date, step1_status, step1_approver, 
+      step1_approved_time, step2_status, step2_approver, step2_approved_time, comment_1, comment_2, carrier) VALUES 
+      ('${data.customer_cd}','${data.modified_by}',now(), 'pending' ,'', null, '','',null,'','','${carrier}' ) ` ;
+
+    const approvalRes = await db.queryByokakin(approvalInsertQuery, []);
+  }
+
+  const subject =`Change Request in Byokakin ${carrier} Rate : ${data.customer_cd}` ;
+
+
+  const html = `Hi Team
+  <br>
+  There is change Request in Byokakin ${carrier} Rate for below company : ${data.customer_cd} 
+  <br>
+  Requested by: ${data.modified_by}
+  <br>
+  URL : http://billing.toadm.com/company
+  Thank you
+  `;
+
+
+  const mailOption = {
+    from: 'ips_tech@sysmail.ipsism.co.jp',
+    to: 'uday@ipsism.co.jp',
+    //cc: 'y_ito@ipsism.co.jp',
+    //     cc:'gaurav@ipsism.co.jp,abhilash@ipsism.co.jp,vijay@ipsism.co.jp',
+    subject,
+    html
+  }
+  utility.sendEmail(mailOption);
+
 }

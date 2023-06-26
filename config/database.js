@@ -355,6 +355,24 @@ module.exports = {
     }
   },
 
+  querySonus: async function (text, values) {
+    console.log("query=" + text + "----" + values);
+    try {
+      types.setTypeParser(1114, function (stringValue) {
+        return stringValue;
+      })
+      let connectionStringSonus = config.SONUSDBWITHOUTTIMEZONE;
+      const pool = await new Pool(connectionStringSonus)
+      const res = await pool.query(text, values);
+      // console.log("data==="+JSON.stringify(res));
+      return (res);
+    } catch (err) {
+      console.log("Error while quering" + err.message)
+      return handleErrorMessages(err);
+    }
+
+  },
+
   queryIBS: async function (text, values) {
     console.log("query=" + text + "----" + values);
     try {
@@ -423,6 +441,8 @@ module.exports = {
       });
     });
   }
+
+  
 };
 
 

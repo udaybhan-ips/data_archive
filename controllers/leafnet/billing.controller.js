@@ -21,12 +21,23 @@ module.exports = {
            billingMonth='0'+billingMonth;
         }
   
+        const tableName = `cdr_sonus_billing_${billingYear}${billingMonth}`;
+
+        const checkTableExistRes = await BillingLeafnet.checkTableExist(tableName);
+       // const targetDay = new Date(Dates.targetDate).getDate();
+  
+        if (!checkTableExistRes) {
+            // create table here
+            const checkTableExistRes = await BillingLeafnet.createBillingTable(tableName);          
+        }
+
+
         const [getCDRRes, getCDRResErr] = await handleError( BillingLeafnet.getTargetCDR(billingYear, billingMonth));
         if(getCDRResErr) {
             throw new Error('Could not fetch CDRes');  
         }
     
-        const [billing, billingErr] = await handleError(BillingLeafnet.insertByBatches(getCDRRes, ratesDetails));
+        const [billing, billingErr] = await handleError(BillingLeafnet.insertByBatches(getCDRRes, ratesDetails, tableName));
         if(billingErr) {
             throw new Error('Error while billing '+ billingErr);  
         }

@@ -501,7 +501,7 @@ async function getInvoiceData(company_code, year, month) {
   try {
     const query = `select * from (select (amount) amount, 0 as cdr_amount, (amount) kotei_amount , 
     comp_acco__c, cdrid, productname, taxinclude, account
-     from kddi_kotei_bill_details where bill_start__c::date ='${year}-${month}-01}' and comp_acco__c = '${company_code}'
+     from kddi_kotei_bill_details where bill_start__c::date ='${year}-${month}-01' and comp_acco__c = '${company_code}'
       UNION ALL
        select   sum( case when terminaltype!='その他' then finalcallcharge else 0 end) as amount ,
        sum( case when terminaltype!='その他' then finalcallcharge else 0 end) as amount, 0 as kotei_amount ,

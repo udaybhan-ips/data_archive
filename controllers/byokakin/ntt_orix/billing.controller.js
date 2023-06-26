@@ -1,6 +1,6 @@
 var BillingByokakin = require('../../../models/byokakin/ntt_orix/billing');
 const dateId = 3;
-const billingMonth = '03', billingYear = "2023";
+const billingMonth = '05', billingYear = "2023";
 const carrier = 'NTTORIX'
 
 module.exports = {

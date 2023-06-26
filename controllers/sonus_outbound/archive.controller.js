@@ -15,10 +15,13 @@ module.exports = {
 
       const deleteTargetDateData = await ArchiveSonusOutbound.deleteTargetDateCDR(Dates.targetDate);
 
+      //const getAllTrunkgroupRes = await ArchiveSonusOutbound.getAllTrunkgroup('00001371');00000989
       const getAllTrunkgroupRes = await ArchiveSonusOutbound.getAllTrunkgroup();
+
+
       const getRatesRes = await ArchiveSonusOutbound.getRates();
 
-      console.log(JSON.stringify(getAllTrunkgroupRes));
+      //console.log(JSON.stringify(getAllTrunkgroupRes));
 
       let trunkPortsVal = '';
       let TGsWithIncalledNum = [];

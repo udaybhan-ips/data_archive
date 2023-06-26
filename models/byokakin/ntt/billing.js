@@ -66,7 +66,7 @@ module.exports = {
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
       where  is_deleted = false       and service_type ->> 'ntt_customer'  = 'true' 
-      and customer_cd in ('00000130','00000938')
+     and customer_cd in ('00000967')
        order by customer_code   `;
       // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getNTTCompListRes = await db.query(query, [], true);
@@ -93,7 +93,7 @@ module.exports = {
       const query = `select  raw_cdr.*, 0 as callcount104 from 
       byokakin_ntt_rawcdr_outbound_${billingYear}${billingMonth}  raw_cdr join ntt_kddi_freedial_c free_dial on 
       (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g') = free_dial.free_numb__c 
-      and free_dial.cust_code__c::int = '${customer_code}' and 
+      and free_dial.cust_code__c::int = '${customer_code}' and   
       (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')  
       and  free_dial.carr_comp__c='NTT' ) ${where} `;
 
@@ -118,7 +118,7 @@ module.exports = {
       let where = `where raw_cdr.carriertype ='NTT'`; 
       const query = `select  raw_cdr.*,  0 as callcount104 from 
       byokakin_ntt_rawcdr_inbound_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
-      (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g')=free_dial.free_numb__c  and 
+      (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g')=free_dial.free_numb__c  and  
       (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')
       and free_dial.cust_code__c::int = '${customer_code}' and  free_dial.carr_comp__c='NTT'  ) ${where} `;
 

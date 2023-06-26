@@ -15,6 +15,7 @@ module.exports = {
           return error;
       }
   },
+  
   getAllMVNOCustomer: async function() {
     try {
           const query=`select * from mvno_customer  where deleted=false  order by customer_id, did`;
@@ -56,7 +57,7 @@ module.exports = {
 
   createSummaryData: async function(customer_name, customer_id, year, month, did, invoice_no) {
     console.log("summary");
-  
+    let numberOfDays= 1;
     try {
       
         let  getSummaryData = "";
@@ -64,11 +65,11 @@ module.exports = {
         if(customer_name == 'MEISHIN'){
 
           getSummaryData=` select sum(duration_use::numeric) as duration ,count(*) as total, sum (CEILING(duration_use::numeric)*.23)as bill,
-          '33328230' as dnis  from cdr_202304 where term_ani like  '00328230%' ` ;
+          '33328230' as dnis  from cdr_${year}${month} where term_ani like  '00328230%' ` ;
 
         }else{
           getSummaryData=`select dnis, sum(billableseconds)as duration, sum(billableseconds*0.23) as bill, count(*) total from
-          calltemp_excel2 where dnis='${did}' and starttime >= '2023-03-31 15:00:00' and starttime <='2023-04-30 14:59:59' 
+          calltemp_excel2 where dnis='${did}' and starttime >= '2023-04-30 15:00:00' and starttime <='${year}-${month}-${new Date(year, month, 0).getDate()} 14:59:59' 
           group by dnis order by dnis` ;
         }
 
@@ -114,7 +115,7 @@ module.exports = {
     try {
         
         const getSummaryData=`select count(*) as total, sum(Duration::int) as duration, sum(Call_Charge) as bill from
-          CDR_FPHONE where LEG='${leg}'and start_time between '2023/04/01 00:00:00' and '2023/04/30 23:59:59' and 
+          CDR_FPHONE where LEG='${leg}'and to_char(start_time, 'MM-YYYY') = '${month}-${year}'  and 
           Company_Code='${customer_id}' and call_charge !='NaN'` ;
 
         const sonusDataRows= await db.queryIBS(getSummaryData,[]);

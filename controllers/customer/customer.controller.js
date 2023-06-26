@@ -2,8 +2,8 @@ var Customer = require('../../models/customer/customer');
 
 module.exports = {
 
-  updateByokiakinRateApproveStep1: function(req, res) {
-    Customer.updateByokiakinRateApproveStep1(req.body)
+  updateByokiakinRateApproval: function(req, res) {
+    Customer.updateByokiakinRateApproval(req.body)
       .then(function(result) {
         return res.status(200).json(result);
       })

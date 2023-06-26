@@ -1,12 +1,14 @@
 var utility= require('../../public/javascripts/utility');
 var db = require('./../../config/database');
 const  BATCH_SIZE  = 1000000;
-const CDR_SONUS_BILLING_CS='cdr_sonus_billing_cs';
-
 var PDFDocument = require("pdfkit");
-
 var fs = require("fs");
+const pgp = require('pg-promise')({
+  capSQL: true
+});
 
+let ColumnSetLeafnetBilling = ['cdr_id', 'rate_id', 'bill_number', 'bill_date', 'bleg_call_amount', 'ips_call_amount','remarks', 'total_amount', 
+'type_of_service'];
 
 module.exports = {
   getRates: async function() {
@@ -40,14 +42,53 @@ module.exports = {
 getTargetCDR: async function(year, month) {
 
     try {
-        const query=`SELECT billing_comp_code, term_carrier_id, duration_use, cdr_id  from 
-        CDR_SONUS where to_char(start_time, 'MM-YYYY') = '${month}-${year}' and type_of_service='Leafnet_006751'`  ;
+        const query=`SELECT billing_comp_code, term_carrier_id, duration_use, cdr_id, type_of_service  from 
+        CDR_SONUS where to_char(start_time, 'MM-YYYY') = '${month}-${year}' `  ;
         const data= await db.query(query);
         return data.rows;
     } catch (error) {
         return error;
     }
 }, 
+
+checkTableExist: async function (tableName, database="sonus_db") {
+  try {
+    let checkTableExistRes = false; 
+    const query = `SELECT EXISTS ( SELECT FROM information_schema.tables WHERE  table_schema ='public' AND table_name = '${tableName}' )` ;
+    if(database === "ibs"){
+      checkTableExistRes = await db.queryIBS(query,[]);
+    }else{
+      checkTableExistRes = await db.query(query,[]);
+    }
+    
+    if (checkTableExistRes && checkTableExistRes.rows) {
+      return checkTableExistRes.rows[0]['exists']
+    }
+    return checkTableExistRes;
+
+  } catch (e) {
+    console.log("err in get table=" + e.message);
+    throw new Error("Error in checking table exist!!"+e.message)
+  }
+},
+
+createBillingTable: async function (tableName) {
+  try {
+    const query =` CREATE TABLE IF NOT EXISTS "${tableName}" (bill_id BIGSERIAL, cdr_id bigint, rate_id bigint, bill_number integer,
+    bill_date TIMESTAMP WITHout TIME ZONE not null , bleg_call_amount numeric , ips_call_amount numeric,
+    remarks varchar, total_amount numeric, type_of_service varchar)` ;
+
+    const tableCreationRes = db.query(query, []);
+    if(tableCreationRes ){
+      return tableCreationRes;
+    }
+    throw new Error("Error while creating table..."+tableCreationRes)
+
+  } catch (e) {
+    throw new Error("Error while creating table..."+e.message)
+  }
+},
+
 deleteSummaryData: async function(customer_id,billing_year, billing_month) {
   try {
       const query=`delete FROM cdr_sonus_outbound_summary where customer_id='${customer_id}' and billing_month='${billing_month}' and billing_year='${billing_year}' `;
@@ -65,7 +106,7 @@ createSummaryData: async function(customer_id, year, month) {
       
       const getSummaryData=`select SUM(FLOOR(total_amount))as total_amount, sum(total_duration) as total_duration  from  
       (select b.Term_Carrier_ID  || '-' || c.Carrier_Name as carrier_name_id, SUM(b.Duration_Use) as total_duration, 
-      round(SUM(a.total_amount), 2) as total_amount from CDR_SONUS_BILLING a, CDR_SONUS b, CDR_SONUS_RATE c 
+      round(SUM(a.total_amount), 2) as total_amount from CDR_SONUS_BILLING_${year}${month} a, CDR_SONUS b, CDR_SONUS_RATE c 
       where a.CDR_ID = b.CDR_ID and a.Rate_ID = c.Rate_ID and to_char(b.start_time, 'MM-YYYY') = '${month}-${year}' 
       group by b.Term_Carrier_ID, c.Carrier_Name )as foo` ;
       const sonusDataRows= await db.query(getSummaryData,[]);
@@ -97,13 +138,14 @@ createSummaryData: async function(customer_id, year, month) {
 },
 
 
-insertByBatches: async function(records, ratesData) {
+insertByBatches: async function(records, ratesData, tableName) {
 
     console.log("start inserting....");
 
     let res=[];
     let resArr=[];
     let ipsRates, JSON_data, chunkArray;
+    let ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetLeafnetBilling, { table: tableName })   
     try{
         ipsRates = await getRates('00000130','',ratesData);
         JSON_data = Object.values(JSON.parse(JSON.stringify(records)));
@@ -111,7 +153,7 @@ insertByBatches: async function(records, ratesData) {
     
         for(let i=0;i<chunkArray.length;i++){
             const data = await getNextInsertBatch(chunkArray[i], ipsRates, ratesData);
-            res=await db.queryBatchInsertWithoutColumnSet(data,CDR_SONUS_BILLING_CS);
+            res= await db.queryBatchInsert(data, 'sonus', ColumnSetValue);
             resArr.push(res);
         }
     }catch(err){
@@ -165,7 +207,7 @@ insertByBatches: async function(records, ratesData) {
 async function getInvoiceData(year, month) {
     try {
         const query=`select b.Term_Carrier_ID  || '-' || c.Carrier_Name as carrier_name_id, SUM(b.Duration_Use) as total_duration, 
-        round(SUM(a.total_amount), 2) as total_amount from CDR_SONUS_BILLING a, CDR_SONUS b, CDR_SONUS_RATE c
+        round(SUM(a.total_amount), 2) as total_amount from CDR_SONUS_BILLING_${year}${month} a, CDR_SONUS b, CDR_SONUS_RATE c
          where a.CDR_ID = b.CDR_ID and a.Rate_ID = c.Rate_ID and to_char(b.start_time, 'MM-YYYY') = '${month}-${year}' 
          group by b.Term_Carrier_ID, c.Carrier_Name order by b.Term_Carrier_ID`;
         const ratesRes= await db.query(query,[]);
@@ -416,6 +458,7 @@ async function getNextInsertBatch(data, ipsRates, ratesData) {
        obj['ips_call_amount']=ipsCallAmount;
        obj['total_amount']=totalCallAmount;
        obj['remarks']='re';
+       obj['type_of_service'] = data[i]['type_of_service'];
        
        if(rates['rateId']==null || rates['rateId']=='' || rates['rateId']=='null'){
             console.log(JSON.stringify(data[i]));
