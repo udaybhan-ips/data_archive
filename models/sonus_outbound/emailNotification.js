@@ -46,9 +46,17 @@ module.exports = {
         }
 
         try {
-            const query = `select count(*) as total, sum(duration) as duration, start_time::date as day, billing_comp_name,billing_comp_code from 
-          cdr_sonus_outbound where to_char(start_time, 'MM-YYYY') = '${month}-${year}'  group by start_time::date, billing_comp_name,
-          billing_comp_code order by start_time::date asc `;
+            const query = `select count(*) as total, sum(duration) as duration, start_time::date as day, billing_comp_code,
+            sum( case when ( left(sonus_egcallednumber,2)='70' OR left(sonus_egcallednumber,2) = '80' OR 
+            left(sonus_egcallednumber,2)='90' ) then 1 else 0 end) as mobile_count,
+            sum( case when ( left(sonus_egcallednumber,2)='70' OR  left(sonus_egcallednumber,2)='80' OR left(sonus_egcallednumber,2)='90' ) 
+            then 0 else 1 end) as landline_count,
+            sum( case when ( left(sonus_egcallednumber,2)='70' OR  left(sonus_egcallednumber,2)='80' OR left(sonus_egcallednumber,2)='90' ) 
+            then duration else 0 end) as mobile_duration,
+            sum( case when ( left(sonus_egcallednumber,2)='70' OR  left(sonus_egcallednumber,2)='80' OR left(sonus_egcallednumber,2)='90' ) 
+            then 0 else duration end) as landline_duration  from 
+            cdr_sonus_outbound where to_char(start_time, 'MM-YYYY') = '${month}-${year}'  group by start_time::date, 
+            billing_comp_code order by start_time::date asc `;
 
             let ratesRes = []
             ratesRes = await db.querySonus(query, []);
@@ -193,8 +201,9 @@ module.exports = {
 
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
+            //to:'telcom@ipspro.co.jp',
             to: 'uday@ipspro.co.jp',
-            // cc:'y_ito@ipsism.co.jp',
+            // cc:'y_ito@ipsism.co.jp,uday@ipspro.co.jp',
             subject: 'SONUS OUTBOUND CDR CHECK',
             html
         }
@@ -366,7 +375,8 @@ function tableCreate(processData, customerInfo) {
     // console.log("create table---");
     let tableRows = '';
 
-    let length = processData.length, locS, locE, table = '', html = '', totalCalls = 0, totalDuration = 0;
+    let length = processData.length, locS, locE, table = '', html = '', totalCalls = 0, totalDuration = 0; 
+    let totalLandlineCalls = 0, totalLandlineDuration = 0, totalMobileCalls = 0, totalMobileDuration = 0 ;
 
     if (length == 0) {
         return '';
@@ -386,8 +396,20 @@ function tableCreate(processData, customerInfo) {
             totalCalls += parseInt(processData[i]['total'], 10);
             totalDuration += parseInt(processData[i]['duration']);
 
+            totalLandlineCalls += parseInt(processData[i]['landline_count'], 10);
+            totalLandlineDuration += parseFloat(processData[i]['landline_duration']);
+            totalMobileCalls += parseInt(processData[i]['mobile_count'], 10);
+            totalMobileDuration += parseFloat(processData[i]['mobile_duration']);
+
             tableRows += '<tr>';
             tableRows += `<td class="day">${utility.getCurrentYearMonthDay(processData[i]['day'])}</td>`;
+
+            tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(processData[i]['landline_count'])}</td>`;
+            tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(processData[i]['landline_duration'], 10))}</td>`;
+
+            tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(processData[i]['mobile_count'])}</td>`;
+            tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(processData[i]['mobile_duration'], 10))}</td>`;
+
             tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(processData[i]['total'])}</td>`;
             tableRows += `<td style="text-align:right" class="Processed Data">${utility.numberWithCommas(parseInt(processData[i]['duration']), 10)}</td>`;
             tableRows = tableRows + '</tr>';
@@ -395,6 +417,13 @@ function tableCreate(processData, customerInfo) {
 
         tableRows += '<tr>';
         tableRows += `<td class="day">Summary</td>`;
+
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(totalLandlineCalls)}</td>`;
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(totalLandlineDuration, 10))}</td>`;
+
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(totalMobileCalls)}</td>`;
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(totalMobileDuration, 10))}</td>`;
+
         tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(totalCalls)}</td>`;
         tableRows += `<td style="text-align:right" class="Processed Data">${utility.numberWithCommas(parseInt(totalDuration, 10))}</td>`;
         tableRows = tableRows + '</tr>';
@@ -413,7 +442,18 @@ function tableCreate(processData, customerInfo) {
 
 
         table += `<table class='some-table' border="2" style='${style}'>
-             <thead> <tr> <th>DATE</th> <th>Processed Call Count</th> <th>Processed Duration</th> </tr> </thead>             
+             <thead> 
+                <tr> 
+                    <th>DATE</th> 
+                    <th>Processed Call Landline Count</th> 
+                    <th>Processed Landline Duration</th> 
+                    <th>Processed Mobile Call Count</th> 
+                    <th>Processed Mobile Duration</th> 
+
+                    <th>Processed Call Count</th> 
+                    <th>Processed Duration</th> 
+                </tr> 
+            </thead>             
         <tbody>
         ${tableRows}    
         </tbody>
@@ -428,7 +468,7 @@ function tableCreate(processData, customerInfo) {
     }
 
 
-    let div = `<div style="margin: auto;width: 50%;padding: 10px;">${table}</div>`;
+    let div = `<div style="margin: auto;width: 100%; padding: 10px;">${table}</div>`;
 
     html += div;
     // html+="Thank you";

@@ -66,7 +66,7 @@ module.exports = {
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
       where  is_deleted = false       and service_type ->> 'ntt_customer'  = 'true' 
-     and customer_cd in ('00000967')
+     and customer_cd in ('00001092')
        order by customer_code   `;
       // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getNTTCompListRes = await db.query(query, [], true);
@@ -497,7 +497,7 @@ async function getInvoiceData(company_code, year, month) {
           '' as  comp_code, 0 as cdrid, 'ＮＴＴコミュニケーションズ' as servicename, 'その他通話料' as productname, '合算10％' as taxinclude, 
           replace(callingnumber,'-','') as account   from  byokakin_ntt_processedcdr_${year}${month} 
             where customercode='${company_code}' and ( case when terminaltype='その他' then finalcallcharge else 0 end) > 0 group by  callingnumber              
-      )as foo order by account, servicename` ;
+      )as foo order by account, productname` ;
     const ratesRes = await db.queryByokakin(query, []);
 
     if (ratesRes.rows) {

@@ -34,16 +34,16 @@ module.exports = {
        (case when calltype='公衆' then (select public_rate->>'ips_rate' from ntt_kddi_rate_c where customer_code=customercode and serv_name='KDDI') 
        end) end) end ) 
       as ips_rate, 
-      sale_price, ips_price, sale_price-ips_price as diff, totol_calls, total_duration,
-       callchargebycarrier
+      sale_price, ips_price, sale_price-ips_price as diff, totol_calls, total_duration
+       
          from (select '${year}-${month}' as cdrmonth, customercode, 
       (select customer_name from m_customer where customer_cd=customercode) as customer_name,  terminaltype as calltype , 
-      sum(finalcallcharge) as sale_price, sum(vendorcallcharge) as ips_price , count(*) as totol_calls, sum(callduration::int) as total_duration, sum(cdrcallcharge) as callchargebycarrier 
+      sum(finalcallcharge) as sale_price, sum(vendorcallcharge) as ips_price , count(*) as totol_calls, sum(callduration::int) as total_duration 
       from byokakin_kddi_processedcdr_${year}${month}   group by customercode, terminaltype, cdrmonth) as kddi
       
       UNION ALL
       
-      select  carriertype as carrier, cdrmonth, customercode, customer_name, calltype,
+      select  'NTT' as carrier, cdrmonth, customercode, customer_name, calltype,
       ( case when calltype='携帯' then (select mobile_rate->>'sale_rate' from ntt_kddi_rate_c where customer_code=customercode and serv_name='NTT') ELSE
        (case when calltype='固定' then (select fixed_rate->>'sale_rate' from ntt_kddi_rate_c where customer_code=customercode and serv_name='NTT')
        ELSE (case when calltype='公衆' then (select public_rate->>'sale_rate' from ntt_kddi_rate_c where customer_code=customercode and serv_name='NTT') end) end) end )
@@ -53,30 +53,53 @@ module.exports = {
        (case when calltype='公衆' then (select public_rate->>'ips_rate' from ntt_kddi_rate_c where customer_code=customercode and serv_name='NTT')
        end) end) end )
       as ips_rate,
-      sale_price, ips_price, sale_price-ips_price as diff, totol_calls, total_duration,  callchargebycarrier
+      sale_price, ips_price, sale_price-ips_price as diff, totol_calls, total_duration
          from (select '${year}-${month}' as cdrmonth, customercode,
       (select customer_name from m_customer where customer_cd=customercode) as customer_name,  terminaltype as calltype ,
-      sum(finalcallcharge) as sale_price, sum(vendorcallcharge) as ips_price , count(*) as totol_calls, sum(callduration::int) as total_duration, sum(cdrcallcharge) as callchargebycarrier, carriertype
-      from byokakin_ntt_processedcdr_${year}${month}  group by customercode,carriertype, terminaltype, cdrmonth) as ntt
+      sum(finalcallcharge) as sale_price, sum(vendorcallcharge) as ips_price , count(*) as totol_calls, sum(callduration::int) as total_duration
+      from byokakin_ntt_processedcdr_${year}${month}  group by customercode, terminaltype, cdrmonth) as ntt
        order by customercode, carrier ` ;
-
-
       const queryByokakinDataPart_1Res = await db.queryByokakin(queryByokakinDataPart_1, []);
+
 
       const queryByokakinDataPart_2 = `select carrier, customercode, 'kotehi' as calltype ,  fixed_cost_subtotal as sale_price, 
       to_char(cdrmonth::date, 'YYYY-MM') as cdrmonth from byokakin_billing_history 
-      where cdrmonth::date='${year}-${month}-1' ` ;
+      where cdrmonth::date='${year}-${month}-1' and carrier!='NTTORIX' ` ;
 
-      const queryByokakinDataPart_2Res = await db.queryByokakin(queryByokakinDataPart_2, []);
+      let queryByokakinDataPart_2Res = await db.queryByokakin(queryByokakinDataPart_2, []);
 
-      const queryNTTKotehiIPS = `select carrier, comp_acco__c as  customercode, 'kotehi' as calltype, sum(kingaku) as ips_price,
+      const queryByokakinDataPart_NTTORIX_2 = `select carrier, customercode, 'kotehi' as calltype ,  fixed_cost_subtotal as sale_price, 
+      to_char(cdrmonth::date, 'YYYY-MM') as cdrmonth from byokakin_billing_history 
+      where cdrmonth::date='${year}-${month}-1' and carrier='NTTORIX' ` ;
+
+      const queryByokakinDataPart_NTTORIX_2Res = await db.queryByokakin(queryByokakinDataPart_NTTORIX_2, []);
+
+      let queryByokakinDataPartKotehi = queryByokakinDataPart_2Res.rows; 
+      let queryByokakinDataPartORIX =  queryByokakinDataPart_NTTORIX_2Res.rows;
+      
+      queryByokakinDataPartORIX.forEach((obj, index)=>{
+        
+        let ind = queryByokakinDataPartKotehi.findIndex((ele)=> (ele.carrier=='NTT' && ele.customercode==obj.customercode ) )
+
+        if(ind !== -1) {
+          queryByokakinDataPartKotehi[ind] = {...obj, carrier: 'NTT', sale_price: (parseInt(obj.sale_price, 10) + parseInt(queryByokakinDataPartKotehi[ind].sale_price) ) }
+        }else{
+          queryByokakinDataPartKotehi.push({...queryByokakinDataPartORIX[index], carrier: 'NTT'} )
+        }
+
+      })
+
+
+    //  console.log("queryByokakinDataPart_2Res.."+JSON.stringify(queryByokakinDataPart_2Res));
+
+      const queryNTTKotehiIPS = `select 'NTT' as carrier, comp_acco__c as  customercode, 'kotehi' as calltype, sum(kingaku) as ips_price,
       to_char(datebill::date, 'YYYY-MM') as cdrmonth from ntt_koteihi_cdr  where  (seikyuuuchiwake not ilike '%通話料%' AND 
       seikyuuuchiwake not ilike '%消費税%' AND seikyuuuchiwake not ilike '%割引%' and seikyuuuchiwake not ilike '%料金補正%')  and  
-      datebill::date ='${year}-${month}-01' group by comp_acco__c, carrier, cdrmonth` ;
+      datebill::date ='${year}-${month}-01' group by comp_acco__c, cdrmonth` ;
 
       const queryNTTKotehiIPSRes = await db.queryByokakin(queryNTTKotehiIPS, []);
       
-      let queryNTTKotehiData = queryByokakinDataPart_2Res.rows.map((obj1)=>(
+      let queryNTTKotehiData = queryByokakinDataPartKotehi.map((obj1)=>(
         {...obj1, ...queryNTTKotehiIPSRes.rows.find((obj2)=>(obj1.carrier==obj2.carrier && obj1.customercode==obj2.customercode))}
       ))
 
@@ -119,23 +142,23 @@ module.exports = {
       const sonusOutboundKotehiRes = await db.queryByokakin(sonusOutboundKotehi, []);
 
 
-      const getNumberOfChannelSonusOutboundQuery = `select 'SonusOutbound' as  carrier , round(sum(amount)/1200.0,2) as sale_price,
-       'number_of_channel' as  calltype , comp_acco__c as customercode, '${year}-${month}' as cdrmonth from ips_kotehi_cdr_bill
+      const getNumberOfChannelSonusOutboundQuery = `select 'SonusOutbound' as  carrier , ceil(sum(amount)/1200.0) as number_of_channel,
+       'kotehi' as  calltype , comp_acco__c as customercode, '${year}-${month}' as cdrmonth from ips_kotehi_cdr_bill
       where to_char(datebill::date, 'MM-YYYY')='${month}-${year}'  and ips_product_name in ('チャネル利用料')
       group by comp_acco__c order by comp_acco__c`;
 
       const getNumberOfChannelSonusOutboundRes = await db.queryByokakin(getNumberOfChannelSonusOutboundQuery, []);
 
-      const getNumberOfChannelKDDIQuery = `select 'KDDI' as  carrier , round(sum(amount)/1200.0,2) as sale_price,
-       'number_of_channel' as  calltype , '0000' ||substring(split_part(bill_numb__c, '-',2),4) as customercode, '${year}-${month}' as cdrmonth 
+      const getNumberOfChannelKDDIQuery = `select 'KDDI' as  carrier , ceil(sum(amount)/1200.0) as number_of_channel,
+       'kotehi' as  calltype , '0000' || substring(split_part(bill_numb__c, '-',2),4) as customercode, '${year}-${month}' as cdrmonth 
        from kddi_kotei_bill_details  where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}'  and productname in ('追加ｃｈ基 本料','月額利用料')
-      group by '0000' ||substring(split_part(bill_numb__c, '-',2),4) order by  '0000' ||substring(split_part(bill_numb__c, '-',2),4)`;
+      group by '0000' || substring(split_part(bill_numb__c, '-',2),4) order by  '0000' ||substring(split_part(bill_numb__c, '-',2),4)`;
 
       const getNumberOfChannelSonusKDDIRes = await db.queryByokakin(getNumberOfChannelKDDIQuery, []);
 
-      const getNumberOfChannelNTTQuery = `select 'NTT' as  carrier , round(sum(kingaku)/1200.0,2) as sale_price,
-       'number_of_channel' as  calltype , comp_acco__c as customercode, '${year}-${month}' as cdrmonth from ntt_koteihi_cdr_bill
-      where to_char(datebill::date, 'MM-YYYY')='${month}-${year}'  and seikyuuuchiwake in 
+      const getNumberOfChannelNTTQuery = `select 'NTT' as  carrier , ceil(sum(kingaku)/1200.0) as number_of_channel,
+       'kotehi' as  calltype , comp_acco__c as customercode, '${year}-${month}' as cdrmonth from ntt_koteihi_cdr_bill
+      where to_char(datebill::date, 'MM-YYYY') = '${month}-${year}'  and seikyuuuchiwake in 
       ('ＩＰＶ　アクセスセット基本料','ＩＰＶアクセスセット基本 料','チャネル追加利用料')
       group by comp_acco__c order by comp_acco__c`;
 
@@ -149,18 +172,47 @@ module.exports = {
       const res3 = querySonusOutboundLandlineDataRes.rows;
       const res4 = querySonusOutboundMobileDataRes.rows;
       const res5 = sonusOutboundKotehiRes.rows;
+
+
+     
       const res6 = getNumberOfChannelSonusOutboundRes.rows;
       const res7 = getNumberOfChannelSonusKDDIRes.rows;
       const res8 = getNumberOfChannelNTTRes.rows;
 
-
+      
       Array.prototype.push.apply(res1, res2);
       Array.prototype.push.apply(res1, res3);
       Array.prototype.push.apply(res1, res4);
       Array.prototype.push.apply(res1, res5);
-      Array.prototype.push.apply(res1, res6);
-      Array.prototype.push.apply(res1, res7);
-      Array.prototype.push.apply(res1, res8);
+
+
+
+      res6.forEach((obj)=>{
+        let ind = res1.findIndex((ele)=> (ele.customercode == obj.customercode && ele.carrier == obj.carrier && ele.calltype== obj.calltype)) ;
+        if(ind !== -1 ){
+          res1[ind] = {...res1[ind], number_of_channel: obj.number_of_channel };
+        }
+      })
+
+      res7.forEach((obj)=>{
+        let ind = res1.findIndex((ele)=> (ele.customercode == obj.customercode && ele.carrier == obj.carrier && ele.calltype== obj.calltype)) ;
+        if(ind !== -1 ){
+          res1[ind] = {...res1[ind], number_of_channel: obj.number_of_channel };
+        }
+      })
+
+      res8.forEach((obj)=>{
+        let ind = res1.findIndex((ele)=> (ele.customercode == obj.customercode && ele.carrier == obj.carrier && ele.calltype== obj.calltype)) ;
+        if(ind !== -1 ){
+          res1[ind] = {...res1[ind], number_of_channel: obj.number_of_channel };
+        }
+      })
+
+
+
+      // Array.prototype.push.apply(res1, res6);
+      // Array.prototype.push.apply(res1, res7);
+      // Array.prototype.push.apply(res1, res8);
 
       //console.log("Ress..."+JSON.stringify(res1))
 
