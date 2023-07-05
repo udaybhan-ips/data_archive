@@ -119,22 +119,22 @@ module.exports = {
         {...obj1, ...queryKDDIKotehiIPSRes.rows.find((obj2)=>(obj1.customercode==obj2.customercode && obj1.carrier==obj2.carrier && obj1.calltype == obj2.calltype ))}
        ))
 
-      const querySonusOutboundLandlineData = `select 'SonusOutbound' as carrier , customer_id as customercode, 
+      const querySonusOutboundLandlineData = `select 'IPSP' as carrier , customer_id as customercode, 
       billing_year || '-' ||  billing_month as cdrmonth,
-       'landline_data' as calltype,  landline_amt as sale_price, 
+       '固定' as calltype,  landline_amt as sale_price, 
       landline_duration as total_duration , landline_count as totol_calls from cdr_sonus_outbound_summary       
       where billing_date::date = '${year}-${month}-1'` ;
 
       const querySonusOutboundLandlineDataRes = await db.query(querySonusOutboundLandlineData, []);
 
-      const querySonusOutboundMobileData = `select 'SonusOutbound' as carrier , customer_id as customercode, 
-      billing_year || '-' ||  billing_month as cdrmonth, 'mobile_data' as calltype,  mobile_amt as sale_price, 
+      const querySonusOutboundMobileData = `select 'IPSP' as carrier , customer_id as customercode, 
+      billing_year || '-' ||  billing_month as cdrmonth, '携帯' as calltype,  mobile_amt as sale_price, 
       mobile_duration as total_duration , mobile_count as totol_calls from  cdr_sonus_outbound_summary       
       where billing_date::date = '${year}-${month}-1'` ;
 
       const querySonusOutboundMobileDataRes = await db.query(querySonusOutboundMobileData, []);
 
-      const sonusOutboundKotehi = `select 'SonusOutbound' as  carrier , sum(amount) as sale_price, 'kotehi' as  calltype , 
+      const sonusOutboundKotehi = `select 'IPSP' as  carrier , sum(amount) as sale_price, 'kotehi' as  calltype , 
           comp_acco__c as customercode, '${year}-${month}' as cdrmonth from ips_kotehi_cdr_bill
           where to_char(datebill::date, 'MM-YYYY')='${month}-${year}'
           group by comp_acco__c, companyname`
@@ -142,7 +142,7 @@ module.exports = {
       const sonusOutboundKotehiRes = await db.queryByokakin(sonusOutboundKotehi, []);
 
 
-      const getNumberOfChannelSonusOutboundQuery = `select 'SonusOutbound' as  carrier , ceil(sum(amount)/1200.0) as number_of_channel,
+      const getNumberOfChannelSonusOutboundQuery = `select 'IPSP' as  carrier , ceil(sum(amount)/1200.0) as number_of_channel,
        'kotehi' as  calltype , comp_acco__c as customercode, '${year}-${month}' as cdrmonth from ips_kotehi_cdr_bill
       where to_char(datebill::date, 'MM-YYYY')='${month}-${year}'  and ips_product_name in ('チャネル利用料')
       group by comp_acco__c order by comp_acco__c`;

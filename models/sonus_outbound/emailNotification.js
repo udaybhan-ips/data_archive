@@ -95,15 +95,19 @@ module.exports = {
                 const actualStartDate = year + "-" + month + "-" + date + " 15:00:00";
 
                 //console.log("customer info="+JSON.stringify(customerInfo));
-                const query = `select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as day,
-                sum(CALLDURATION*0.01) AS total_duration from COLLECTOR_73 
+                const query = `select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as day, sum(CALLDURATION*0.01) AS total_duration,
+                sum( case when ( left(egcallednumber,2)='70' OR left(egcallednumber,2) = '80' OR left(egcallednumber,2)='90' ) then 1 else 0 end) as mobile_count,
+                sum( case when ( left(egcallednumber,2)='70' OR  left(egcallednumber,2)='80' OR left(egcallednumber,2)='90' ) then 0 else 1 end) as landline_count,
+                sum( case when ( left(egcallednumber,2)='70' OR  left(egcallednumber,2)='80' OR left(egcallednumber,2)='90' ) then CALLDURATION*0.01 
+                else 0 end) as mobile_duration, sum( case when ( left(egcallednumber,2)='70' OR  left(egcallednumber,2)='80' OR 
+                left(egcallednumber,2)='90' ) then 0 else CALLDURATION*0.01 end) as landline_duration  from COLLECTOR_73 
                 where INGRPSTNTRUNKNAME in (${trunkPortsVal})  AND RECORDTYPEID = 3 AND 
                 starttime>='${actualStartDate}' and  startTime < DATE_ADD("${actualStartDate}", INTERVAL 1 DAY) 
                 group by cast(addtime(starttime,'09:00:00') as Date) `;
 
 
-                const sharedTrunkPortsQuery = `select incallednumber, CALLDURATION*0.01 AS duration, ingrpstntrunkname  from COLLECTOR_73 
-                 where INGRPSTNTRUNKNAME in (${sharedTrunkPortsValue})  AND RECORDTYPEID = 3 AND 
+                const sharedTrunkPortsQuery = `select incallednumber, CALLDURATION*0.01 AS duration, ingrpstntrunkname, egcallednumber  
+                from COLLECTOR_73 where INGRPSTNTRUNKNAME in (${sharedTrunkPortsValue})  AND RECORDTYPEID = 3 AND 
                  starttime>='${actualStartDate}' and  startTime < DATE_ADD("${actualStartDate}", INTERVAL 1 DAY) `;
 
                 //console.log("sharedTrunkPortsQuery..." + sharedTrunkPortsQuery);
@@ -133,13 +137,27 @@ module.exports = {
                         })
                         return ind !== -1 ? true : false;
                     })
-                    const totalDuration = filterdData.reduce(
-                        (accumulator, currentValue) => accumulator + currentValue.duration,
-                        0,
-                    );
+                    let totalDuration = 0, landlineCount = 0, landLineDuration=0, mobileCount=0, mobileDuration=0;
+
+                    filterdData.forEach((ele)=>{
+                        totalDuration += ele.duration;
+                        if(ele.egcallednumber.substr(0,2) =='70' || ele.egcallednumber.substr(0,2) == '80' || ele.egcallednumber.substr(0,2) == '90' ){
+                            mobileCount += 1;
+                            mobileDuration += parseFloat(ele.duration);
+                        }else{
+                            landlineCount += 1;
+                            landLineDuration += parseFloat(ele.duration);
+                        }
+                    })
+
                     sharedTrunkPortsQueryResObj['total'] = filterdData.length;
                     sharedTrunkPortsQueryResObj['day'] = year + "-" + month + "-" + date;
                     sharedTrunkPortsQueryResObj['total_duration'] = totalDuration;
+
+                    sharedTrunkPortsQueryResObj['mobile_duration'] = mobileDuration;
+                    sharedTrunkPortsQueryResObj['landline_duration'] = landLineDuration;
+                    sharedTrunkPortsQueryResObj['mobile_count'] = mobileCount;
+                    sharedTrunkPortsQueryResObj['landline_count'] = landlineCount;
                 }
                 // console.log("sharedTrunkPortsQueryResObj" + JSON.stringify(sharedTrunkPortsQueryResObj));
 
@@ -154,6 +172,13 @@ module.exports = {
                     let tmpData = {};
                     tmpData['total'] = parseInt(rawData[0].total, 10) + parseInt(sharedTrunkPortsQueryResObj.total, 10)
                     tmpData['total_duration'] = parseFloat(rawData[0].total_duration) + parseFloat(sharedTrunkPortsQueryResObj.total_duration)
+
+                    tmpData['mobile_count'] = parseInt(rawData[0].mobile_count, 10) + parseInt(sharedTrunkPortsQueryResObj.mobile_count, 10)
+                    tmpData['mobile_duration'] = parseFloat(rawData[0].mobile_duration) + parseFloat(sharedTrunkPortsQueryResObj.mobile_duration)
+
+                    tmpData['landline_count'] = parseInt(rawData[0].landline_count, 10) + parseInt(sharedTrunkPortsQueryResObj.landline_count, 10)
+                    tmpData['landline_duration'] = parseFloat(rawData[0].landline_duration) + parseFloat(sharedTrunkPortsQueryResObj.landline_duration)
+
                     tmpData['day'] = rawData[0].day;
                     resData = [...resData, tmpData];
                 }
@@ -230,11 +255,8 @@ function tableCreateSummary(processData, rawData) {
 
     try {
 
-
         // console.log("locS in sumarry"+locS)
         // console.log("locE in sumarry"+locE)
-
-
 
         let processDataSummary = []
 
@@ -247,10 +269,23 @@ function tableCreateSummary(processData, rawData) {
             if (ind !== -1) {
                 processDataSummary[ind]['total'] = parseInt(element.total, 10) + parseInt(processDataSummary[ind].total, 10);
                 processDataSummary[ind]['duration'] = parseFloat(element.duration) + parseFloat(processDataSummary[ind].duration);
+
+                processDataSummary[ind]['mobile_count'] = parseInt(element.mobile_count, 10) + parseInt(processDataSummary[ind].mobile_count, 10);
+                processDataSummary[ind]['mobile_duration'] = parseFloat(element.mobile_duration) + parseFloat(processDataSummary[ind].mobile_duration);
+
+                processDataSummary[ind]['landline_count'] = parseInt(element.landline_count, 10) + parseInt(processDataSummary[ind].landline_count, 10);
+                processDataSummary[ind]['landline_duration'] = parseFloat(element.landline_duration) + parseFloat(processDataSummary[ind].landline_duration);
+
             } else {
                 tmpObj['day'] = utility.getCurrentYearMonthDay(element.day);
                 tmpObj['total'] = element.total;
                 tmpObj['duration'] = element.duration;
+
+                tmpObj['mobile_count'] = element.mobile_count;
+                tmpObj['mobile_duration'] = element.mobile_duration;
+                tmpObj['landline_count'] = element.landline_count;
+                tmpObj['landline_duration'] = element.landline_duration;
+                
                 processDataSummary.push(tmpObj);
             }
 
@@ -269,22 +304,28 @@ function tableCreateSummary(processData, rawData) {
         locS = utility.getCurrentYearMonthDay((rawData[0]['day']));
         locE = utility.getCurrentYearMonthDay(rawData[rawDataLength - 1]['day']);
 
-
-
-
         //console.log("processDataSummary..."+processDataSummary.length)
 
-
-
+        let rawLandlineCount = 0, rawLandlineDuration=0, rawMobileCount=0, rawMobileDuration=0, proLandlineCount = 0, proLandlineDuration=0, 
+        proMobileCount=0, proMobileDuration=0;
 
         for (let i = 0; i < processDataSummary.length; i++) {
 
             totalCalls += parseInt(processDataSummary[i]['total'], 10);
             totalDuration += parseFloat(processDataSummary[i]['duration']);
 
-            rawTotalCalls += parseInt(rawData[i]['total'], 10);
-            rawTotalDuration += parseFloat(rawData[i]['total_duration'], 10);
+            proLandlineCount += parseInt(processDataSummary[i]['landline_count'], 10)
+            proLandlineDuration += parseFloat(processDataSummary[i]['landline_duration'])
+            proMobileCount += parseInt(processDataSummary[i]['mobile_count'], 10)
+            proMobileDuration += parseFloat(processDataSummary[i]['mobile_duration'])
 
+            rawTotalCalls += parseInt(rawData[i]['total'], 10);
+            rawTotalDuration += parseFloat(rawData[i]['total_duration']);
+            
+            rawLandlineCount += parseInt(rawData[i]['landline_count'], 10)
+            rawLandlineDuration += parseFloat(rawData[i]['landline_duration'])
+            rawMobileCount += parseInt(rawData[i]['mobile_count'], 10)
+            rawMobileDuration += parseFloat(rawData[i]['mobile_duration'])
 
 
             // console.log("totalCalls"+totalCalls)
@@ -294,31 +335,90 @@ function tableCreateSummary(processData, rawData) {
 
             tableRows += '<tr>';
             tableRows += `<td class="day">${utility.getCurrentYearMonthDay(rawData[i]['day'])}</td>`;
-            tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(rawData[i]['total']), 10)}</td>`;
-            tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(processDataSummary[i]['total']), 10)}</td>`;
 
-            tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(rawData[i]['total'], 10) - parseInt(processDataSummary[i]['total']), 10)}</td>`;
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas(parseInt(rawData[i]['landline_count'], 10))}</td>`;
 
-            tableRows += `<td style="text-align:right" class="Processed Data">${utility.numberWithCommas(parseInt(rawData[i]['total_duration']), 10)}</td>`;
-            tableRows += `<td style="text-align:right" class="Processed Data">${utility.numberWithCommas(parseInt((processDataSummary[i]['duration'])), 10)}</td>`;
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas(parseInt(processDataSummary[i]['landline_count'], 10))}</td>`;
 
-            tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(rawData[i]['total_duration'], 10) - parseInt(processDataSummary[i]['duration'], 10))}</td>`;
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas(parseInt((parseFloat(rawData[i]['landline_duration'])), 10))}</td>`;
+
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas(parseInt((parseFloat(processDataSummary[i]['landline_duration'])), 10))}</td>`;
+
+            
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas(parseInt(rawData[i]['mobile_count'], 10))}</td>`;
+
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas(parseInt(processDataSummary[i]['mobile_count'], 10))}</td>`;
+
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas(parseInt((parseFloat(rawData[i]['mobile_duration'])), 10))}</td>`;
+
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas(parseInt((parseFloat(processDataSummary[i]['mobile_duration'])), 10))}</td>`;
+
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas((parseInt(rawData[i]['landline_count'], 10)) + (parseInt(rawData[i]['mobile_count'], 10)))}</td>`;
+
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas((parseInt(processDataSummary[i]['landline_count'], 10)) + (parseInt(processDataSummary[i]['mobile_count'], 10)))}</td>`;
+
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas( ((parseInt(rawData[i]['landline_count'], 10)) + (parseInt(rawData[i]['mobile_count'], 10))) - 
+            ((parseInt(processDataSummary[i]['landline_count'], 10)) +(parseInt(processDataSummary[i]['mobile_count'], 10)))  )}</td>`;
+
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas( parseInt((parseFloat(rawData[i]['mobile_duration'])), 10) + 
+            parseInt((parseFloat(rawData[i]['landline_duration'])), 10) )}</td>`;
+
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas( parseInt((parseFloat(processDataSummary[i]['mobile_duration'])), 10) + 
+            parseInt((parseFloat(processDataSummary[i]['landline_duration'])),10) )}</td>`;
+
+            tableRows += `<td style="text-align:right" class="Raw Data">
+            ${utility.numberWithCommas( (parseInt((parseFloat(rawData[i]['mobile_duration'])), 10) + 
+            parseInt((parseFloat(rawData[i]['landline_duration'])), 10) ) - ( parseInt((parseFloat(processDataSummary[i]['mobile_duration'])), 10) 
+            + parseInt((parseFloat(processDataSummary[i]['landline_duration'])), 10) ) )}</td>`;
 
             tableRows = tableRows + '</tr>';
         }
 
         rawTotalDuration = parseInt(rawTotalDuration, 10)
-
         totalDuration = parseInt(totalDuration, 10)
 
         tableRows += '<tr>';
         tableRows += `<td class="day">Summary</td>`;
-        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(rawTotalCalls)}</td>`;
-        tableRows += `<td style="text-align:right" class="Processed Data">${utility.numberWithCommas(totalCalls)}</td>`;
-        tableRows += `<td style="text-align:right" class="Processed Data">${utility.numberWithCommas(rawTotalCalls - totalCalls)}</td>`;
-        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(rawTotalDuration)}</td>`;
-        tableRows += `<td style="text-align:right" class="Processed Data">${utility.numberWithCommas(totalDuration)}</td>`;
-        tableRows += `<td style="text-align:right" class="Processed Data">${utility.numberWithCommas(rawTotalDuration - totalDuration)}</td>`;
+
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(rawLandlineCount)}</td>`;
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(proLandlineCount)}</td>`;
+
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(rawLandlineDuration, 10))}</td>`;
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(proLandlineDuration, 10))}</td>`;
+
+        
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(rawMobileCount)}</td>`;
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(proMobileCount)}</td>`;
+
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(rawMobileDuration, 10))}</td>`;
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(proMobileDuration, 10))}</td>`;
+
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(rawLandlineCount+rawMobileCount)}</td>`;
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(proLandlineCount+proMobileCount)}</td>`;
+
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas( (rawLandlineCount+rawMobileCount) - (proLandlineCount+proMobileCount)  )}</td>`;
+
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas( parseInt(rawMobileDuration, 10) + parseInt(rawLandlineDuration, 10) )}</td>`;
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas( parseInt(proMobileDuration, 10) + parseInt(proLandlineDuration,10) )}</td>`;
+
+        tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas( 
+                (parseInt(rawMobileDuration, 10) + parseInt(rawLandlineDuration, 10) ) - 
+                ( parseInt(proMobileDuration, 10) + parseInt(proLandlineDuration, 10) ) 
+             )}</td>`;
+
         tableRows = tableRows + '</tr>';
 
 
@@ -331,15 +431,29 @@ function tableCreateSummary(processData, rawData) {
         const style = `thead { text-align: left;background-color: #4CAF50; color: white; }`
 
 
-        table += `<table class='some-table' border="2" style='${style}'>
+        table += `<table class='some-table' border="1" style='${style}'>
              <thead> 
                 <tr> 
                     <th>DATE</th> 
+                    
+                    <th>RAW Land Line Count</th>
+                    <th>Pro Land Line Count</th>
+
+                    <th>RAW Land Line Duration</th>
+                    <th>Pro Land Line Duration</th>
+
+                    <th>RAW Mobile Count</th>
+                    <th>Pro Mobile Count</th>
+
+                    <th>RAW Mobile Duration</th>
+                    <th>Pro Mobile Duration</th>
+                    
                     <th>RAW Call Count</th> 
-                    <th>Processed Call Count</th> 
+                    <th>Pro Call Count</th> 
                     <th>Diff</th> 
-                    <th>RAW Duration</th> 
-                    <th>Processed Duration</th> 
+
+                    <th>RAW Duration</th>                     
+                    <th>Pro Duration</th> 
                     <th>Diff</th> 
                 </tr> 
             </thead>             
@@ -357,7 +471,7 @@ function tableCreateSummary(processData, rawData) {
     }
 
 
-    let div = `<div style="margin: auto;width: 90%;padding: 10px;">${table}</div>`;
+    let div = `<div style="margin: auto;width: 100%;padding: 5px;">${table}</div>`;
 
     html += div;
     // html+="Thank you";
@@ -411,7 +525,7 @@ function tableCreate(processData, customerInfo) {
             tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(processData[i]['mobile_duration'], 10))}</td>`;
 
             tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(processData[i]['total'])}</td>`;
-            tableRows += `<td style="text-align:right" class="Processed Data">${utility.numberWithCommas(parseInt(processData[i]['duration']), 10)}</td>`;
+            tableRows += `<td style="text-align:right" class="Processed Data">${utility.numberWithCommas(parseInt(processData[i]['landline_duration'], 10) + parseInt(processData[i]['mobile_duration'], 10) )}</td>`;
             tableRows = tableRows + '</tr>';
         }
 
@@ -425,7 +539,7 @@ function tableCreate(processData, customerInfo) {
         tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(parseInt(totalMobileDuration, 10))}</td>`;
 
         tableRows += `<td style="text-align:right" class="Raw Data">${utility.numberWithCommas(totalCalls)}</td>`;
-        tableRows += `<td style="text-align:right" class="Processed Data">${utility.numberWithCommas(parseInt(totalDuration, 10))}</td>`;
+        tableRows += `<td style="text-align:right" class="Processed Data">${utility.numberWithCommas(parseInt(totalLandlineDuration, 10) + parseInt(totalMobileDuration, 10) )}</td>`;
         tableRows = tableRows + '</tr>';
 
 
@@ -468,7 +582,7 @@ function tableCreate(processData, customerInfo) {
     }
 
 
-    let div = `<div style="margin: auto;width: 100%; padding: 10px;">${table}</div>`;
+    let div = `<div style="margin: auto;width: 100%; padding: 5px;">${table}</div>`;
 
     html += div;
     // html+="Thank you";

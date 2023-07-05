@@ -15,7 +15,8 @@ router.post('/auth/authenticate', function(req, res) {
     .then(function(result) {
      // console.log(result)
       if (result.isAuthorized === true) {
-        jwt.sign({ sub: result.id , email:result.email}, config.SECRET, { expiresIn: config.JWT_EXPIRATION, issuer: 'masterLord' }, function(err,token) {
+        jwt.sign({ sub: result.id , email:result.email}, config.SECRET, { expiresIn: config.JWT_EXPIRATION, issuer: 'masterLord' }, 
+        function(err,token) {
           if(err){
             console.log(err);
           }

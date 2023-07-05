@@ -36,6 +36,8 @@ module.exports = {
         billingMonth = '0' + billingMonth;
       }
 
+      const tableName = `billcdr_${billingYear}${billingMonth}`;
+
       const [ratesDetails, ratesErr] = await handleError(BillingKickback.getRatesFC());
       if (ratesErr) {
         throw new Error('Could not fetch Rates details');
@@ -132,7 +134,7 @@ module.exports = {
             throw new Error('Could not fetch 03 numbers details');
           }
 
-          const [getKickCompCallsInfoRes, getKickCompCallsInfoErr] = await handleError(BillingKickback.getKickCompCallsInfo(getKickCompListRes[i]['customer_id']));
+          const [getKickCompCallsInfoRes, getKickCompCallsInfoErr] = await handleError(BillingKickback.getKickCompCallsInfo(getKickCompListRes[i]['customer_id'], tableName));
           if (getKickCompCallsInfoErr) {
             throw new Error('Error while creating summary data ' + getKickCompCallsInfoErr.message);
           }
@@ -141,7 +143,7 @@ module.exports = {
 
             if (getKickCompCallsInfoRes[0]['total_duration'] > getKickCompListRes[i]['cell_phone_limit']) {
               console.log("Exceed limit");
-              const [getExceedLimitRes, getExceedLimitErr] = await handleError(BillingKickback.getTargetDateByTermUse(getKickCompListRes[i]));
+              const [getExceedLimitRes, getExceedLimitErr] = await handleError(BillingKickback.getTargetDateByTermUse(getKickCompListRes[i], tableName));
               if (getExceedLimitErr) {
                 throw new Error('Error while creating summary data ' + getExceedLimitErr.message);
               }

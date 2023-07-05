@@ -69,7 +69,7 @@ module.exports = {
 
         }else{
           getSummaryData=`select dnis, sum(billableseconds)as duration, sum(billableseconds*0.23) as bill, count(*) total from
-          calltemp_excel2 where dnis='${did}' and starttime >= '2023-04-30 15:00:00' and starttime <='${year}-${month}-${new Date(year, month, 0).getDate()} 14:59:59' 
+          calltemp_excel2 where dnis='${did}' and starttime >= '2023-05-31 15:00:00' and starttime <='${year}-${month}-${new Date(year, month, 0).getDate()} 14:59:59' 
           group by dnis order by dnis` ;
         }
 

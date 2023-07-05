@@ -5,22 +5,21 @@ var BillingController = require('../sonus_outbound/billing.controller');
 var CDRController = require('../sonus_outbound/cdr.controller');
 
 
-// var archiverJobSonusOut = new CronJob ('49 17 * * *',function(){
+// var archiverJobSonusOut = new CronJob ('1 10 * * *',function(){
 //     console.log('You will see this message every second');
 //     archiveController.getData();
 //     console.log('You will see this message every second');
-
 // },null, true, 'Asia/Tokyo');
 
 
-// var emailNotificationJobOut = new CronJob ('23 14 * * *',function(){
+// var emailNotificationJobOut = new CronJob ('27 10 * * *',function(){
 //     console.log('You will see this message every second');
 //     EmailController.sendEmail();
 //     console.log('You will see this message every second');
 // },null, true, 'Asia/Tokyo');
 
 
-// var BillingControllerJob = new CronJob ('11 12 * * *',function(){
+// var BillingControllerJob = new CronJob ('6 10 * * *',function(){
 //     console.log('You will see this message every second');
 //     BillingController.getData();
 //     console.log('You will see this message every second');

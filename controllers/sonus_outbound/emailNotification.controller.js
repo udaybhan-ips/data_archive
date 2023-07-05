@@ -18,9 +18,11 @@ module.exports = {
         throw new Error('error while fetching data processed data');
       }
 
-     // let RawDataRes = await EmailNotification.getSummaryDataMysql(Dates.targetDateWithTimezone, getAllTrunkgroupRes);
+      let RawDataRes = await EmailNotification.getSummaryDataMysql(Dates.targetDateWithTimezone, getAllTrunkgroupRes);
 
       let html = '<div>Hi</div>';
+      
+      html = html + await EmailNotification.createTableSummary(proDataRes, RawDataRes);
 
       for (let i = 0; i < getAllTrunkgroupRes.length; i++) {
         const proDataCustomerWise = await proDataRes.filter((obj) => {
@@ -30,7 +32,7 @@ module.exports = {
         html = html + await EmailNotification.createTable(proDataCustomerWise, getAllTrunkgroupRes[i]);
       }
 
-     // html = html + await EmailNotification.createTableSummary(proDataRes, RawDataRes);
+      
 
       // console.log(JSON.stringify(rawDataRes));
       let h1 = '<div>Thank you</div>';

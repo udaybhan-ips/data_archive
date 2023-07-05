@@ -83,7 +83,7 @@ module.exports = {
 
 
     try {
-      query = `select count(*) as total_calls, sum(duration) as total_duration , carrier_code, term_carrier_id 
+      query = `select count(*) as total_calls,  trunc(sum(duration), 0) as total_duration , carrier_code, term_carrier_id 
           from billcdr_${year}${month} where duration>1 and company_code='${company_code}' group by carrier_code, term_carrier_id 
           order by carrier_code, term_carrier_id `;
 
@@ -492,7 +492,7 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
         paymentDueDate = `${currentYear}/10/31`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
-      paymentDueDate = `${currentYear }/06/30`;
+      paymentDueDate = `${currentYear }/07/31`;
     }
 
   await generateHeader(address, doc, totalCallAmount);
