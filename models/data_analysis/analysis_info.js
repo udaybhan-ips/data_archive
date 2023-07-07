@@ -151,7 +151,8 @@ module.exports = {
 
       const getNumberOfChannelKDDIQuery = `select 'KDDI' as  carrier , ceil(sum(amount)/1200.0) as number_of_channel,
        'kotehi' as  calltype , '0000' || substring(split_part(bill_numb__c, '-',2),4) as customercode, '${year}-${month}' as cdrmonth 
-       from kddi_kotei_bill_details  where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}'  and productname in ('追加ｃｈ基 本料','月額利用料')
+       from kddi_kotei_bill_details  where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}'  and productname in
+       ('追加ｃｈ基本料','追加チャネル利用料','月額利用料')
       group by '0000' || substring(split_part(bill_numb__c, '-',2),4) order by  '0000' ||substring(split_part(bill_numb__c, '-',2),4)`;
 
       const getNumberOfChannelSonusKDDIRes = await db.queryByokakin(getNumberOfChannelKDDIQuery, []);
@@ -159,7 +160,8 @@ module.exports = {
       const getNumberOfChannelNTTQuery = `select 'NTT' as  carrier , ceil(sum(kingaku)/1200.0) as number_of_channel,
        'kotehi' as  calltype , comp_acco__c as customercode, '${year}-${month}' as cdrmonth from ntt_koteihi_cdr_bill
       where to_char(datebill::date, 'MM-YYYY') = '${month}-${year}'  and seikyuuuchiwake in 
-      ('ＩＰＶ　アクセスセット基本料','ＩＰＶアクセスセット基本 料','チャネル追加利用料')
+      ('ＩＰＶ　アクセスセット基本料','ＩＰＶアクセスセット基本料','IPV　アクセスセット基本料','IPV アクセスセット基本料','チャネル追加利用料','ch基本料','ch追加基本料','チャネル利用料',
+      '基本利用料','チャネル基本利用料','チャネル基本料金','追加ch利用料','基本料金')
       group by comp_acco__c order by comp_acco__c`;
 
       const getNumberOfChannelNTTRes = await db.queryByokakin(getNumberOfChannelNTTQuery, []);

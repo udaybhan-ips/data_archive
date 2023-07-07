@@ -226,9 +226,9 @@ module.exports = {
 
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
-            //to:'telcom@ipspro.co.jp',
-            to: 'uday@ipspro.co.jp',
-            // cc:'y_ito@ipsism.co.jp,uday@ipspro.co.jp',
+            to:'telcom@ipspro.co.jp',
+            //to: 'uday@ipspro.co.jp',
+             cc:'y_ito@ipspro.co.jp,uday@ipspro.co.jp',
             subject: 'SONUS OUTBOUND CDR CHECK',
             html
         }

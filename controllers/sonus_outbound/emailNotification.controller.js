@@ -32,8 +32,6 @@ module.exports = {
         html = html + await EmailNotification.createTable(proDataCustomerWise, getAllTrunkgroupRes[i]);
       }
 
-      
-
       // console.log(JSON.stringify(rawDataRes));
       let h1 = '<div>Thank you</div>';
       html = html + h1;
