@@ -74,13 +74,13 @@ module.exports = {
       and free_dial.cust_code__c::int = '${customer_code}' and 
       (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')  
       and  free_dial.carr_comp__c='NTT'  )`;
-      console.log("query..."+query)
-      const getNTTRAWDataRes = await db.queryByokakin(query, []);      
+      console.log("query..." + query)
+      const getNTTRAWDataRes = await db.queryByokakin(query, []);
 
       if (getNTTRAWDataRes.rows) {
-        if(customer_code==='00000436'){
-          return getNTTRAWDataRes.rows.filter((obj)=>(
-            obj.carriertype==='NTTORIX' ? true :false
+        if (customer_code === '00000436') {
+          return getNTTRAWDataRes.rows.filter((obj) => (
+            obj.carriertype === 'NTTORIX' ? true : false
           ))
         }
         return (getNTTRAWDataRes.rows);
@@ -95,21 +95,21 @@ module.exports = {
   getNTTRAWInboundData: async function (billingYear, billingMonth, customer_code, carrier) {
 
     try {
-      
+
       const query = `select  raw_cdr.*,  0 as callcount104 from 
       byokakin_ntt_rawcdr_inbound_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
       (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g')=free_dial.free_numb__c  and 
       (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00')
       and free_dial.cust_code__c::int = '${customer_code}' and  free_dial.carr_comp__c='NTT'  ) `;
 
-      console.log("query..."+query)
+      console.log("query..." + query)
 
       const getNTTRAWInboundDataRes = await db.queryByokakin(query, []);
 
       if (getNTTRAWInboundDataRes.rows) {
-        if(customer_code==='00000436'){
-          return getNTTRAWInboundDataRes.rows.filter((obj)=>(
-            obj.carriertype==='NTTORIX' ? true :false
+        if (customer_code === '00000436') {
+          return getNTTRAWInboundDataRes.rows.filter((obj) => (
+            obj.carriertype === 'NTTORIX' ? true : false
           ))
         }
         return (getNTTRAWInboundDataRes.rows);
@@ -225,7 +225,7 @@ module.exports = {
       cdrAmount = parseInt(cdrAmount, 10);
       koteiAmount = parseInt(koteiAmount, 10);
 
-      if(cdrAmount<=0 && koteiAmount<=0){
+      if (cdrAmount <= 0 && koteiAmount <= 0) {
         console.log("No data!!");
         return 'no data';
       }
@@ -245,8 +245,8 @@ async function createInvoice(company_code, customer_name, address, billingYear, 
   const tax = parseInt(subTotal * .1);
   const totalAmount = subTotal + tax;
 
-  let doc = new PDFDocument({size: [597,842], margin:50});
-  let MAXY = doc.page.height ;
+  let doc = new PDFDocument({ size: [597, 842], margin: 50 });
+  let MAXY = doc.page.height;
   let fontpath = (__dirname + '\\..\\..\\..\\controllers\\font\\ipaexg.ttf');
   doc.font(fontpath);
 
@@ -302,7 +302,7 @@ function generateCustomerInformation(doc, invoice, y, koteiAmount, cdrAmount, su
 
 function basciInfo(doc, y, company_code, customer_name, billingYear, billingMonth) {
 
-  const todayYYYYMMDD= getYearMonthDay();
+  const todayYYYYMMDD = getYearMonthDay();
   const todayYYYYMMDDArr = todayYYYYMMDD.split("-");
   let numerOfDays = new Date(billingYear, billingMonth, 0).getDate();
 
@@ -318,7 +318,7 @@ function basciInfo(doc, y, company_code, customer_name, billingYear, billingMont
 
     .text(`${billingYear}-${billingMonth}-01 ～ ${billingYear}-${billingMonth}-${numerOfDays}`, 125, y + 65, { width: 250, align: "left" })
     .text(`${todayYYYYMMDDArr[0]}-${todayYYYYMMDDArr[1].padStart(2, '0')}-${todayYYYYMMDDArr[2].padStart(2, '0')}`, 125, y + 80, { width: 100, align: "left" })
-    
+
 
     .moveDown()
   return y + 35;
@@ -339,13 +339,13 @@ function addTableHeader(doc, y) {
     .fontSize(12)
     .text(`課金対象`, 50, y + 5, { width: 75, align: "center" })
     .text(`請求内容`, 125, y + 5, { width: 300, align: "center" })
-   // .text(`品 目 `, 250, y + 5, { width: 175, align: "center" })
+    // .text(`品 目 `, 250, y + 5, { width: 175, align: "center" })
     .text(`課税対象`, 425, y + 5, { width: 50, align: "center" })
     .text(`金額`, 475, y + 5, { width: 65, align: "center" })
 
   doc.rect(50, y - 5, 75, 30).stroke()
   doc.rect(125, y - 5, 300, 30).stroke()
- // doc.rect(250, y - 5, 175, 30).stroke()
+  // doc.rect(250, y - 5, 175, 30).stroke()
   doc.rect(425, y - 5, 50, 30).stroke()
   doc.rect(475, y - 5, 65, 30).stroke()
 
@@ -367,7 +367,7 @@ function customTable(doc, y, data, MAXY) {
     textInRowFirst(doc, '¥' + utility.numberWithCommas(parseFloat(data[i].amount).toFixed(2)), 475, height, "right", 65);
 
     if (height >= 750) {
-     // doc.text(counter, 500, 720)
+      // doc.text(counter, 500, 720)
       doc.addPage()
       height = 50;
       counter++;
@@ -400,7 +400,7 @@ async function generateHeader(customerDetails, doc) {
   const address = customerDetails[0]['address'];
 
   // const Phone = "TEL. 03-3549-7621（代）";
-  // const Fax = "FAX. 03-3545-7331";
+  // const Fax = "FAX. 03-3545-7331"; 
 
   const Phone = `TEL. ${customerDetails[0]['tel_number']}（代）`;
   const Fax = `FAX. ${customerDetails[0]['fax_number']}`;
@@ -768,11 +768,11 @@ async function roundToFour(num) {
 }
 
 
-function getYearMonthDay(){
+function getYearMonthDay() {
   var dateObj = new Date();
-var month = dateObj.getUTCMonth() + 1; //months from 1-12
-var day = dateObj.getUTCDate();
-var year = dateObj.getUTCFullYear();
+  var month = dateObj.getUTCMonth() + 1; //months from 1-12
+  var day = dateObj.getUTCDate();
+  var year = dateObj.getUTCFullYear();
 
-return year + "-" + month + "-" + day;
+  return year + "-" + month + "-" + day;
 }

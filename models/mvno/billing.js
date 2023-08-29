@@ -18,7 +18,7 @@ module.exports = {
   
   getAllMVNOCustomer: async function() {
     try {
-          const query=`select * from mvno_customer  where deleted=false  order by customer_id, did`;
+          const query=`select * from mvno_customer  where  deleted=false  order by customer_id, did`;
 
           const getAllMVNOCustRes = await db.queryIBS(query,[]);
           if(getAllMVNOCustRes.rows){
@@ -57,7 +57,15 @@ module.exports = {
 
   createSummaryData: async function(customer_name, customer_id, year, month, did, invoice_no) {
     console.log("summary");
-    let numberOfDays= 1;
+    console.log("Year is "+year)
+    console.log("Month is "+month)
+    
+    const {prevYear, prevMonth, prevDay} = utility.getPreviousYearMonthDay(`${year}-${month}-1`) ;
+
+    //console.log("prevMonthBillingDate"+prevYear, prevMonth);
+
+    //return null;
+
     try {
       
         let  getSummaryData = "";
@@ -69,7 +77,8 @@ module.exports = {
 
         }else{
           getSummaryData=`select dnis, sum(billableseconds)as duration, sum(billableseconds*0.23) as bill, count(*) total from
-          calltemp_excel2 where dnis='${did}' and starttime >= '2023-05-31 15:00:00' and starttime <='${year}-${month}-${new Date(year, month, 0).getDate()} 14:59:59' 
+          calltemp_excel2 where dnis='${did}' and starttime >= '${prevYear}-${prevMonth}-${new Date(prevYear, prevMonth, 0).getDate()} 15:00:00' and 
+          starttime <='${year}-${month}-${new Date(year, month, 0).getDate()} 14:59:59' 
           group by dnis order by dnis` ;
         }
 

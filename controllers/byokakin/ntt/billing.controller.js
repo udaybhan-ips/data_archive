@@ -1,6 +1,6 @@
 var BillingByokakin = require('../../../models/byokakin/ntt/billing');
 const dateId = 3;
-const billingMonth = '05', billingYear = "2023";
+const billingMonth = '07', billingYear = "2023";
       const carrier = 'NTT'
 
 module.exports = {
@@ -20,8 +20,15 @@ module.exports = {
 
       for (let i = 0; i < getNTTCompListRes.length; i++) {
 
-        // outbound data processing
+        
 
+        const [deleteProcessedDataRes, deleteProcessedDataErr] = await handleError(BillingByokakin.deleteProcessedData(getNTTCompListRes[i]['customer_code'], billingYear, billingMonth));
+        if (deleteProcessedDataErr) {
+          throw new Error('Could not delete the processed data...');
+        }
+
+        // outbound data processing
+        
         const [ratesDetails, ratesErr] = await handleError(BillingByokakin.getRates(getNTTCompListRes[i]['customer_code']));
         if (ratesErr) {
           throw new Error('Could not fetch Rates details');

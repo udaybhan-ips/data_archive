@@ -11,7 +11,8 @@ module.exports = {
   },
   getAllSonusOutboundCustomer: async function() {
     try {
-          const query=`select  customer_name, customer_id   from sonus_outbound_customer where customer_name!='Wiz' and deleted=false group by customer_name, customer_id order by customer_id`;
+          const query=`select  customer_name, customer_id   from sonus_outbound_customer 
+          where deleted=false group by customer_name, customer_id order by customer_id`;
           const ipsPortal=true;
           const getAllSonusOutboundCustRes= await db.query(query,[],ipsPortal);
           if(getAllSonusOutboundCustRes.rows){

@@ -5,7 +5,7 @@ var archiveController = require('../comsq/archive.controller');
 // var EmailController = require('../comsq/emailNotification.controller');
 
 
-// var archiverJob = new CronJob ('16 17 * * *',function(){
+// var archiverJob = new CronJob ('34 14 * * *',function(){
 //     console.log('This is comsq archiver start');
 //     archiveController.getData();
 //     console.log('This is comsq archiver End');

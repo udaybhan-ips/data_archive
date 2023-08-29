@@ -181,6 +181,7 @@ module.exports = {
   },
 
   authenticate: function(data) {
+    console.log("user data is..."+JSON.stringify(data))
     return new Promise(function(resolve, reject) {
       if (!data.email || !data.password) {
         reject('error: email and/or password missing')
@@ -249,7 +250,7 @@ function findOneByEmail(email) {
   return new Promise(function(resolve, reject) {
     db.query('SELECT *, now()::date - updated_password_date::date as no_of_day FROM users WHERE email_id = $1', [email],ipsPortal=true)
       .then(function(result) {
-    //    console.log(JSON.stringify(result))
+       // console.log(JSON.stringify(result))
         if (result.rows[0] && result.rows[0]['no_of_day'] > 30 ) {
           let resD = result.rows[0];
           resD = {...resD, renew_password : true}
@@ -345,10 +346,7 @@ function validatePassword(password, minCharacters) {
 }
 
 function verifyPassword(password, user) {
- // console.log("passwoed="+user.password);
- //console.log("passwoed="+password);
-   //console.log("passwoed="+user.password);
-   //console.log("result.."+JSON.stringify(user));
+
   return new Promise(function(resolve, reject) {
     bcrypt.compare(password, user.password, function(err, result) {
       if (err) {
@@ -376,8 +374,7 @@ function verifyPasswordCus(password, user) {
         resolve({ isValid: result,id:user.id,name:user.name, email: user.email_id, role:user.role });
        }
        else {
-        // console.log("err 1"+JSON.stringify(err))
-         
+        // console.log("err 1"+JSON.stringify(err))         
          reject("Password did not match");
        }
      });

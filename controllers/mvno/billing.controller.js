@@ -77,11 +77,11 @@ module.exports = {
 
         }
       }
-      // const [sendNotificationRes, sendNotificationErr] = await handleError(BillingMVNO.sendNotification( billingYear, billingMonth));
+      const [sendNotificationRes, sendNotificationErr] = await handleError(BillingMVNO.sendNotification( billingYear, billingMonth));
 
-      // if(sendNotificationErr) {
-      //     throw new Error('Error while sending motification '+ sendNotificationErr.message);  
-      // }
+      if(sendNotificationErr) {
+          throw new Error('Error while sending motification '+ sendNotificationErr.message);  
+      }
 
       console.log("Done....")
 

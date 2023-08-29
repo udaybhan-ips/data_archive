@@ -317,6 +317,10 @@ module.exports.getCurrentYearMonthDay = function (date){
   let day =  pad(d.getDate());
   let year = d.getFullYear();
 
+  console.log("year..."+year)
+  console.log("day..."+day)
+  console.log("month..."+month)
+
   return `${year}-${month}-${day}`;
 
 }
@@ -362,6 +366,31 @@ module.exports.getPreviousYearMonth = function (date){
   }
 
   return {year:[year], month:[month]};
+
+}
+
+module.exports.getPreviousYearMonthDay = function (date){
+  var d;
+  
+  if(date){
+    d = new Date(date);
+  }else{
+    d = new Date();
+  }
+  
+  d.setDate(1);
+  d.setMonth(d.getMonth()-1);
+
+
+  let prevMonth = d.getMonth() + 1;
+  let prevDay =  d.getDate();
+  let prevYear = d.getFullYear();
+
+  if(prevMonth < 10 ){
+    prevMonth = '0'+prevMonth;
+  }
+
+  return {prevYear, prevMonth, prevDay};
 
 }
 

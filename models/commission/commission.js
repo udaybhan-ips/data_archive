@@ -7,7 +7,8 @@ module.exports = {
     try {
       const query = `select data_idno as id, agent_code, freedial_code as target_agent_code, serv_name, 
           call_sort as call_type, edat_star as start_date, edat_fini as end_date, amnt_conv as commission,
-         edit_by, edit_date , amount from agent_incentive where edat_fini::date > now() and deleted=false order by agent_code` ;
+         edit_by, edit_date , amount from agent_incentive where edat_fini::date > now() and deleted=false 
+         order by agent_code, target_agent_code` ;
 
       //  console.log("query.."+query)
 
@@ -180,7 +181,8 @@ module.exports = {
 
             } else {
               getCommissionData = `select count(*), SUM(FINALCALLCHARGE) as TOTAL_AMOUNT from 
-              byokakin_${targetAgentCode.rows[i].serv_name}_processedcdr_${year}${month} where terminaltype= '${targetAgentCode.rows[i].call_sort}' 
+              byokakin_${targetAgentCode.rows[i].serv_name}_processedcdr_${year}${month} where 
+              terminaltype= '${targetAgentCode.rows[i].call_sort}' 
               and customercode='${targetAgentCode.rows[i].freedial_code}'`;
             }
 

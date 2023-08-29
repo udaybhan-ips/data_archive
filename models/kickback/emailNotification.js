@@ -88,16 +88,29 @@ module.exports = {
                 month = '0' + month;
             }
 
-            const query = ` select distinct(CUSTOMER_CD) as customer_cd, (select customer_name from m_customer 
-                where customer_cd=kickback_traffic_summary.customer_cd) as customer_name, 
+            const query = ` select distinct(CUSTOMER_CD) as customer_cd, 
                 (select case when cell_phone_limit!=0 then cell_phone_limit/10000 else 0 end as cell_phone_limit 
                     from kickback_billable where customer_id=kickback_traffic_summary.customer_cd)  from kickback_traffic_summary  where
             CUSTOMER_CD NOT IN ('00000350','00000026','00000138','00000141','00000292',
             '00000409','00000564','00000565','88888888') and to_char(traffic_date, 'MM-YYYY') = '${month}-${year}'
              order by customer_cd`;
-            //const query = ` select * from kickback_cdr_carrier where email_type='multiple' order by customer_cd`;
+
+            const customerDetails = ` select customer_cd,  customer_name from m_customer where is_deleted= false `;
+            const customerDetailsRes = await db.query(customerDetails, [], true);
             const kickCompRes = await db.queryIBS(query, []);
-            return kickCompRes.rows;
+
+            let kickCompResData = kickCompRes.rows;
+
+            kickCompResData = kickCompResData.map((obj) => {
+                let ind = customerDetailsRes.rows.findIndex((ele) => (ele.customer_cd == obj.customer_cd))
+                if (ind !== -1) {
+                    return { ...obj, customer_name: customerDetailsRes.rows[ind].customer_name };
+                } else {
+                    return { ...obj, customer_name: '' };
+                }
+            })
+
+            return kickCompResData;
 
         } catch (error) {
             console.log("err in getting kick company  =" + error.message);
@@ -366,12 +379,12 @@ module.exports = {
             if (parseInt(month, 10) < 10) {
                 month = '0' + month;
             }
-            if(__type === 'billcdr'){
+            if (__type === 'billcdr') {
                 return `billcdr_${year}${month}`;
-            }else{
+            } else {
                 return `cdr_${year}${month}`;
             }
-            
+
 
         } catch (e) {
             console.log("err in get table=" + e.message);
@@ -490,7 +503,7 @@ module.exports = {
                 let actualStartDate = year + "-" + month + "-" + date + " 15:00:00";
 
                 let query = `select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as
-                 day from COLLECTOR_73 
+                day from COLLECTOR_73 
                 where  RECORDTYPEID = 3 
                 AND (CALLDURATION > 0)
                 AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
@@ -555,8 +568,8 @@ module.exports = {
             let emailTO = `${customerInfo['mail_address']}`;
             let emailCC = `${customerInfo['east_link_address']}`;
 
-              //emailTO = 'uday@ipspro.co.jp';
-              //emailCC = 'uday@ipspro.co.jp';
+            //emailTO = 'uday@ipspro.co.jp';
+            //emailCC = 'uday@ipspro.co.jp';
             //  emailCC = 'y_ito@ipspro.co.jp';
 
             if (!emailTO) {
@@ -586,7 +599,7 @@ module.exports = {
             to: 'telecom@ipspro.co.jp',
             //to: 'uday@ipspro.co.jp',
             cc: 'y_ito@ipspro.co.jp,uday@ipspro.co.jp',
-            //cc: 'uday@ipspro.co.jp',
+           // cc: 'uday@ipspro.co.jp',
             subject,
             html
         }
@@ -639,8 +652,7 @@ function tableCreate(processData, customerInfo) {
         console.log("inside-1")
 
         let h4 = `いつもお世話になっております。, <br /> <br /> 販売促進トラフィック状況を送信致します。 <br /> <br />
-        よろしくお願いします。 <br /><br /> <p style="color:red">※本メールはシステムより自動的に送信されていますので、返信はしないでください。</p> 
-<br />`;
+        よろしくお願いします。 <br /><br /> <p style="color:red">※本メールはシステムより自動的に送信されていますので、返信はしないでください。</p><br />`;
         html += h4;
 
         let header = `<div style="style="margin: auto;width: 100%;padding: 10px;"><p style="text-align:left">(${customerInfo['title_name']})</p></div> `;
@@ -946,20 +958,20 @@ function tableCDRDailyTransistion(data, year, month) {
         html += div;
         html += "Thank you";
         // console.log("sdfsdf"+html);
-    
+
         return html;
 
     } catch (err) {
         console.log("error in daily transition email batch" + err.message);
     }
-    
-    
+
+
 }
 
 
 function rowData(data) {
 
-    
+
 
     try {
 
@@ -1023,7 +1035,7 @@ function rowData(data) {
         tableRow += `<td style="text-align:right" class="durations">${utility.numberWithCommas(fumeichkSum)}</td>`;
 
         tableRow += '</tr>'
-        
+
 
         return { tableRow, cdrcountSum, kokusaiSum, kokunaiSum, inboundSum, outboundSum, durationsSum, fumeichkSum };
 

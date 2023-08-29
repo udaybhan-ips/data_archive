@@ -23,7 +23,7 @@ module.exports = {
             const query = `select lj.*, rj.customer_name from ( select trunkport,  customer_id, incallednumber from sonus_outbound_rates where
                 deleted = false   and trunkport!='' ) as lj join 
                 (select customer_cd, customer_name from m_customer where service_type->>'sonus_outbound' = 'true' ) as rj  
-                on (lj.customer_id=rj.customer_cd) order by customer_id  ;` ;
+                on (lj.customer_id=rj.customer_cd) order by case when customer_id= '00001371' then 1 else 2 end, customer_id asc  ;` ;
 
             const getTrunkportRes = await db.query(query, [], ipsPortal);
             //  console.log(getTrunkportRes);
@@ -110,19 +110,7 @@ module.exports = {
                 from COLLECTOR_73 where INGRPSTNTRUNKNAME in (${sharedTrunkPortsValue})  AND RECORDTYPEID = 3 AND 
                  starttime>='${actualStartDate}' and  startTime < DATE_ADD("${actualStartDate}", INTERVAL 1 DAY) `;
 
-                //console.log("sharedTrunkPortsQuery..." + sharedTrunkPortsQuery);
-                // console.log("incallednumbers..." + JSON.stringify(incallednumbers))
-
                 let sharedTrunkPortsQueryRes = await db.mySQLQuery(sharedTrunkPortsQuery, []);
-
-
-
-
-                //  console.log("sharedTrunkPortsQueryRes length" + sharedTrunkPortsQueryRes.length);
-                //  console.log("sharedTrunkPortsQueryRes.." + JSON.stringify(sharedTrunkPortsQueryRes[0]))
-
-
-
                 let sharedTrunkPortsQueryResObj = {}
 
                 if (sharedTrunkPortsQueryRes.length > 0) {
@@ -159,14 +147,7 @@ module.exports = {
                     sharedTrunkPortsQueryResObj['mobile_count'] = mobileCount;
                     sharedTrunkPortsQueryResObj['landline_count'] = landlineCount;
                 }
-                // console.log("sharedTrunkPortsQueryResObj" + JSON.stringify(sharedTrunkPortsQueryResObj));
-
-                //  console.log(query);
-                let rawData;
-                rawData = await db.mySQLQuery(query, []);
-
-
-                //    console.log("rawData.."+JSON.stringify(rawData));
+                let rawData = await db.mySQLQuery(query, []);
 
                 if (rawData.length) {
                     let tmpData = {};
@@ -182,13 +163,7 @@ module.exports = {
                     tmpData['day'] = rawData[0].day;
                     resData = [...resData, tmpData];
                 }
-
-                // await new Promise(resolve => setTimeout(resolve, 10000));
-
-
-                // console.log("data=" + JSON.stringify(resData));
             }
-            // console.log("data=" + JSON.stringify(resData));
 
             return (resData);
         } catch (error) {
@@ -199,36 +174,23 @@ module.exports = {
     createTable: async function (processData, customerInfo) {
 
         let html = '';
-
-        // console.log("proData asdas=" + processData.length);
-        //console.log("rawData="+rawDataLen.length);
         html = tableCreate(processData, customerInfo);
-        //console.log("html");
-        //console.log(html);
-
         return html;
     },
 
     createTableSummary: async function (processData, rawData) {
         let html = '';
-
-        // console.log("proData asdas=" + processData.length);
-        //console.log("rawData="+rawDataLen.length);
         html = tableCreateSummary(processData, rawData);
-        //console.log("html");
-        //console.log(html);
-
         return html;
-
     },
 
     sendEmail: async function (html) {
 
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
-            to:'telcom@ipspro.co.jp',
+            to:'telecom@ipspro.co.jp',
             //to: 'uday@ipspro.co.jp',
-             cc:'y_ito@ipspro.co.jp,uday@ipspro.co.jp',
+            cc:'y_ito@ipspro.co.jp,uday@ipspro.co.jp',
             subject: 'SONUS OUTBOUND CDR CHECK',
             html
         }
@@ -241,23 +203,13 @@ module.exports = {
 
 function tableCreateSummary(processData, rawData) {
 
-    //console.log("rawData="+JSON.stringify(rawData))
-    //console.log("processData="+JSON.stringify(processData))
-    // console.log("create table---");
     let tableRows = '';
 
     let locS, locE, table = '', html = '', totalCalls = 0, totalDuration = 0;
     let rawDataLength = rawData.length, rawTotalCalls = 0, rawTotalDuration = 0;
-
-
     console.log("raw length is " + rawDataLength)
 
-
     try {
-
-        // console.log("locS in sumarry"+locS)
-        // console.log("locE in sumarry"+locE)
-
         let processDataSummary = []
 
         processData.forEach(element => {

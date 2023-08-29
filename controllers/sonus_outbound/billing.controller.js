@@ -16,7 +16,7 @@ module.exports = {
           billingMonth='0'+ billingMonth;
         }
 
-        const [customerListRes,customerListErr] = await handleError(BillingSonusOutbound.getAllSonusOutboundCustomer('00001340'));
+        const [customerListRes,customerListErr] = await handleError(BillingSonusOutbound.getAllSonusOutboundCustomer());
         if(customerListErr) {
           throw new Error('Could not fetch customer list');  
         }
@@ -35,11 +35,11 @@ module.exports = {
         
         }
 
-        // const [sendNotificationRes, sendNotificationErr] = await handleError(BillingSonusOutbound.sendNotification( billingYear, billingMonth));
+        const [sendNotificationRes, sendNotificationErr] = await handleError(BillingSonusOutbound.sendNotification( billingYear, billingMonth));
 
-        // if(sendNotificationErr) {
-        //     throw new Error('Error while sending motification '+ sendNotificationErr.message);  
-        // }
+        if(sendNotificationErr) {
+            throw new Error('Error while sending motification '+ sendNotificationErr.message);  
+        }
 
         console.log("done!!")
          

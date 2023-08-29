@@ -1,5 +1,5 @@
 var ArchiveNTT = require('../../../models/byokakin/ntt/archive');
-const billingMonth = "05";
+const billingMonth = "07";
 const billingYear ="2023";
 const carrier = 'NTT';
 
@@ -27,7 +27,6 @@ module.exports = {
       
       const resNTTFreeDialNumList = await ArchiveNTT.getNTTFreeDialNumList();
       const resCustomerList = await ArchiveNTT.getNTTCustomer();
-
       const resChargeKotehiData = await ArchiveNTT.chargeKotehiData(billingYear, billingMonth, resNTTFreeDialNumList, resCustomerList);
 
       console.log("NTT Kotehi Charge Done ...")

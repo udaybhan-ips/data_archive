@@ -17,8 +17,7 @@ module.exports = {
   },
   getAllSonusOutboundCustomer: async function (customerId) {
     try {
-
-
+      
       if (customerId) {
         where = ` customer_id= '${customerId}' and deleted= false `;
       } else {
@@ -42,7 +41,8 @@ module.exports = {
 
   deleteSummaryData: async function (customer_id, billing_year, billing_month) {
     try {
-      const query = `delete FROM cdr_sonus_outbound_summary where customer_id='${customer_id}' and billing_month='${billing_month}' and billing_year='${billing_year}' `;
+      const query = `delete FROM cdr_sonus_outbound_summary where customer_id='${customer_id}' and billing_month='${billing_month}' 
+      and billing_year='${billing_year}' `;
       const deleteTargetDateSummaryRes = await db.query(query, []);
       return deleteTargetDateSummaryRes;
     } catch (error) {

@@ -66,7 +66,7 @@ module.exports = {
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
       where  is_deleted = false       and service_type ->> 'ntt_customer'  = 'true' 
-     and customer_cd in ('00001138')
+      and customer_cd not in ('00000813')
        order by customer_code   `;
       // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
       const getNTTCompListRes = await db.query(query, [], true);
@@ -134,6 +134,22 @@ module.exports = {
       return error;
     }
   },
+
+  deleteProcessedData: async function (customerId, year, month) {
+    try {
+
+      const query = `delete from byokakin_ntt_processedcdr_${year}${month} where customercode='${customerId}' `;
+
+      const deleteRes = await db.queryByokakin(query, []);
+      
+      return deleteRes;
+
+    } catch (error) {
+      console.log("error in deleting processed data.." + error.message);
+      throw new Error("error in deleting processed data." + error.message);
+    }
+  },
+
 
   deleteSummaryData: async function (customerId, year, month) {
     try {

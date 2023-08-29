@@ -664,8 +664,6 @@ module.exports = {
             obj['telcotype'] = data[i][8];
             obj['datebill'] = `${billingYear}-${billingMonth}-01`;
             csvData.push(obj);
-
-
           } else if (parseInt(data[i][0]) === 24 || parseInt(data[i][0]) === 25) {
 
             let callToNum = data[i][5];

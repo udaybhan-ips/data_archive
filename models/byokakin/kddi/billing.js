@@ -62,7 +62,7 @@ module.exports = {
 
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
-      where is_deleted = false 
+      where is_deleted = false
       
       and service_type ->> 'kddi_customer'  = 'true' 
       order by customer_code`;
@@ -124,7 +124,8 @@ module.exports = {
 
     try {
 
-      const query = `select  raw_cdr.* from byokakin_kddi_infinidata_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
+      const query = `select  raw_cdr.* from byokakin_kddi_infinidata_${billingYear}${billingMonth} raw_cdr 
+      join ntt_kddi_freedial_c free_dial on 
       (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g')=free_dial.free_numb__c  and 
       (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00' OR 
       free_dial.stop_date__c='null' OR free_dial.stop_date__c::date > now()::date)
@@ -262,7 +263,10 @@ module.exports = {
         cdrAmount = cdrAmount + parseFloat(obj.cdr_amount);
       });
 
-      cdrAmount = parseInt(cdrAmount,10);
+
+      //console.log("cdr amount.."+cdrAmount)
+
+      cdrAmount = parseInt(cdrAmount.toFixed(4),10);
       koteiAmount = parseInt(koteiAmount,10);
       if(cdrAmount<=0 && koteiAmount<=0){
         console.log("No data!!");

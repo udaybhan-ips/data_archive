@@ -126,7 +126,7 @@ module.exports = {
         authcode ,  billableseconds ,  billdate ,  billedseconds ,  billedsecondsdisplay ,  billingclass ,   callcharge ,  calldirection ,  
         callstatuscode ,  calltypecode ,  connectseconds ,  custaccountcode ,   custcode ,  custid ,  custserviceid ,  discountamount , 
         dnis ,  origani , termani , outportgroupnumber , termcountrydesc , stoptime ,   starttime , inseizetime 
-        FROM CALL WITH(NOLOCK) WHERE starttime BETWEEN '${targetDateWithTimezone}' and  DATEADD(day, 30, '${targetDateWithTimezone}') AND 
+        FROM CALL WITH(NOLOCK) WHERE starttime BETWEEN '${targetDateWithTimezone}' and  DATEADD(day, 31, '${targetDateWithTimezone}') AND 
         (calldirection = 'O') AND (connectseconds > 0) ORDER BY starttime `;
       //console.log("query="+query);
       const data = await db.msSQLServer(query);
@@ -165,7 +165,7 @@ module.exports = {
   deleteTargetDateCDRFPhone: async function (targetDate, leg, company_code) {
     try {
 
-      const query = `delete FROM cdr_fphone where start_time::date = '${targetDate}'::date + interval '1' day  and company_code='${company_code}' and leg='${leg}'`;
+      const query = `delete FROM cdr_fphone where start_time::date = '${targetDate}'::date and company_code='${company_code}' and leg='${leg}'`;
       const deleteTargetDateRes = await db.queryIBS(query, []);
       return deleteTargetDateRes;
     } catch (error) {
@@ -214,7 +214,7 @@ module.exports = {
   deleteTargetDateCDRFPhoneXMOBILE: async function (targetDate, leg, company_code) {
     try {
 
-      const query = `delete FROM cdr_fphone where start_time::date = '${targetDate}'::date + interval '1' day and company_code='${company_code}' and leg='${leg}'`;
+      const query = `delete FROM cdr_fphone where start_time::date = '${targetDate}'::date  and company_code='${company_code}' and leg='${leg}'`;
       const deleteTargetDateRes = await db.queryIBS(query, []);
       return deleteTargetDateRes;
     } catch (error) {
@@ -295,7 +295,7 @@ module.exports = {
   },
   deleteTargetDateSummary: async function (serviceId, targetDate) {
     try {
-      const query = `delete FROM sonus_outbound_summary where summary_date::date = '${targetDate}'::date + interval '1' day and service_id='${serviceId}'`;
+      const query = `delete FROM sonus_outbound_summary where summary_date::date = '${targetDate}'::date  and service_id='${serviceId}'`;
       const deleteTargetDateSummaryRes = await db.query(query, []);
       return deleteTargetDateSummaryRes;
     } catch (error) {
