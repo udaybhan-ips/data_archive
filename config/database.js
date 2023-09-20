@@ -335,6 +335,7 @@ module.exports = {
       }
       const pool = await new Pool(connectionString)
       const res = await pool.query(text, values);
+      
       return (res);
     } catch (err) {
 

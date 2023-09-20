@@ -23,8 +23,30 @@ module.exports = {
                 
             const summaryRes = await db.query(query, []);
 
+
+            const getInvoiceDetailsFlag = `select * from sonus_outbound_rates where deleted = false` ;
+            let getInvoiceDetailsFlagResData  ;
+            const getInvoiceDetailsFlagRes = await db.query(getInvoiceDetailsFlag, [], true);
+
+            if(getInvoiceDetailsFlagRes.rows && getInvoiceDetailsFlagRes.rows.length>0){
+                getInvoiceDetailsFlagResData = getInvoiceDetailsFlagRes.rows ;
+            }
+
             if (summaryRes.rows) {
-                return (summaryRes.rows);
+
+                let res = [];
+
+                res = summaryRes.rows.map((obj)=>{
+                    let ind = -1;
+
+                    ind = getInvoiceDetailsFlagResData.findIndex((ele)=>(ele.customer_id==obj.customer_id))
+                    if(ind !== -1)
+                        return {...obj, details_invoice: getInvoiceDetailsFlagResData[ind].details_invoice}
+                    else    
+                        return {...obj, details_invoice: false}
+                })
+
+                return res;
             }
             throw new Error('not found')
 
@@ -33,6 +55,27 @@ module.exports = {
             throw new Error(error.message)
         }
     },
+
+    getDetailsDataByMonth: async function ({ year, month }) {
+
+        try {
+            
+            const query = `select * from cdr_sonus_outbound_details where billing_year ='${year}' and billing_month='${month}'  `;
+    
+            const detailsData = await db.query(query, []);
+
+            if (detailsData.rows) {
+                return (detailsData.rows);
+            }
+            throw new Error('not found')
+
+        } catch (error) {
+            console.log("error in getting details data")
+            throw new Error(error.message)
+        }
+    },
+
+    
     getSummary: async function() {
       try {
           const query=`select *, 

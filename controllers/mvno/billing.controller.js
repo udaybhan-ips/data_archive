@@ -27,8 +27,6 @@ module.exports = {
 
         if (customerListRes[i]['customer_name'] == 'FPHONE') {
           
-          
-
           const [deleteSummaryRes, deleteSummaryErr] = await handleError(BillingMVNO.deleteSummaryDataLeg(customerListRes[i]['customer_name'], customerListRes[i]['customer_id'], billingYear, billingMonth, customerListRes[i]['did'], customerListRes[i]['leg']));
           if (deleteSummaryErr) {
             throw new Error('Error while delete summary data ' + deleteSummaryErr);

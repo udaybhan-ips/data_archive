@@ -238,7 +238,7 @@ async function checkApprovalStatus(data, carrier) {
 
   const mailOption = {
     from: 'ips_tech@sysmail.ipsism.co.jp',
-    to: 'uday@ipsism.co.jp',
+    to: 'uday@ipspro.co.jp',
     //cc: 'y_ito@ipsism.co.jp',
     //     cc:'gaurav@ipsism.co.jp,abhilash@ipsism.co.jp,vijay@ipsism.co.jp',
     subject,

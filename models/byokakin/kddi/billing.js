@@ -62,8 +62,8 @@ module.exports = {
 
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
-      where is_deleted = false
-      
+      where is_deleted = false 
+      and customer_cd = '00001204'
       and service_type ->> 'kddi_customer'  = 'true' 
       order by customer_code`;
      // const query = `select id, customer_code from kddi_customer where customer_code::int= '516' and deleted = false  order by customer_code::int `;
@@ -84,7 +84,6 @@ module.exports = {
     try {
 
       const query = `delete from byokakin_kddi_processedcdr_${year}${month} where customercode='${customerId}' `;
-
       const deleteRes = await db.queryByokakin(query, []);
       if (!deleteRes) {
         throw new Error('not found')
@@ -344,7 +343,7 @@ function generateCustomerInformation(doc, invoice, y, koteiAmount, cdrAmount, su
 }
 
 function basciInfo(doc, y, company_code, customer_name, billingYear, billingMonth) {
-  const todayYYYYMMDD= getYearMonthDay();
+  const todayYYYYMMDD = getYearMonthDay();
   const todayYYYYMMDDArr = todayYYYYMMDD.split("-");
 
   let numerOfDays = new Date(billingYear, billingMonth, 0).getDate();

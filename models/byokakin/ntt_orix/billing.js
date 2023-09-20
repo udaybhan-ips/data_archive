@@ -367,6 +367,7 @@ function customTable(doc, y, data, MAXY) {
     textInRowFirst(doc, '¥' + utility.numberWithCommas(parseFloat(data[i].amount).toFixed(2)), 475, height, "right", 65);
 
     if (height >= 750) {
+      
       // doc.text(counter, 500, 720)
       doc.addPage()
       height = 50;

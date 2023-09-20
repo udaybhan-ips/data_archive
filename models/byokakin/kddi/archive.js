@@ -513,7 +513,7 @@ module.exports = {
                 obj1['contentsprovider'] = row[12];
                 obj1['amount'] = parseInt(row[13]);
                 obj1['taxinclude'] = row[14];
-                obj1['datebill'] = `${billingYear}-${billingMonth}-01`;;
+                obj1['datebill'] = `${billingYear}-${billingMonth}-01`;
 
                 csvDataContents.push(obj1);
                 csvstream.resume();
@@ -567,8 +567,6 @@ module.exports = {
       } else {
         return "data is already there";
       }
-
-
     } catch (error) {
       throw new Error("Error!!" + error.message)
     }
@@ -690,7 +688,7 @@ module.exports = {
             obj1['contentsprovider'] = data[i][12];
             obj1['amount'] = parseInt(data[i][13]);
             obj1['taxinclude'] = data[i][14];
-            obj1['datebill'] = `${billingYear}-${billingMonth}-01`;;
+            obj1['datebill'] = `${billingYear}-${billingMonth}-01`;
 
             csvDataContents.push(obj1);
 

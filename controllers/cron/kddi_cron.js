@@ -10,20 +10,20 @@ var billingController = require('../byokakin/kddi/billing.controller');
 //     console.log('This is byokakin archiver End');  
 // },null, true, 'Asia/Tokyo');
 
-// var archiverJob = new CronJob ('2 12 * * *',function(){
+// var archiverJob = new CronJob ('8 10 * * *',function(){
 //     console.log('This is byokakin archiver start');
 //     archiveController.uploadKDDIRAW();
 //     console.log('This is byokakin archiver End');  
 // },null, true, 'Asia/Tokyo');
 
-// var CDRProcessingControllerJob = new CronJob ('27 16 * * *',function(){
+// var CDRProcessingControllerJob = new CronJob ('1 14 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.cdrProcessing();
 //     console.log('This is byokakin email notification end');
 
 // },null, true, 'Asia/Tokyo');
 
-// var billingControllerJob = new CronJob ('17 10 * * *',function(){
+// var billingControllerJob = new CronJob ('58 11 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.getData();
 //     console.log('This is byokakin email notification end');

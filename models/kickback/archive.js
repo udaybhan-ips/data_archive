@@ -144,9 +144,12 @@ module.exports = {
   deleteTargetDateCDR: async function (targetDate, tableName) {
     try {
       const query = `delete FROM ${tableName} where START_TIME::date = '${targetDate}'::date`;
+      console.log("I am here!!")
       const deleteTargetDateRes = await db.query(query, []);
+      console.log("I am here 1!!")
       return deleteTargetDateRes;
     } catch (error) {
+      console.log("Error in deleting records "+error.message);
       return error;
     }
   },
