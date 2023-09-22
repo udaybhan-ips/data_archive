@@ -253,7 +253,9 @@ module.exports = {
 
   async deleteKotehiProcessedData(req, res) {
     try {
+      console.log("req.body.."+JSON.stringify(req.body))
       const [deleteKotehiProcessedDataRes, deleteKotehiProcessedDataErr] = await handleError(ArchiveKDDI.deleteKotehiProcessedData(req.body));
+
       if (deleteKotehiProcessedDataErr) {
         //throw new Error('Could not fetch the summary');
         return res.status(500).json({

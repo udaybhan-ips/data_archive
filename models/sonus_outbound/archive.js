@@ -61,9 +61,10 @@ module.exports = {
   getProcessedKotehiData: async function ({ year, month, comCode }) {
     try {
 
-      const query = ` select count(*), sum(amount) as amount,  comp_acco__c, companyname from ips_kotehi_cdr_bill 
+      const query = ` select count(*), sum(amount) as amount,  comp_acco__c, companyname ,  max(date_added) as date_added , 
+        added_by from ips_kotehi_cdr_bill 
           where to_char(datebill::date, 'MM-YYYY')='${month}-${year}'
-          group by comp_acco__c, companyname `;
+          group by comp_acco__c, companyname, added_by `;
       const processedKotehiData = await db.queryByokakin(query, []);
       //console.log(targetDateRes);
       if (processedKotehiData && processedKotehiData.rows) {

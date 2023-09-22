@@ -234,10 +234,6 @@ module.exports = {
     }
   },
 
-
-
-
-
   getLastMonthKDDIKotehiData: async function ({ year, month, comCode }) {
     try {
       let where = "";
@@ -312,14 +308,24 @@ module.exports = {
       //const query = `select  substring(split_part(bill_numb__c, '-',2),4) as comp_code,  sum (amount) from kddi_kotei_bill_details 
       //where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_numb__c, '-',2),4) `;
 
-      const query = `select * from (select  substring(split_part(bill_numb__c, '-',2),4) as comp_code, 
+      const query = `select lj.*, rj.date_added, rj.added_by from (select * from (select  substring(split_part(bill_numb__c, '-',2),4) as comp_code, 
        sum (amount) from kddi_kotei_bill_details  where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' 
        group by substring(split_part(bill_numb__c, '-',2),4)) as current_month  
        left join 
        (select  substring(split_part(bill_numb__c, '-',2),4) as prev_comp_code, sum (amount) as prev_amount 
        from kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}' 
        group by substring(split_part(bill_numb__c, '-',2),4) ) as prev_month 
-       on (current_month.comp_code=prev_month.prev_comp_code)`
+       on (current_month.comp_code=prev_month.prev_comp_code)) lj
+
+       left join (
+        select date_added, added_by, substring(split_part(bill_numb__c, '-',2),4) as comp_code from 
+        kddi_kotei_bill_summary where to_char(bill_start__c::date, 'MM-YYYY') ='${month}-${year}' and deleted=false
+
+       ) as rj on (lj.comp_code=rj.comp_code)
+       
+       `;
+
+
 
 
       const getKDDIKotehiProcessedDataRes = await db.queryByokakin(query, []);
@@ -334,10 +340,17 @@ module.exports = {
     try {
       console.log("year, month .." + billing_month, customer_cd);
 
-      const query = `delete from kddi_kotei_bill_details where to_char(bill_start__c,'YYYY-MM') ='${billing_month}' and comp_acco__c='${customer_cd}' `;
-      const deleteKotehiProcessedDataRes = await db.queryByokakin(query, []);
+      const query = `delete from kddi_kotei_bill_details where to_char(bill_start__c,'YYYY-MM') ='${billing_month}' 
+      and comp_acco__c='${customer_cd}' `;
 
-      console.log(JSON.stringify(deleteKotehiProcessedDataRes))
+      const querySumarry = `update kddi_kotei_bill_summary set deleted = true, deleted_by='${deleted_by}' 
+      where to_char(bill_start__c,'YYYY-MM') ='${billing_month}' and comp_acco__c='${customer_cd}' `;
+
+      const deleteKotehiProcessedDataRes = await db.queryByokakin(query, []);
+      const deleteKotehiProcessedSummaryDataRes = await db.queryByokakin(querySumarry, []);
+
+      //console.log(JSON.stringify(deleteKotehiProcessedDataRes))
+
 
       return deleteKotehiProcessedDataRes;
     } catch (e) {
@@ -380,9 +393,10 @@ module.exports = {
         let tmpData = [];
 
         const bill_numb__c = `KDDI-FIX${comCode.slice(comCode.length - 4)}-${year}${month}-1`;
-
+        let amount = 0;
         for (let i = 0; i < data.length; i++) {
           let tmpObj = {};
+          amount += parseFloat(data[i]['amount']) ;
 
           tmpObj['cdrid'] = data[i]['cdrid'];
           tmpObj['companyname'] = data[i]['companyname'];
@@ -402,7 +416,15 @@ module.exports = {
 
         const insertKotehiDataRes = await insertByBatches(tmpData, 'kddi_kotehi_bill_detail');
 
-        console.log("insertKotehiDataRes.." + JSON.stringify(insertKotehiDataRes));
+        const insertKotehiSummaryData = `insert into kddi_kotei_bill_summary (bill_numb__c, bill_start__c, amount, 
+          comp_acco__c, date_added, added_by) values ('${bill_numb__c}','${year}-${month}-01','${amount}',
+          '${comCode}',now(),'${currentUser}') ` ;
+
+          console.log("insertKotehiSummaryData is.."+ insertKotehiSummaryData);
+
+        const insertKotehiSummaryDataRes = await db.queryByokakin(insertKotehiSummaryData,[]);
+
+       // console.log("insertKotehiDataRes.." + JSON.stringify(insertKotehiDataRes));
 
         if (insertKotehiDataRes.length > 0 && insertKotehiDataRes[0] == null) {
           return 'done';
@@ -514,7 +536,6 @@ module.exports = {
                 obj1['amount'] = parseInt(row[13]);
                 obj1['taxinclude'] = row[14];
                 obj1['datebill'] = `${billingYear}-${billingMonth}-01`;
-
                 csvDataContents.push(obj1);
                 csvstream.resume();
               } else if (parseInt(row[0]) === 20) {

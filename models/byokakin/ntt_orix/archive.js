@@ -168,14 +168,20 @@ module.exports = {
       const lastYear = lastMonthDate.year;
       const lastMonth = lastMonthDate.month;
 
-      const query = ` select * from (select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  
+      const query = ` select lj.*, rj.date_added, rj.added_by from  ( select * from (select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  
       sum (kingaku) as amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' 
       group by substring(split_part(bill_code, '-',2),4)) as lj 
       left join 
       (select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as prev_comp_code,  
       sum (kingaku) as prev_amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}' 
       group by substring(split_part(bill_code, '-',2),4)) as last_month 
-      on (lj.comp_code= last_month.prev_comp_code) `;
+      on (lj.comp_code= last_month.prev_comp_code)) lj
+
+      left join (
+        select date_added, added_by, substring(comp_acco__c,5) as comp_code from 
+        ntt_koteihi_bill_summary where to_char(bill_start__c::date, 'MM-YYYY') ='${month}-${year}' 
+        and deleted=false and carrier ='NTT'
+       ) as rj on (lj.comp_code=rj.comp_code) `;
 
       const getNTTORIXKotehiProcessedDataRes = await db.queryByokakin(query, []);
       return getNTTORIXKotehiProcessedDataRes.rows;
@@ -191,6 +197,10 @@ module.exports = {
 
       const query = `delete from ntt_koteihi_cdr_bill where to_char(datebill,'YYYY-MM') ='${billing_month}' and comp_acco__c='${customer_cd}' `;
       const deleteKotehiProcessedDataRes = await db.queryByokakin(query, []);
+
+      const querySumarry = `update ntt_koteihi_bill_summary set deleted = true, deleted_by='${deleted_by}' 
+      where to_char(bill_start__c,'YYYY-MM') ='${billing_month}' and comp_acco__c='${customer_cd}' and carrier= 'NTT_ORIX'`;
+      const deleteKotehiProcessedSummaryDataRes = await db.queryByokakin(querySumarry, []);
 
       console.log(JSON.stringify(deleteKotehiProcessedDataRes))
 
@@ -227,6 +237,8 @@ module.exports = {
       to_char(datebill::date, 'MM-YYYY')='${selectedData.month}-${selectedData.year}' and  substring(split_part(bill_code, '-',2),4) = '${comCode4Dig}' `;
 
       const getNTTORIXKotehiLastMonthDataRes = await db.queryByokakin(query, []);
+      const bill_code = `NTTORIX-FIX${comCode.slice(comCode.length - 4)}-${selectedData.year}${selectedData.month}-1`;
+      let amount = 0;
 
       if (getNTTORIXKotehiLastMonthDataRes.rows && getNTTORIXKotehiLastMonthDataRes.rows.length > 0) {
         return 'alredy processed';
@@ -234,11 +246,11 @@ module.exports = {
 
         let tmpData = [];
 
-        const bill_code = `NTTORIX-FIX${comCode.slice(comCode.length - 4)}-${selectedData.year}${selectedData.month}-1`;
+        
 
         for (let i = 0; i < row.length; i++) {
           let tmpObj = {};
-
+          amount += parseFloat(row[i]['kingaku']);
           tmpObj['cdrid'] = row[i]['cdrid'];
           tmpObj['companyname'] = row[i]['companyname'];
           tmpObj['comp_acco__c'] = row[i]['comp_acco__c'];
@@ -257,6 +269,16 @@ module.exports = {
         const insertKotehiDataRes = await insertByBatches(tmpData, 'ntt_koteihi_cdr_bill');
 
         console.log("insertKotehiDataRes.." + JSON.stringify(insertKotehiDataRes));
+
+
+        const insertKotehiSummaryData = `insert into ntt_koteihi_bill_summary (bill_numb__c, bill_start__c, bill_sum__c, 
+          comp_acco__c, date_added, added_by, carrier) values ('${bill_code}','${selectedData.year}-${selectedData.month}-01','${amount}',
+          '${comCode}',now(),'${currentUser}', 'NTT_ORIX') ` ;
+
+          console.log("insertKotehiSummaryData is.."+ insertKotehiSummaryData);
+
+        const insertKotehiSummaryDataRes = await db.queryByokakin(insertKotehiSummaryData,[]);
+
 
         if (insertKotehiDataRes.length > 0 && insertKotehiDataRes[0] == null) {
           return 'done';
