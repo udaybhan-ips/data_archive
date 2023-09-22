@@ -160,7 +160,7 @@ module.exports = {
     }
   },
 
-  getNTTORIXKotehiProcessedData: async function ({ year, month }) {
+  getNTTORIXKotehiProcessedData: async function ({ year, month, carrier }) {
     try {
       console.log("in orix year , month .." + year, month);
       
@@ -180,7 +180,7 @@ module.exports = {
       left join (
         select date_added, added_by, substring(comp_acco__c,5) as comp_code from 
         ntt_koteihi_bill_summary where to_char(bill_start__c::date, 'MM-YYYY') ='${month}-${year}' 
-        and deleted=false and carrier ='NTT'
+        and deleted=false 
        ) as rj on (lj.comp_code=rj.comp_code) `;
 
       const getNTTORIXKotehiProcessedDataRes = await db.queryByokakin(query, []);
