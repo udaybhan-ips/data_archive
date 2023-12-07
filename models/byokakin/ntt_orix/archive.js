@@ -10,7 +10,7 @@ let ColumnSetNTTORIXKoteihiCDR = ['companyname', 'comp_acco__c', 'kaisenbango',
 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'hiwarihyouji', 'datebill', 'linkedcdrid','carrier'];
 let tableNameNTTORIXKoteihiCDR = { table: 'ntt_koteihi_cdr' };
 let ColumnSetNTTORIXKoteihiCDRBILL = ['cdrid', 'bill_code', 'comp_acco__c', 'bill_count', 'companyname', 
-'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'datebill','carrier'];
+'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun', 'datebill','carrier','ips_amount'];
 let tableNameNTTORIXKoteihiCDRBILL = { table: 'ntt_koteihi_cdr_bill' };
 
 
@@ -238,7 +238,7 @@ module.exports = {
 
       const getNTTORIXKotehiLastMonthDataRes = await db.queryByokakin(query, []);
       const bill_code = `NTTORIX-FIX${comCode.slice(comCode.length - 4)}-${selectedData.year}${selectedData.month}-1`;
-      let amount = 0;
+      let amount = 0,  ipsAmount= 0;
 
       if (getNTTORIXKotehiLastMonthDataRes.rows && getNTTORIXKotehiLastMonthDataRes.rows.length > 0) {
         return 'alredy processed';
@@ -249,7 +249,14 @@ module.exports = {
         
 
         for (let i = 0; i < row.length; i++) {
-          let tmpObj = {};
+          let tmpObj = {}, ips_amount =0 ;
+          if(row[i]['ips_amount']!==undefined && row[i]['ips_amount']!==null && row[i]['ips_amount']!==''){
+            ipsAmount += parseFloat(row[i]['ips_amount']);
+            ips_amount = row[i]['ips_amount'];
+          }
+          else{
+            ipsAmount = 0;
+          }
           amount += parseFloat(row[i]['kingaku']);
           tmpObj['cdrid'] = row[i]['cdrid'];
           tmpObj['companyname'] = row[i]['companyname'];
@@ -264,6 +271,7 @@ module.exports = {
           tmpObj['zeikubun'] = row[i]['zeikubun'];
           tmpObj['kingaku'] = row[i]['kingaku'];
           tmpObj['carrier'] = 'NTT_ORIX';
+          tmpObj['ips_amount'] = ips_amount;
           tmpData.push(tmpObj);
         }
         const insertKotehiDataRes = await insertByBatches(tmpData, 'ntt_koteihi_cdr_bill');
@@ -272,8 +280,8 @@ module.exports = {
 
 
         const insertKotehiSummaryData = `insert into ntt_koteihi_bill_summary (bill_numb__c, bill_start__c, bill_sum__c, 
-          comp_acco__c, date_added, added_by, carrier) values ('${bill_code}','${selectedData.year}-${selectedData.month}-01','${amount}',
-          '${comCode}',now(),'${currentUser}', 'NTT_ORIX') ` ;
+          comp_acco__c, date_added, added_by, carrier, ips_amount) values ('${bill_code}','${selectedData.year}-${selectedData.month}-01','${amount}',
+          '${comCode}',now(),'${currentUser}', 'NTT_ORIX', '${ipsAmount}') ` ;
 
           console.log("insertKotehiSummaryData is.."+ insertKotehiSummaryData);
 

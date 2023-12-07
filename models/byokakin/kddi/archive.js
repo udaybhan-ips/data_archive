@@ -15,7 +15,8 @@ let ColumnSetInfini = ['servicecode', 'did', 'usednumber', 'cld', 'calldate', 'c
 let ColumnSetKDDIRAW = ['did', 'freedialnum', 'cld', 'calldate', 'calltime', 'callduration', 'source', 'destination', 'callclassi', 'calltype', 'callcharge', 'customercode'];
 
 
-let ColumnSetKDDIBillDetail = ['bill_numb__c', 'bill_start__c', 'cdrtype', 'cdrid', 'cdrcnt', 'account', 'servicename', 'productname', 'taxinclude', 'amount', 'comp_acco__c'];
+let ColumnSetKDDIBillDetail = ['bill_numb__c', 'bill_start__c', 'cdrtype', 'cdrid', 'cdrcnt', 'account', 'servicename', 'productname', 'taxinclude', 
+'amount', 'comp_acco__c','ips_amount'];
 let tableNameKDDIBillDetail = { table: 'kddi_kotei_bill_details' };
 
 
@@ -393,11 +394,17 @@ module.exports = {
         let tmpData = [];
 
         const bill_numb__c = `KDDI-FIX${comCode.slice(comCode.length - 4)}-${year}${month}-1`;
-        let amount = 0;
+        let amount = 0, ips_amount = 0;
         for (let i = 0; i < data.length; i++) {
-          let tmpObj = {};
+          let tmpObj = {}, ipsAmount = 0;
           amount += parseFloat(data[i]['amount']) ;
-
+          if(data[i]['ips_amount']!==undefined && data[i]['ips_amount']!==null && data[i]['ips_amount']!==''){
+            ips_amount += parseFloat(data[i]['ips_amount']);
+            ipsAmount = data[i]['ips_amount'];
+          }
+          else{
+            ips_amount = 0;
+          }
           tmpObj['cdrid'] = data[i]['cdrid'];
           tmpObj['companyname'] = data[i]['companyname'];
           tmpObj['comp_acco__c'] = data[i]['comp_acco__c'];
@@ -410,6 +417,7 @@ module.exports = {
           tmpObj['productname'] = data[i]['product_name'];
           tmpObj['taxinclude'] = '課税';
           tmpObj['amount'] = data[i]['amount'];
+          tmpObj['ips_amount'] = ipsAmount;
           tmpData.push(tmpObj);
         }
 
@@ -417,8 +425,8 @@ module.exports = {
         const insertKotehiDataRes = await insertByBatches(tmpData, 'kddi_kotehi_bill_detail');
 
         const insertKotehiSummaryData = `insert into kddi_kotei_bill_summary (bill_numb__c, bill_start__c, amount, 
-          comp_acco__c, date_added, added_by) values ('${bill_numb__c}','${year}-${month}-01','${amount}',
-          '${comCode}',now(),'${currentUser}') ` ;
+          comp_acco__c, date_added, added_by, ips_amount) values ('${bill_numb__c}','${year}-${month}-01','${amount}',
+          '${comCode}',now(),'${currentUser}', '${ips_amount}') ` ;
 
           console.log("insertKotehiSummaryData is.."+ insertKotehiSummaryData);
 

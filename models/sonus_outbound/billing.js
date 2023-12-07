@@ -21,7 +21,7 @@ module.exports = {
       if (customerId) {
         where = ` customer_id= '${customerId}' and deleted= false `;
       } else {
-        where = ` deleted = false `;
+        where = ` deleted = false  `;
       }
 
       const query = `select details_invoice, customer_id, landline as landline_rate, mobile as mobile_rate from sonus_outbound_rates where 

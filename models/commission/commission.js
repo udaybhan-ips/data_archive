@@ -2,6 +2,115 @@ var db = require('../../config/database');
 var utility = require('./../../public/javascripts/utility');
 
 module.exports = {
+
+  getCommissionConfig: async function (data) {
+
+    try {
+      const query = `select * from agent_commission_config where deleted = false order by agent_id ` ;
+      //  console.log("query.."+query)
+      const getCommissionConfigRes = await db.queryByokakin(query, []);
+      if (getCommissionConfigRes.rows) {
+        return (getCommissionConfigRes.rows);
+      }
+      throw new Error('not found')
+    } catch (error) {
+      console.log("error in getting commission config !" + error.message)
+      throw new Error(error.message)
+    }
+  },
+
+  deleteCommissionConfig: async function (data) {
+    console.log("data..." + JSON.stringify(data))    
+    try {
+      const query = `update agent_commission_config  set deleted=${data.deleted}, update_by='${data.edit_by}', 
+      updated_date=now()  where id ='${data.id}' `;      
+      //  console.log("query.."+query)
+      const deleteRes = await db.queryByokakin(query, []);      
+      if (deleteRes ) {
+        return (deleteRes);
+      }
+      throw new Error('not found')
+    } catch (error) {
+      console.log("error in delete commission data !" + error.message)
+      throw new Error(error.message)
+    }
+  },
+
+  
+  addCommissionConfig: async function (data) {
+
+    console.log("data..." + JSON.stringify(data))
+    
+    try {
+      const query = `insert into agent_commission_config  (agent_id, payment_due_date_mode, email_content, email_to, email_cc, date_added,added_by) 
+      values ('${data.comp_code}','${data.payment_plan_type}','${data.email_content}','${data.email_to}','${data.email_cc}',now(),'${data.addedBy}')`;
+      
+      //  console.log("query.."+query)
+
+      const deleteRes = await db.queryByokakin(query, []);
+      
+
+      if (deleteRes ) {
+        return (deleteRes);
+      }
+      throw new Error('not found')
+
+    } catch (error) {
+      console.log("error in delete commission data !" + error.message)
+      throw new Error(error.message)
+    }
+  },
+  
+  updateCommissionConfig: async function (data) {
+
+    console.log("data..." + JSON.stringify(data))
+    let updateData = "", agentId = "";
+    try {
+
+      if(data.agent_id!==undefined && data.agent_id!==null && data.agent_id!=='' ){
+          agentId = data.agent_id ;
+      }else{
+        throw new Error("Invalid request!");
+      }
+
+
+      if (data.payment_due_date_mode) {
+        updateData = `payment_due_date_mode= '${data.payment_plan_type}',`;
+      }
+      if (data.email_content) {
+        updateData = updateData + `email_content= '${data.email_content}',`;
+      }
+      if (data.email_to) {
+        updateData = updateData + `email_to= '${data.email_to}',`;
+      }
+      if (data.email_cc) {
+        updateData = updateData + `email_cc= '${data.email_cc}',`;
+      }
+      
+      updateData = updateData + `update_by= '${data.edit_by}',`;
+      updateData = updateData + `updated_date= now()`;
+    
+      
+
+      const query = `update agent_commission_config  set ${updateData} where agent_id ='${agentId}' `;
+      
+
+      //  console.log("query.."+query)
+
+      const deleteRes = await db.queryByokakin(query, []);
+      
+
+      if (deleteRes ) {
+        return (deleteRes);
+      }
+      throw new Error('not found')
+
+    } catch (error) {
+      console.log("error in update commission config data !" + error.message)
+      throw new Error(error.message)
+    }
+  },
+
   getCommissionInfo: async function (data) {
 
     try {

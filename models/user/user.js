@@ -130,7 +130,7 @@ module.exports = {
         reject('error: email and/or password missing')
       }
       else {
-        validatePassword(data.password, 6)
+        validatePassword(data.password, 8)
           .then(function() {
             return hashPassword(data.password);
           })
@@ -158,7 +158,7 @@ module.exports = {
              return verifyPasswordCus(data.current_password, user);
           })
           .then(function(result) {
-            validatePassword(data.password, 6)
+            validatePassword(data.password, 8)
             .then(function() {
               return hashPassword(data.password);
             })
@@ -300,7 +300,7 @@ function validateUserData(data) {
       reject('email and/or password missing')
     }
     else {
-      validatePassword(data.password, 6)
+      validatePassword(data.password, 8)
         .then(function() {
           return validateEmail(data.email);
         })

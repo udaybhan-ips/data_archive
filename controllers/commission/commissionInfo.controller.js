@@ -1,6 +1,84 @@
 var CommissionInfo = require('../../models/commission/commission');
 
 module.exports = {
+
+  getCommissionConfig: async function(req, res) {
+    
+    try {
+        const [agentCommissionConfigRes,agentCommissionConfigErr] = await handleError(CommissionInfo.getCommissionConfig(req.body));
+        if(agentCommissionConfigErr) {
+
+             return res.status(500).json({
+              message: agentCommissionConfigErr.message
+            });  
+        }
+        return res.status(200).json(agentCommissionConfigRes);
+        
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+
+  deleteCommissionConfig: async function(req, res) {
+    
+    try {
+        const [deleteCommissionConfigRes,deleteCommissionConfigErr] = await handleError(CommissionInfo.deleteCommissionConfig(req.body));
+        if(deleteCommissionConfigErr) {
+
+             return res.status(500).json({
+              message: deleteCommissionConfigErr.message
+            });  
+        }
+        return res.status(200).json(deleteCommissionConfigRes);
+        
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+  
+  addCommissionConfig: async function(req, res) {
+    
+    try {
+        const [addCommissionConfigRes,addCommissionConfigErr] = await handleError(CommissionInfo.addCommissionConfig(req.body));
+        if(addCommissionConfigErr) {
+             return res.status(500).json({
+              message: addCommissionConfigErr.message
+            });  
+        }
+        return res.status(200).json(addCommissionConfigRes);
+        
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+
+  updateCommissionConfig: async function(req, res) {
+    console.log("req..."+JSON.stringify(req.body))
+    try {
+        const [updateCommConfigRes,updateCommConfigErr] = await handleError(CommissionInfo.updateCommissionConfig(req.body));
+
+
+        if(updateCommConfigErr) {
+
+             return res.status(500).json({
+              message: updateCommConfigErr.message
+            });  
+        }
+        return res.status(200).json(updateCommConfigRes);
+        
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+
   getCommissionInfo: async function(req, res) {
     
     try {

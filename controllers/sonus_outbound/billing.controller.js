@@ -17,7 +17,7 @@ module.exports = {
           billingMonth='0'+ billingMonth;
         }
 
-        const [customerListRes,customerListErr] = await handleError(BillingSonusOutbound.getAllSonusOutboundCustomer('00001401'));
+        const [customerListRes,customerListErr] = await handleError(BillingSonusOutbound.getAllSonusOutboundCustomer());
         if(customerListErr) {
           throw new Error('Could not fetch customer list');  
         }
@@ -25,7 +25,7 @@ module.exports = {
         for(let i=0; i<customerListRes.length;i++){
 
           detailsData = customerListRes[i]['details_invoice'] ; 
-          
+          // For details invoice creation
           if(detailsData){
             const [deleteDetailsRes, deleteDetailsErr] = await handleError(BillingSonusOutbound.deleteDetailData(customerListRes[i]['customer_id'], billingYear, billingMonth));
             if(deleteDetailsErr) {
@@ -39,15 +39,15 @@ module.exports = {
           }
 
           
-          // const [deleteSummaryRes, deleteSummaryErr] = await handleError(BillingSonusOutbound.deleteSummaryData(customerListRes[i]['customer_id'], billingYear, billingMonth));
-          // if(deleteSummaryErr) {
-          //   throw new Error('Error while delete summary data '+ deleteSummaryErr);  
-          // } 
+          const [deleteSummaryRes, deleteSummaryErr] = await handleError(BillingSonusOutbound.deleteSummaryData(customerListRes[i]['customer_id'], billingYear, billingMonth));
+          if(deleteSummaryErr) {
+            throw new Error('Error while delete summary data '+ deleteSummaryErr);  
+          } 
 
-          // const [createSummaryRes, createSummaryErr] = await handleError(BillingSonusOutbound.createSummaryData(customerListRes[i]['customer_id'], billingYear, billingMonth, customerListRes[i]['landline_rate'], customerListRes[i]['mobile_rate']));
-          // if(createSummaryErr) {
-          //   throw new Error('Error while creating summary data '+ createSummaryErr);  
-          // }
+          const [createSummaryRes, createSummaryErr] = await handleError(BillingSonusOutbound.createSummaryData(customerListRes[i]['customer_id'], billingYear, billingMonth, customerListRes[i]['landline_rate'], customerListRes[i]['mobile_rate']));
+          if(createSummaryErr) {
+            throw new Error('Error while creating summary data '+ createSummaryErr);  
+          }
         
         }
 

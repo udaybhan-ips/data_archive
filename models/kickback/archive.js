@@ -8,12 +8,37 @@ const CDR_CS = 'cdr_cs';
 const BILLCDR_CS = 'billcdr_cs';
 
 
+
+let ColumnSetNewSonus = ['cdr_id', 'gw', 'session_id', 'start_time', 'stop_time', 'callduration', 'disconnect_reason', 'calltype_id','calling_number',
+ 'called_number', 'ingr_pstn_trunk_name', 'calling_name', 'orig_ioi', 'term_ioi', 'calling_type','called_type', 'date_added', 'duration_use', 
+ 'sonus_duration','company_code','term_carrier_id', 'orig_carrier_id'];
+
 let ColumnSetSonus = ['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound','dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_company_code', 'trunk_port','sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_anani','sonus_incallednumber', 'sonus_ingressprotocolvariant', 'registerdate', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus','sonus_callingnumber', 'sonus_egcallednumber'];
 
 let ColumnSetBillCDR = ['cdr_id', 'date_bill', 'company_code', 'carrier_code', 'in_outbound', 'call_type', 'trunk_port_target', 'duration', 'start_time', 'stop_time', 'orig_ani', 'term_ani', 'route_info', 'date_update', 'orig_carrier_id', 'term_carrier_id','transit_carrier_id', 'selected_carrier_id', 'trunk_port_name', 'gw', 'session_id', 'call_status', 'kick_company', 'term_use']
 
 module.exports = {
+  getTargetNewCDR: async function (targetDate) {
+    console.log("Here!")
+    try {
+      const query = `select *, CALLDURATION*0.01 AS DURATION from cdr where  start_time>='${targetDate}' and  
+      start_time < DATE_ADD("${targetDate}", INTERVAL 30 DAY) and ingr_pstn_trunk_name ='INNET00'     ` ;
+      //const query = `select * from cdr where start_time>='${targetDate}' and  start_time < DATE_ADD("${targetDate}", INTERVAL 1 DAY) ` ;
 
+      //STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
+        //AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
+        //AND (INGRPSTNTRUNKNAME IN ('IPSCSQFFFFJ7','IPSCSQ0000J7') ) 
+
+        console.log("new get sql query="+query);
+
+      const data = await db.mySQLQuery(query, [], 'new_data');
+
+      //console.log("data.."+JSON.stringify(data))
+      return data;
+    } catch (error) {
+      return error;
+    }
+  },
   getTargetDate: async function (date_id) {
     try {
       const query = `SELECT date_id , date_set::date + interval '1' day as next_run_time  ,  (date_set)::date + interval '0 HOURS' as target_date , (date_set)::date - interval '9 HOURS'  as target_date_with_timezone FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
@@ -187,7 +212,10 @@ module.exports = {
   },
   getTargetBillableCDR: async function (targetDate, tableName) {
     try {
-      const query = `SELECT * from ${tableName} where (SONUS_GW IN ('nfpgsx4','IPSGSX5'))  AND ((TERM_ANI ILIKE '035050%')
+      const query = `SELECT  cdr_id, date_bill, billing_company_code, orig_carrier_id, in_outbound, dom_int_call, trunk_port, duration_use,
+       start_time, stop_time, orig_ani, sonus_incallednumber, sonus_ingressprotocolvariant, term_carrier_id, transit_carrier_id, 
+       selected_carrier_id, sonus_ingrpstntrunkname, sonus_gw, sonus_session_id, sonus_callstatus from ${tableName} where 
+       (SONUS_GW IN ('nfpgsx4','IPSGSX5'))  AND ((TERM_ANI ILIKE '035050%')
        OR (TERM_ANI ILIKE '35050%') OR (TERM_ANI ILIKE '036110%') OR (TERM_ANI ILIKE '36110%') OR (TERM_ANI ILIKE '050505%')
        OR (TERM_ANI ILIKE '50505%')) and start_time::date='${targetDate}'::date   `;
 
@@ -212,16 +240,25 @@ module.exports = {
     let res = [], ColumnSetValue;
     let resArr = [];
     
-    try{
 
-      if(__type == 'raw_cdr')  {
+    console.log("chunkArray len is ..."+chunkArray.length)
+
+    try{
+      if(__type =='cdr_202311_new'){
+        ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetNewSonus, { table: 'cdr_202311_new' }) 
+      }
+      else if(__type == 'raw_cdr')  {
         ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetSonus, { table: tableName })           
       }else{
         ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetBillCDR, { table: tableName })           
       }
       
       for (let i = 0; i < chunkArray.length; i++) {
-        if (__type == 'raw_cdr') {       
+        if(__type =='cdr_202311_new'){
+          const data = await getNextInsertBatchNew(chunkArray[i], '', '');   
+          res = await db.queryBatchInsert(data, 'ibs', ColumnSetValue);
+        }
+        else if (__type == 'raw_cdr') {       
           const data = await getNextInsertBatch(chunkArray[i], getCompanyCodeInfoRes, getRemoteControlNumberDataRes);   
           res = await db.queryBatchInsert(data, 'sonus', ColumnSetValue);
         } else if (__type == 'bill_cdr') {
@@ -576,6 +613,134 @@ async function getNextInsertBatch(data, getCompanyCodeInfoRes, getRemoteControlN
   return valueArray;
 
 }
+
+async function getNextInsertBatchNew(data) {
+  const dataLen = data.length;
+  console.log("data preapering for new sonus data ");
+  let valueArray = [];
+
+ // ['cdr_id', 'gw', 'session_id', 'start_time', 'stop_time', 'callduration', 'disconnect_reason', 'calltype_id','calling_number',
+ //'called_number', 'ingr_pstn_trunk_name', 'calling_name', 'orig_ioi', 'term_ioi', 'calling_type','called_type', 'date_added'];
+
+  try {
+    for (let i = 0; i < dataLen; i++) {
+
+      // let INCALLEDNUMBER = data[i]['INCALLEDNUMBER'] ;
+
+      // if(data[i]['INCALLEDNUMBER'].substring(0,4) == '4266'){
+      //   INCALLEDNUMBER = data[i]['INCALLEDNUMBER'].substring(4);
+      // }
+
+      // const { TRUNKPORT, XFB, XFC, XFD, XFE, XFEF, XFEL, INOU, INDO, XFEC } = await getInOutbound(data[i]['INGRESSPROTOCOLVARIANT'], data[i]['INGRPSTNTRUNKNAME']);
+      // const companyCode = await getCompanyCode(XFB, XFC, XFD, XFE, data[i]['ORIGDATE'], INCALLEDNUMBER, getCompanyCodeInfoRes, getRemoteControlNumberDataRes);
+
+
+      //console.log("data[i]['START_TIME'] len ..."+ data[i]['START_TIME'].toString().length )
+
+      if(data[i]['START_TIME'].toString().length !=55){
+        console.log("data[i]['START_TIME'] len ..."+ data[i]['START_TIME'] )
+      }
+
+      if(data[i]['DISCONNECT_TIME'].toString().length !=55){
+        console.log("data[i]['DISCONNECT_TIME'] len ..."+ data[i]['DISCONNECT_TIME'] )
+        console.log("data[i]['START_TIME']"+data[i]['START_TIME'])
+      }
+
+      const companyCode = await getCompanyCodeNew(data[i]['ORIG_IOI']);
+      const termCarrierId = await getTermCarrierId(data[i]['CALLED_NUMBER']);
+
+      let origCarrierId = "";
+      if(companyCode =='1011000056'){
+        origCarrierId = '5001'
+      }else if(companyCode=='1011000057'){
+        origCarrierId = '5007'
+      }
+      
+      let obj = {};
+      obj['cdr_id'] = data[i]['ID'];
+      obj['gw'] = data[i]['GW'];
+      obj['session_id'] = data[i]['SESSION_ID'];
+      obj['stop_time'] = data[i]['DISCONNECT_TIME'];
+      obj['start_time'] = data[i]['START_TIME'];
+      obj['callduration'] = parseFloat(data[i]['DURATION']);
+      obj['duration_use'] = await getDurationUse(data[i]['DURATION']);
+      obj['sonus_duration'] = parseFloat(data[i]['CALLDURATION']);
+
+      obj['disconnect_reason'] = data[i]['DISCONNECT_REASON'];;
+      obj['calltype_id'] = data[i]['CALL_TYPE_ID'];;
+      obj['calling_number'] = data[i]['CALLING_NUMBER'];;
+      obj['called_number'] = data[i]['CALLED_NUMBER'];;
+      obj['ingr_pstn_trunk_name'] = data[i]['INGR_PSTN_TRUNK_NAME'];;
+     
+      obj['calling_name'] = data[i]['CALLING_NAME'];
+      obj['orig_ioi'] = data[i]['ORIG_IOI'];
+      obj['term_ioi'] = data[i]['TERM_IOI'];
+      obj['calling_type'] = data[i]['CALLING_TYPE'];
+      obj['called_type'] = data[i]['CALLED_TYPE'];
+      obj['company_code'] = companyCode;
+      obj['term_carrier_id'] = termCarrierId;
+      obj['orig_carrier_id'] = origCarrierId;
+      obj['date_added'] = 'now()';
+
+      // obj['sonus_anani'] = data[i]['INANI'];
+      // obj['sonus_incallednumber'] = INCALLEDNUMBER;
+      // obj['sonus_ingressprotocolvariant'] = data[i]['CALLED_TYPE'];
+      // obj['registerdate'] = 'now()';
+      // obj['sonus_ingrpstntrunkname'] = data[i]['INGRPSTNTRUNKNAME'];
+      // obj['sonus_gw'] = data[i]['GW'];
+      // obj['sonus_callstatus'] = data[i]['CALLSTATUS'];
+      // obj['sonus_callingnumber'] = data[i]['CALLINGNUMBER'];
+      // obj['sonus_egcallednumber'] = data[i]['EGCALLEDNUMBER'];
+
+      valueArray.push(obj);
+    }
+  } catch (err) {
+    console.log("err in data preapring==" + err.message);
+  }
+  console.log("arr length=" + (valueArray.length));
+  return valueArray;
+
+}
+
+async function getCompanyCodeNew(origIOI){
+  let res = "9999999999";
+
+  if(origIOI.includes("ntt-east")){
+    res = "1011000056";
+  }else if(origIOI.includes("ntt-west")){
+    res = "1011000057";
+  } 
+
+  return res;
+
+}
+
+async function getTermCarrierId(calledNumber){
+  let res = "NA", len = calledNumber.length ;
+
+  if(len===11){
+    let subStr = calledNumber.substring(2,3);
+    
+    if(subStr=='3'){
+      res = '5039'
+    }else if(subStr=='5'){
+      res = '5040'
+    }
+
+  }else {
+    let subStr = calledNumber.substring(0,1);
+    
+    if(subStr=='3'){
+      res = '5039'
+    }else if(subStr=='5'){
+      res = '5040'
+    }
+  } 
+
+  return res;
+
+}
+
 
 async function getNextInsertBatchBillCDR(data, companyInfo, carrierInfo) {
   console.log("data preapering for bill cdr");

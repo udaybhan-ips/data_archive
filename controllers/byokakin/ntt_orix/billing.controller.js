@@ -1,6 +1,6 @@
 var BillingByokakin = require('../../../models/byokakin/ntt_orix/billing');
 const dateId = 3;
-const billingMonth = '07', billingYear = "2023";
+const billingMonth = '10', billingYear = "2023";
 const carrier = 'NTTORIX'
 
 module.exports = {
@@ -27,6 +27,14 @@ module.exports = {
         // console.log("bill_no " + BillNoArr.max_bill_no);
 
         // let bill_no = parseInt(BillNoArr.max_bill_no, 10) + 1;
+
+        // delete processed data first...
+
+        const [deleteProcessedDataRes, deleteProcessedDataErr] = await handleError(BillingByokakin.deleteProcessedData(getNTTCompListRes[i]['customer_code'], billingYear, billingMonth));
+        if (deleteProcessedDataErr) {
+          throw new Error('Could not delete ntt orix processed data...');
+        }
+
 
 
 
@@ -63,7 +71,7 @@ module.exports = {
         
       }
 
-      console.log("cdr processing done..")
+     
 
       return {
         message: 'success! data inserted sucessfully',

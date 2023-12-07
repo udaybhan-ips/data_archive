@@ -45,6 +45,21 @@ module.exports = {
     }
   },
 
+  deleteProcessedData: async function (customerId, year, month) {
+    try {
+
+      const query = `delete from byokakin_ntt_processedcdr_${year}${month} where customercode='${customerId}' and carriertype='NTTORIX' `;
+
+      const deleteRes = await db.queryByokakin(query, []);
+      
+      return deleteRes;
+
+    } catch (error) {
+      console.log("error in deleting processed data.." + error.message);
+      throw new Error("error in deleting processed data." + error.message);
+    }
+  },
+
 
   getNTTCompList: async function () {
 

@@ -412,7 +412,10 @@ module.exports = {
     //console.log("mysql connection string is=  "+mySQLConnectionString.MYSQL);
     let pool;
     console.log("query=" + text + "----" + values);
-    if (service_type == 'kickback') {
+    if(service_type == 'new_data'){
+      pool = mysql.createPool(config.MYSQL_NEW_WITHOUT_TIMEZONE);
+    }
+    else if (service_type == 'kickback') {
       pool = mysql.createPool(config.MYSQL_DATABASE_URL_WITHOUT_TIMEZONE);
     } else {
       pool = mysql.createPool(config.MYSQL_DATABASE_URL);

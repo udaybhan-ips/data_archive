@@ -6,11 +6,19 @@ const MYSQL={
   timezone: 'Z'
 }
 const MYSQL_WITHOUT_TIMEZONE={
-  host     : (process.env.MYSQL_PORT || '10.168.11.252'),
+  host     : (process.env.MYSQL_HOST || '10.168.11.252'),
   database : (process.env.MYSQL_DATABASE || 'epart'),
   user     : (process.env.MYSQL_USER ||'ipstwo'),
   password : (process.env.MYSQL_PASSWORD || 'ipstwo0032'),  
 }
+
+const MYSQL_NEW_WITHOUT_TIMEZONE={
+  host     : (process.env.MYSQL_HOST || '192.168.11.71'),
+  database : (process.env.MYSQL_DATABASE || 'fpart'),
+  user     : (process.env.MYSQL_USER ||'billing'),
+  password : (process.env.MYSQL_PASSWORD || 'C!_jAqzZ3f'),   
+}
+
 
 const MSSQLServer = {
   user: 'advent',
@@ -100,6 +108,7 @@ module.exports = {
   MYSQL_DATABASE_URL:MYSQL,
   MSSQLServer,
   MYSQL_DATABASE_URL_WITHOUT_TIMEZONE:MYSQL_WITHOUT_TIMEZONE,
+  MYSQL_NEW_WITHOUT_TIMEZONE:MYSQL_NEW_WITHOUT_TIMEZONE,
   SONUSDBWITHOUTTIMEZONE:SONUSDBWITHOUTTIMEZONE,
   BATCH_SIZE:100000
 };

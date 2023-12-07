@@ -1,10 +1,10 @@
 
-var EmailNotification = require('../../models/dms/emailNotification');
+var EmailNotification = require('../../models/commission/emailNotification');
 
 module.exports = {
   
   sendEmail: async function(req, res) {
-    const dateId='1';
+    const dateId='11';
     try {
       const [Dates,targetDateErr] = await handleError(EmailNotification.getTargetDate(dateId));
       if(targetDateErr) {

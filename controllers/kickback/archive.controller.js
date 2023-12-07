@@ -2,6 +2,33 @@ var ArchiveKickback = require('../../models/kickback/archive');
 
 
 module.exports = {
+
+  getNewData: async function (req, res) {
+    const dateId = 13;
+    try {
+
+      //getting new sonus migration data 
+
+      const [Dates, targetDateErr] = await handleError(ArchiveKickback.getTargetDate(dateId));
+      if (targetDateErr) {
+        throw new Error('Could not fetch target date');
+      }
+      const getTargetBillableNewCDRRes = await ArchiveKickback.getTargetNewCDR(Dates.targetDate);
+      const getDataBillabeRes = await ArchiveKickback.insertByBatches(getTargetBillableNewCDRRes, null, null, null, null, 'cdr_202311_new', null);
+
+      const [updateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveKickback.updateBatchControl(dateId, Dates.targetDate));
+      if (updateBatchControlErr) {
+        throw new Error('Err: while updating target date');
+      }
+
+      return res.status(200).json({
+        message: 'success! data inserted sucessfully',
+
+      });
+    } catch (error) {
+      return error;
+    }
+  },
   getData: async function (req, res) {
     const dateId = '3';
     try {

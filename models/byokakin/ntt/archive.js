@@ -8,7 +8,7 @@ let ColumnSetNTTKoteihi = ['did', 'carrier', 'carrier_name', 'service_name', 'am
 let ColumnSetNTTKoteihiCDR = ['companyname', 'comp_acco__c', 'kaisenbango', 'riyougaisya', 'seikyuuuchiwake', 'kingaku', 'zeikubun',
   'hiwarihyouji', 'datebill', 'linkedcdrid', 'carrier'];
 let ColumnSetNTTKoteihiCDRBILL = ['cdrid', 'bill_code', 'comp_acco__c', 'bill_count', 'companyname', 'kaisenbango', 'riyougaisya',
-  'seikyuuuchiwake', 'kingaku', 'zeikubun', 'datebill'];
+  'seikyuuuchiwake', 'kingaku', 'zeikubun', 'datebill','carrier','ips_amount'];
 let ColumnSetNTTInbound = ['customername', 'did', 'calldate', 'calltime', 'callduration', 'callcharge', 'callcount104',
   'freedialnum', 'source', 'division', 'terminaltype', 'carriertype'];
 let ColumnSetNTTOutbound = ['customername', 'parentdid', 'calltype', 'calldate', 'calltime', 'cld', 'destination', 'callduration',
@@ -187,6 +187,7 @@ module.exports = {
     try {
 
       let res = { message: 'not_found', cdr_basic: [] };
+      
       const query = `select  distinct(kaisenbango) as freedialnumber from ntt_koteihi_cdr  where  datebill::date ='${billingYear}-${billingMonth}-01' and comp_acco__c='99999999' `;
       const qRes = await db.queryByokakin(query, []);
       if (qRes && qRes.rows && qRes.rows.length > 0) {
@@ -377,7 +378,7 @@ module.exports = {
       const getNTTKotehiLastMonthDataRes = await db.queryByokakin(query, []);
 
       const bill_code = `NTT-FIX${comCode.slice(comCode.length - 4)}-${selectedData.year}${selectedData.month}-1`;
-      let amount = 0;
+      let amount = 0,  ipsAmount= 0;
 
       if (getNTTKotehiLastMonthDataRes.rows && getNTTKotehiLastMonthDataRes.rows.length > 0) {
         return 'alredy processed';
@@ -388,7 +389,17 @@ module.exports = {
         
 
         for (let i = 0; i < row.length; i++) {
-          let tmpObj = {};
+          let tmpObj = {}, ips_amount = 0;
+
+        //  amount += parseFloat(data[i]['amount']) ;
+          if(row[i]['ips_amount']!==undefined && row[i]['ips_amount']!==null && row[i]['ips_amount']!==''){
+            ipsAmount += parseFloat(row[i]['ips_amount']);
+            ips_amount = row[i]['ips_amount'];
+          }
+          else{
+            ipsAmount = 0;
+          }
+
           amount += parseFloat(row[i]['kingaku']);
           tmpObj['cdrid'] = row[i]['cdrid'];
           tmpObj['companyname'] = row[i]['companyname'];
@@ -402,6 +413,9 @@ module.exports = {
           tmpObj['seikyuuuchiwake'] = row[i]['seikyuuuchiwake'];
           tmpObj['zeikubun'] = row[i]['zeikubun'];
           tmpObj['kingaku'] = row[i]['kingaku'];
+          tmpObj['carrier'] = 'NTT';
+          tmpObj['ips_amount'] = ips_amount;
+
           tmpData.push(tmpObj);
         }
 
@@ -410,8 +424,8 @@ module.exports = {
 
 
         const insertKotehiSummaryData = `insert into ntt_koteihi_bill_summary (bill_numb__c, bill_start__c, bill_sum__c, 
-          comp_acco__c, date_added, added_by, carrier) values ('${bill_code}','${selectedData.year}-${selectedData.month}-01','${amount}',
-          '${comCode}',now(),'${currentUser}', 'NTT') ` ;
+          comp_acco__c, date_added, added_by, carrier, ips_amount) values ('${bill_code}','${selectedData.year}-${selectedData.month}-01','${amount}',
+          '${comCode}',now(),'${currentUser}', 'NTT', '${ipsAmount}') ` ;
 
           console.log("insertKotehiSummaryData is.."+ insertKotehiSummaryData);
 
@@ -690,7 +704,7 @@ module.exports = {
                     (recordType == 'VoIP' && excludedNumberList.includes(parentDID))) {
                     // csvstream.resume(); nothing to do
                   } else {
-                    if (recordType == 'VoIP') {
+                    if (recordType == 'VoIP' || recordType == 'ナビダイヤル') {
                       DID = parentDID;
                     } else {
 
@@ -729,7 +743,8 @@ module.exports = {
                   csvstream.resume();
                 }
               } else {
-                //  console.log("Invalid data"+JSON.stringify(row))
+                 console.log("Invalid data"+JSON.stringify(row))
+               
               }
             })
             .on('end', function () {

@@ -8,5 +8,11 @@ router.post('/commission/getCommissionSummary',  CommissionInfoController.getCom
 router.post('/commission/deleteCommissionInfo',  CommissionInfoController.deleteCommissionInfo);
 router.post('/commission/addCommissionInfo',  CommissionInfoController.addCommissionInfo);
 router.post('/commission/updateCommissionConfig',  CommissionInfoController.updateCommissionInfo);
+// commission config 
+router.post('/commission/getCommissionConfigData',  CommissionInfoController.getCommissionConfig);
+router.post('/commission/deleteCommissionConfigData',  CommissionInfoController.deleteCommissionConfig);
+router.post('/commission/addCommissionConfigData',  CommissionInfoController.addCommissionConfig);
+router.post('/commission/updateCommissionConfigData',  CommissionInfoController.updateCommissionConfig);
+
 
 module.exports = router;

@@ -9,7 +9,7 @@ const ColumnSet = ['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time
 const tableName = 'cdr_sonus_outbound';
 let ColumnSetIPSKotehiBillDetail = ['companyname', 'bill_code', 'comp_acco__c', 'ips_product_name', 'amount', 'datebill', 'added_by', 'date_added'];
 let tableNameIPSKotehiBillDetail = { table: 'ips_kotehi_cdr_bill' };
-const INTERVAL = 5;
+const INTERVAL = 1;
 
 module.exports = {
 
@@ -189,6 +189,7 @@ module.exports = {
 
       if (customerId) {
         where = ` customer_id= '${customerId}' and deleted= false `;
+       // where = ` customer_id in ('00001401','00001420') and deleted= false `;
       } else {
         where = ` deleted = false  `;
       }
@@ -215,7 +216,8 @@ module.exports = {
       let ANDclo = "";
 
       if (customerId ) {
-        ANDclo = `AND  billing_comp_code= '${customerId}'  `;
+        ANDclo = `AND  billing_comp_code  = '${customerId}'  `;
+       // ANDclo = `AND  billing_comp_code in ('00001401','00001420') `;
       }
       const query = `delete FROM cdr_sonus_outbound where START_TIME::date = '${targetDate}'::date ${ANDclo}`;
       const deleteTargetDateRes = await db.query(query, []);
@@ -591,6 +593,7 @@ async function chunk(array, size) {
 async function cusInsertByBatches(records, type, billingYear, billingMonth) {
   const chunkArray = await chunk(records, BATCH_SIZE);
   let res = [];
+
   let resArr = [];
 
   for (let i = 0; i < chunkArray.length; i++) {

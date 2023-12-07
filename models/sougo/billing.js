@@ -48,11 +48,42 @@ module.exports = {
       return error;
     }
   },
+
+  getNewBillNoInfo: async function () {
+    try {
+      const query = `select max(bill_no) as max_bill_no from bill_history_new `;
+      const billNoRes = await db.queryIBS(query, []);
+      if (billNoRes.rows) {
+        return { 'max_bill_no': (billNoRes.rows[0].max_bill_no) };
+      }
+      return { err: 'not found' };
+    } catch (error) {
+      console.log("err in bill no info =" + error.message);
+      return error;
+    }
+  },
+
+
   getAllCompCode: async function (year, month) {
     try {
       console.log("in get all comp code");
       const query = `select distinct(company_code) as company_code from billcdr_${year}${month}  
     
+      order by company_code `;
+      const billNoRes = await db.queryIBS(query, []);
+      return billNoRes.rows;
+    } catch (error) {
+      console.log("err in getting company code =" + error.message);
+      return error;
+    }
+  },
+
+
+  getAllCompCodeNewData: async function (year, month) {
+    try {
+      console.log("in get all comp code");
+      const query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
+      where company_code!='9999999999'
       order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
@@ -86,6 +117,26 @@ module.exports = {
       query = `select count(*) as total_calls,  trunc(sum(duration), 0) as total_duration , carrier_code, term_carrier_id 
           from billcdr_${year}${month} where duration>1 and company_code='${company_code}' group by carrier_code, term_carrier_id 
           order by carrier_code, term_carrier_id `;
+
+      console.log("query==" + query);
+      const data = await db.queryIBS(query);
+
+      return data.rows;
+    } catch (error) {
+      console.log("error in get cdr data=" + error.message);
+      return error;
+    }
+  },
+
+  getNewDataTargetCDR: async function (company_code, year, month) {
+
+
+    try {
+      query = `select count(*) as total_calls,  trunc(sum(duration_use::numeric), 0) as total_duration , orig_carrier_id as carrier_code, 
+      term_carrier_id , split_part(calling_type,'.',1) as calling_type from cdr_${year}${month}_new where  company_code='${company_code}' 
+      and calling_type !='GSTN' 
+      group by orig_carrier_id, term_carrier_id ,split_part(calling_type,'.',1)
+      order by orig_carrier_id, term_carrier_id `;
 
       console.log("query==" + query);
       const data = await db.queryIBS(query);
@@ -147,10 +198,59 @@ module.exports = {
     }
   },
 
-  genrateInvoice: async function (company_code, billingYear, billingMonth, currentMonth) {
+  createNewDetailData: async function (bill_no, company_code, year, month, ratesDetails, data, carrierInfo) {
+    console.log("details ");
+    let numerOfDays = new Date(year, month , 0). getDate();
     try {
 
-      const invoiceData = await getInvoiceData(company_code, billingYear, billingMonth);
+      let call_count = 0;
+      let duration = 0;
+      let amount = 0;
+      let billAmount = 0;
+      let tax = 0;
+
+
+      for (let i = 0; i < data.length; i++) {
+        let info = await getResInfoNew(data[i], company_code, ratesDetails, carrierInfo, month, i);
+
+        for (let ii = 0; ii < info.length; ii++) {
+
+          call_count = call_count + parseInt(info[ii]['call_count'], 10);
+          duration = duration + parseInt(info[ii]['call_sec'], 10);
+          if (parseInt(info[ii]['amount'], 10) >= 1) {
+            amount = amount + parseInt(info[ii]['amount'], 10);
+          }
+          let query = `insert into bill_detail_new (bill_no,line_no, item_type , item_name, call_count, call_sec,rate,
+                amount, remarks, date_update, name_update, date_insert, name_insert) VALUES('${bill_no}', '${info[ii]['line_no']}', 
+                '${info[ii]['item_type']}', '${info[ii]['item_name']}',${info[ii]['call_count']}, ${info[ii]['call_sec']}, ${info[ii]['rate']} 
+                ,${info[ii]['amount']},'${info[ii]['remarks']}','now()','system', 'now()','system')`;
+
+          //console.log("query==" + query);
+          await db.queryIBS(query, []);
+        }
+      }
+
+      if (amount > 0) {
+        tax = amount * .1; // 10% tax
+        billAmount = amount + tax;
+      }
+
+      let query = `insert into bill_history_new (bill_no , company_code , date_bill , date_payment , bill_term_start , bill_term_end , bill_period ,
+         amount , tax ,print_flag , date_insert , name_insert , date_update , name_update , bill_include ,call_count) VALUES('${bill_no}', '${company_code}', '${year}-${month}-01', '${year}-${month}-25','${year}-${month}-01', '${year}-${month}-${numerOfDays}',
+         '1' ,'${amount}','${tax}','0','now()','System','now()','System', '0','${call_count}')`;
+      //console.log("query==" + query);
+
+      await db.queryIBS(query, []);
+    } catch (error) {
+      console.log("Error in result ---" + error.message);
+      return error;
+    }
+  },
+
+  genrateInvoice: async function (company_code, billingYear, billingMonth, currentMonth, newData) {
+    try {
+
+      const invoiceData = await getInvoiceData(company_code, billingYear, billingMonth, newData);
       const customerAddress = await getCustomerInfo(company_code);
 
       let path = __dirname + `\\Invoice\\1${company_code}${billingYear}${billingMonth}_${customerAddress[0]['company_name']}御中.pdf`;
@@ -276,6 +376,97 @@ async function getResInfo(data, company_code, ratesInfo, carrierInfo, billingMon
 
   return res;
 }
+
+async function getResInfoNew (data, company_code, ratesInfo, carrierInfo, billingMonth, lineCounter) {
+
+  console.log("company_code==" + company_code);
+  console.log("carrier_code==" + data['carrier_code']);
+  console.log("term_carrier_id==" + data['term_carrier_id']);
+
+
+  let res = [], case1 = {}, case2 = {}, case3 = {}, case4 = {}, case5 = {}, case6 = {};
+  try {
+
+    let rate = await getSougoRates(ratesInfo, data['carrier_code'], company_code, data['term_carrier_id']);
+    let carrierName = await getCarrierName(carrierInfo, data['carrier_code']);
+    let termCarrierName = await getCarrierName(carrierInfo, data['term_carrier_id']);
+
+    let newOicName = data['term_carrier_id'] == '5039' ? '0ABJ' : '050IP' ;
+
+    case1['call_count'] = data['total_calls'];
+    case1['line_no'] = lineCounter * 6 + 1;
+    case1['item_type'] = 1;
+    case1['item_name'] = data['calling_type'] + '-' + carrierName + "発信分 通話回数（国内）";
+    case1['call_sec'] = data['total_calls'];
+    case1['amount'] = data['total_calls'] * rate['rate_setup'];
+    case1['rate'] = rate['rate_setup'];
+    case1['remarks'] = newOicName + "着信 " + billingMonth + "月分";
+
+    case2['call_count'] = 0;
+    case2['line_no'] = lineCounter * 6 + 2;
+    case2['item_type'] = 2;
+    case2['item_name'] =data['calling_type'] + '-' + carrierName + "発信分 通話秒数（国内）";
+    case2['call_sec'] = data['total_duration'];
+    case2['amount'] = data['total_duration'] * rate['rate_sec'];
+    case2['rate'] = rate['rate_sec'];
+    case2['remarks'] = newOicName + "着信 " + billingMonth + "月分";
+
+
+    case3['call_count'] = data['total_duration'];
+    case3['line_no'] = lineCounter * 6 + 3;
+    case3['item_type'] = 3;
+    case3['item_name'] = data['calling_type'] + '-' + carrierName + "発信分 ﾄﾗﾝｸﾎﾟｰﾄ接続料（国内）";
+    case3['call_sec'] = data['total_duration'];
+    case3['amount'] = rate['rate_trunk_port'] * data['total_duration'];
+    case3['rate'] = rate['rate_trunk_port'];
+    case3['remarks'] = data['term_carrier_id'] + "着信 " + billingMonth + "月分";
+
+    case4['call_count'] = 0;
+    case4['line_no'] = lineCounter * 6 + 4;
+    case4['item_type'] = 1;
+    case4['item_name'] = data['calling_type'] + '-' + carrierName + "発信分 通話回数（国際）"
+    case4['call_sec'] = 0;
+    case4['amount'] = 0 * rate['rate_setup'];
+    case4['rate'] = rate['rate_setup'];
+    case4['remarks'] = newOicName + "着信" + billingMonth + "月分";
+
+    case5['call_count'] = 0;
+    case5['line_no'] = lineCounter * 6 + 5;
+    case5['item_type'] = 2;
+    case5['item_name'] = data['calling_type'] + '-' + carrierName + "発信分 通話秒数（国際）";
+    case5['call_sec'] = 0;
+    case5['amount'] = 0 * rate['rate_sec'];
+    case5['rate'] = rate['rate_sec'];
+    case5['remarks'] = newOicName + "着信" + billingMonth + "月分";
+
+
+    case6['call_count'] = 0;
+    case6['line_no'] = lineCounter * 6 + 6;
+    case6['item_type'] = 3;
+    case6['item_name'] = data['calling_type'] + '-' + carrierName + "発信分 ﾄﾗﾝｸﾎﾟｰﾄ接続料（国際）";
+    case6['call_sec'] = 0;
+    case6['amount'] = 0;
+    case6['rate'] = rate['rate_trunk_port'];
+    case6['remarks'] = newOicName + "着信" + billingMonth + "月分";
+
+
+    res.push(case1);
+    res.push(case2);
+    res.push(case3);
+    res.push(case4);
+    res.push(case5);
+    res.push(case6);
+
+
+
+
+  } catch (err) {
+    console.log("error in get res..." + err.message);
+  }
+
+  return res;
+}
+
 
 async function getCarrierName(data, carrier_code) {
 
@@ -424,12 +615,25 @@ async function getCustomerInfo(company_code) {
   }
 }
 
-async function getInvoiceData(company_code, year, month) {
+async function getInvoiceData(company_code, year, month, newData) {
   try {
-    const query = `select * from (select bill_no,line_no, item_name, rate, call_sec, amount , remarks from bill_detail where amount>1 )as lj join 
-    (select bill_no, company_code, date_bill  from bill_history
-      where company_code='${company_code}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}') as rj
-       on (lj.bill_no=rj.bill_no) order by line_no` ;
+    let query ="" ;
+    if(newData){
+
+      query = `select * from (select bill_no,line_no, item_name, rate, call_sec, amount , remarks from bill_detail_new where amount>1 )as lj join 
+      (select bill_no, company_code, date_bill  from bill_history_new
+        where company_code='${company_code}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}') as rj
+         on (lj.bill_no=rj.bill_no) order by line_no` ;
+  
+    }else{
+      query = `select * from (select bill_no,line_no, item_name, rate, call_sec, amount , remarks from bill_detail where amount>1 )as lj join 
+      (select bill_no, company_code, date_bill  from bill_history
+        where company_code='${company_code}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}') as rj
+         on (lj.bill_no=rj.bill_no) order by line_no` ;
+  
+    }
+    
+
     const ratesRes = await db.queryIBS(query, []);
 
     if (ratesRes.rows) {
@@ -486,14 +690,14 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
       }
         
     } else if (tmpPaymentDate == 'half_yearly') {
-      if (parseInt(billingMonth) > 10 && parseInt(billingMonth) <=3 )
-        paymentDueDate = `${billingYear +1}/10/31`;
+      if (parseInt(billingMonth) > 10 && parseInt(billingMonth) >=3 )
+        paymentDueDate = `${billingYear +1}/4/30`;
       else
-        paymentDueDate = `${currentYear}/10/31`;
+        paymentDueDate = `${currentYear}/04/30`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
       // monthly due date!
-      paymentDueDate = `${currentYear }/10/02`;
+      paymentDueDate = `${currentYear +1 }/01/04`;
     }
 
   await generateHeader(address, doc, totalCallAmount);

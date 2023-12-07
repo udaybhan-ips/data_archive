@@ -13,6 +13,10 @@ module.exports = {
       }
       // console.log(JSON.stringify(Dates));
 
+      // for reprocess
+     // const customCustomerId = '00001401' ;
+      // end 
+
       //const deleteTargetDateData = await ArchiveSonusOutbound.deleteTargetDateCDR(Dates.targetDate);
 
       const getAllTrunkgroupRes = await ArchiveSonusOutbound.getAllTrunkgroup();
@@ -57,9 +61,9 @@ module.exports = {
 
       // For incallednumber 
 
-    //   let getTargetCDRWithIncalledRes = await ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, TGsWithIncalledNum, null, "incallednumber");
+      let getTargetCDRWithIncalledRes = await ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, TGsWithIncalledNum, null, "incallednumber");
 
-     //  const getWithCalledDataRes = await ArchiveSonusOutbound.insertByBatches(getTargetCDRWithIncalledRes, TGsWithIncalledNum);
+      const getWithCalledDataRes = await ArchiveSonusOutbound.insertByBatches(getTargetCDRWithIncalledRes, TGsWithIncalledNum);
 
       const [udpateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveSonusOutbound.updateBatchControl(dateId, Dates.targetDate));
       if (updateBatchControlErr) {
