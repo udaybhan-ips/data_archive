@@ -48,7 +48,7 @@ module.exports = {
 
   uploadKDDIRAW: async function (req, res) {
     try {
-      const billingMonth = "10";
+      const billingMonth = "11";
       const billingYear ="2023";
       const serviceType = "RAW";
       

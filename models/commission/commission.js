@@ -42,8 +42,21 @@ module.exports = {
     console.log("data..." + JSON.stringify(data))
     
     try {
-      const query = `insert into agent_commission_config  (agent_id, payment_due_date_mode, email_content, email_to, email_cc, date_added,added_by) 
-      values ('${data.comp_code}','${data.payment_plan_type}','${data.email_content}','${data.email_to}','${data.email_cc}',now(),'${data.addedBy}')`;
+
+      if(data && data.comp_code!==''){
+        const checkQuery = `select * from agent_commission_config where agent_id='${data.comp_code}' ` ;
+        let res = await db.queryByokakin(checkQuery, []) ;
+        if(res && res.rows && res.rows.length > 0){
+          throw new Error('Record already exist!');
+        }
+
+      }else{
+        throw new Error('Invalid data!')
+      }
+
+
+      const query = `insert into agent_commission_config  (agent_id, payment_due_date_mode, email_content, email_subject , email_to, email_cc, date_added,added_by) 
+      values ('${data.comp_code}','${data.payment_plan_type}','${data.email_content}','${data.email_subject}','${data.email_to}','${data.email_cc}',now(),'${data.addedBy}')`;
       
       //  console.log("query.."+query)
 
@@ -83,6 +96,12 @@ module.exports = {
       if (data.email_to) {
         updateData = updateData + `email_to= '${data.email_to}',`;
       }
+
+      
+      if (data.email_subject) {
+        updateData = updateData + `email_subject= '${data.email_subject}',`;
+      }
+
       if (data.email_cc) {
         updateData = updateData + `email_cc= '${data.email_cc}',`;
       }

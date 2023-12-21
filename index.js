@@ -41,7 +41,7 @@ app.use(cors());
 // //console.log("test");
 // Start listening
 
-console.error("testing!")
+
 
 
 const server = app.listen(config.PORT, function() {

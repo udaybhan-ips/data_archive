@@ -37,18 +37,18 @@ module.exports = {
         month = '0' + month;
       }
 
-      if(__type ==='billcdr'){
+      if (__type === 'billcdr') {
         return `billcdr_${year}${month}`;
-      }else{
+      } else {
         return `cdr_${year}${month}`;
-      }      
+      }
 
     } catch (e) {
       console.log("err in get table=" + e.message);
       return console.error(e);
     }
   },
-  
+
   getRatesFC: async function () {
     try {
       const query = `select * from rate_kickback  `;
@@ -138,7 +138,7 @@ module.exports = {
 
        where  customer_id ='00000697' and   deleted=false  order by  customer_id     `;
 
-       //where  deleted=false and customer_id in ('00001101','00001282') order by  customer_id     `;
+      //where  deleted=false and customer_id in ('00001101','00001282') order by  customer_id     `;
       const getKickCompListRes = await db.queryIBS(query, []);
 
       if (getKickCompListRes.rows) {
@@ -339,7 +339,7 @@ module.exports = {
           duration = parseInt(duration / 60, 10);
         }
         let item_no = i + 1;
-        
+
         let query = `insert into kickback_detail (bill_no, item_no , item_name, call_minute, amount, remarks, date_update,
           name_update, date_insert, name_insert, call_count) VALUES('${bill_no}', '${item_no}', '${_03_numbers[i]['_03_numbers']}', '${duration}', 0, '' ,'now()','', 'now()',
            'system','${call_count}')`;
@@ -489,7 +489,7 @@ module.exports = {
 
       const invoiceData = await getInvoiceData(customerId, serviceType, billingYear, billingMonth, term_use, bill_no);
       const customerAddress = await getCustomerInfo(customerId);
-      
+
       let path;
       if (customerId == '00000697' || customerId == '00000893') {
         path = __dirname + `\\Invoice\\10${customerId}_${customerAddress[0]['customer_name']}${billingYear}${billingMonth}${bill_no}.pdf`;
@@ -798,7 +798,7 @@ async function createInvoice(customerId, serviceType, billingYear, billingMonth,
     addTableHeader(doc, 50, y + 40, totalCallAmount, totalCallDuration, billingYear, billingMonth);
     y = customTable(doc, y + 85, invoice, MAXY);
     compType = "IPS Pro, Inc.";
-    compTypeJ= "アイ・ピー・エス・プロ";
+    compTypeJ = "アイ・ピー・エス・プロ";
   } else {
     addTableHeaderFC(doc, 50, y + 40, totalCallAmount, totalCallDuration, billingYear, billingMonth);
     y = await customTableFC(doc, y + 50, invoice, MAXY);

@@ -17,7 +17,7 @@ module.exports = {
      // const customCustomerId = '00001401' ;
       // end 
 
-      //const deleteTargetDateData = await ArchiveSonusOutbound.deleteTargetDateCDR(Dates.targetDate);
+      const deleteTargetDateData = await ArchiveSonusOutbound.deleteTargetDateCDR(Dates.targetDate);
 
       const getAllTrunkgroupRes = await ArchiveSonusOutbound.getAllTrunkgroup();
       //const getAllTrunkgroupRes = await ArchiveSonusOutbound.getAllTrunkgroup();
@@ -56,8 +56,8 @@ module.exports = {
       }
 
 
-      let getTargetCDRTGRes = await ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, getAllTrunkgroupRes, trunkPortsVal);
-      const getTGDataRes = await ArchiveSonusOutbound.insertByBatches(getTargetCDRTGRes, getAllTrunkgroupRes);
+       let getTargetCDRTGRes = await ArchiveSonusOutbound.getTargetCDR(Dates.targetDateWithTimezone, getAllTrunkgroupRes, trunkPortsVal);
+     const getTGDataRes = await ArchiveSonusOutbound.insertByBatches(getTargetCDRTGRes, getAllTrunkgroupRes);
 
       // For incallednumber 
 

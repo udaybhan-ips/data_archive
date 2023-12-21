@@ -82,9 +82,14 @@ module.exports = {
   getAllCompCodeNewData: async function (year, month) {
     try {
       console.log("in get all comp code");
-      const query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
+      let query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
       where company_code!='9999999999'
       order by company_code `;
+
+      query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
+      where company_code ='1011000058'
+      order by company_code `;
+
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
     } catch (error) {
@@ -134,7 +139,7 @@ module.exports = {
     try {
       query = `select count(*) as total_calls,  trunc(sum(duration_use::numeric), 0) as total_duration , orig_carrier_id as carrier_code, 
       term_carrier_id , split_part(calling_type,'.',1) as calling_type from cdr_${year}${month}_new where  company_code='${company_code}' 
-      and calling_type !='GSTN' 
+     
       group by orig_carrier_id, term_carrier_id ,split_part(calling_type,'.',1)
       order by orig_carrier_id, term_carrier_id `;
 

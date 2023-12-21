@@ -526,6 +526,8 @@ module.exports = {
       let DID = null;
       let carrier = null;
 
+  
+
       for (let i = 0; i < data.length; i++) {
 
         let obj = {};
@@ -559,7 +561,7 @@ module.exports = {
       await insertByBatches(csvData, 'ntt_koteihi', billingYear, billingMonth);
       //  return csvData;
     } catch (error) {
-      console.log("Error" + error.message);
+      console.log("Error" + error);
       return error;
     }
   },

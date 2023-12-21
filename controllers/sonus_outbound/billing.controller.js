@@ -17,7 +17,7 @@ module.exports = {
           billingMonth='0'+ billingMonth;
         }
 
-        const [customerListRes,customerListErr] = await handleError(BillingSonusOutbound.getAllSonusOutboundCustomer());
+        const [customerListRes,customerListErr] = await handleError(BillingSonusOutbound.getAllSonusOutboundCustomer('00000784'));
         if(customerListErr) {
           throw new Error('Could not fetch customer list');  
         }
