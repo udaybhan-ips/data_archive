@@ -20,6 +20,7 @@ var NTTORIX = require('./controllers/cron/ntt_orix_cron');
 var DBBACKUP = require('./controllers/cron/db_backup');
 var jobComsq = require('./controllers/cron/comsq_cron');
 var jobDMS = require('./controllers/cron/dms_cron');
+var jobCommission = require('./controllers/cron/commission_cron');
 
 
 

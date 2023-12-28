@@ -5,32 +5,61 @@ module.exports = {
 
     getTargetDate: async function (date_id) {
         try {
-            const query = `SELECT max(date_set)::date + interval '0 HOURS' as target_date, max(date_set)::date - interval '9 HOURS'  
-            as target_date_with_timezone FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
-            const targetDateRes = await db.query(query, []);
-            //console.log(targetDateRes);
-            if (targetDateRes.rows) {
-                return { 'targetDate': (targetDateRes.rows[0].target_date), 'targetDateWithTimezone': (targetDateRes.rows[0].target_date_with_timezone) };
-            }
-            return { err: 'not found' };
+          const query = `SELECT max(date_set)::date as target_billing_month, max(date_set)::date as current_montth FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
+          const targetDateRes = await db.query(query, []);
+    
+          if (targetDateRes.rows) {
+            return { 'target_billing_month': (targetDateRes.rows[0].target_billing_month), 'current_montth': (targetDateRes.rows[0].current_montth) };
+          }
+          return { err: 'not found' };
         } catch (error) {
-            return error;
+          return error;
         }
-    },
+      },
 
-    getSummaryData: async function (targetMonth, type_of_service) {
-        console.log("target month=" + targetMonth);
-
-        const year = new Date(targetMonth).getFullYear();
-        let month = new Date(targetMonth).getMonth() + 1;
-        if (parseInt(month, 10) < 10) {
-            month = '0' + month;
-        }
+      getAllCommissionCustomer: async function (customerId) {
         try {
-            const query = `select count(*) as total, sum(duration_use) as duration, start_time::date as day, type_of_service from cdr_sonus where 
-          to_char(start_time, 'MM-YYYY') = '${month}-${year}' and type_of_service='${type_of_service}' 
-          group by start_time::date, type_of_service order by start_time::date asc `;
-            const ratesRes = await db.query(query, []);
+    
+          let WHERE = "";
+    
+          if(customerId){
+            WHERE = `where customer_cd = '${customerId}' and is_deleted = false `
+          }else{
+            WHERE = `where is_deleted = false `
+          }
+    
+          let customerList = []
+    
+          const getAllCustomerList = `select id, customer_cd, customer_name, commission from m_customer ${WHERE} limit 3` ; 
+          const getAllCustomerListRes = await db.query(getAllCustomerList, [], true);
+    
+          const getAllAgentList = `select agent_code from agent_incentive where edat_fini::date > now() and deleted=false  ` ; 
+          const getAllAgentListRes = await db.queryByokakin(getAllAgentList, []);
+          
+          if(getAllCustomerListRes && getAllCustomerListRes.rows && getAllCustomerListRes.rows.length > 0 && getAllAgentListRes 
+            && getAllAgentListRes.rows && getAllAgentListRes.rows.length>0 ) {
+    
+            customerList = getAllCustomerListRes.rows.filter((obj) => {
+              let ind = -1
+              ind = getAllAgentListRes.rows.findIndex((ele) => (ele.agent_code==obj.customer_cd));
+              return ind === -1 ? false : true;      
+            })
+          }
+    
+          console.log("customer list=="+JSON.stringify(customerList))
+    
+          return customerList;
+          
+        } catch (error) {
+          return error;
+        }
+      },
+
+    getEmailDetails: async function (customerId) {
+        
+        try {
+          const query = `select * from agent_commission_config where agent_id ='${customerId}'  and deleted = false limit 1`;
+            const ratesRes = await db.queryByokakin(query, []);
 
             if (ratesRes.rows) {
                 return (ratesRes.rows);
@@ -108,29 +137,40 @@ module.exports = {
 
         return tableDiv;
     },
-    sendEmail: async function (tableDiv) {
+    sendEmail: async function (emailDetails, customerId) {
+
+        console.log("email details .."+JSON.stringify(emailDetails))
+
+        if(emailDetails && emailDetails.length<=0){
+            throw new Error('Email details are not valid! Please check email config for this customer Id '+customerId)
+        }
+
+
+
+        let emailSubject = emailDetails[0]['email_subject'] ; 
+        let emailContent = emailDetails[0]['email_content'] ; 
+        let paymentDueDateMode = emailDetails[0]['payment_due_date_mode'] ; 
+        let emailTo = emailDetails[0]['email_to'] ; 
+        let emailCc = emailDetails[0]['email_cc'] ; 
+        //let payment_due_date_mode = emailDetails[0]['payment_due_date_mode'] ; 
 
         let html = '';
-         let h4 = `Hi, <br /> This is the daily Leafnet CDR Report!! <br /><br />`;
-        //let h1 = `<br />  ${type_of_service} <br /><br />`;
-        //let h3 = `${locSA[0]} ~ ${locEA[0]} !! `;
-         let h2 = `<h2 align="center"> LEAFNET CDR BALANCE CHECK </h2>`;
-        html += h4;
-         //html += h3;
-        html += h2;
-        html += tableDiv;
-        html += "Thank you";
+        
+        html += emailContent ; 
 
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
-            to: 'uday@ipspro.co.jp',
-            cc:'y_ito@ipspro.co.jp',
-            subject: 'LEAFNET CDR CHECK',
+            to: emailTo,
+            cc:emailTo,
+            subject: emailSubject,
             html
         }
+        console.log("1")
 
-        utility.sendEmail(mailOption);
-
+       let res = await utility.sendEmailTesting(mailOption);
+        console.log("2")
+       
+        return res ;
     },
 
 }

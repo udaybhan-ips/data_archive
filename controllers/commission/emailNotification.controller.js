@@ -10,33 +10,41 @@ module.exports = {
       if(targetDateErr) {
            throw new Error('Could not fetch target date');  
       }
+
+
+      const billingYear = new Date(Dates.target_billing_month).getFullYear();
+        let billingMonth = new Date(Dates.target_billing_month).getMonth() + 1;
+
+        if(parseInt(billingMonth,10)<10){ 
+          billingMonth='0'+ billingMonth;
+        }
+
+        const [customerListRes,customerListErr] = await handleError(EmailNotification.getAllCommissionCustomer());
+        if(customerListErr) {
+          throw new Error('Could not fetch customer list');  
+        }
+
+        for(let i=0; i<customerListRes.length;i++){
+
+                    
+          const [getEmailDetailsRes,getEmailDetailsErr] = await handleError(EmailNotification.getEmailDetails(customerListRes[i]['customer_cd']));
+          if(getEmailDetailsErr) {
+               throw new Error('error while fetching data processed data');  
+          }
+  
+          const sendEmailRes = await EmailNotification.sendEmail(getEmailDetailsRes, customerListRes[i]['customer_cd']);
+          // if(sendEmailErr) {
+          //      throw new Error('error while sending email');  
+          // }
+
+          console.log("Send Email res"+JSON.stringify(sendEmailRes));
+        
+        }
       
-        const [proDataRes,proDataErr] = await handleError(EmailNotification.getSummaryData(Dates.targetDateWithTimezone));
-        if(proDataErr) {
-             throw new Error('error while fetching data processed data');  
-        }
-
-        const [rawDataRes,rawDataErr] = await handleError(EmailNotification.getSummaryDataMysql(Dates.targetDateWithTimezone));
-        if(rawDataErr) {
-             throw new Error('error while fetching raw data');  
-        }
-        
-        const [createTableRes,createTableErr] = await handleError(EmailNotification.createTable(rawDataRes, proDataRes));
-        if(createTableErr) {
-             throw new Error('error while creating table');  
-        }
-
-        const [sendEmailRes,sendEmailErr] = await handleError(EmailNotification.sendEmail(createTableRes));
-        if(sendEmailErr) {
-             throw new Error('error while sending email');  
-        }
+      
 
         
-        
-        return {
-            message: 'success! data inserted sucessfully',
-            id: addRatesRes
-          };
+       
     } catch (error) {
         return {
             message: error

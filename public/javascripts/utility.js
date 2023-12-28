@@ -219,7 +219,28 @@ module.exports.utcToDate=function(utcDate){
 
 
 
-module.exports.sendEmail=function(mailOptions){
+module.exports.sendEmailTesting= async function(mailOptions){
+  var transporter = nodemailer.createTransport({
+    secure: false,
+    host:'103.120.16.136',
+    port:587,
+    auth: {
+      user: 'ips_tech@sysmail.ipsism.co.jp',
+      pass: 't2oqa$5sPlNix2zuT$'
+    }
+  });
+  
+  try {
+    let res = await transporter.sendMail(mailOptions);    
+    console.log("res.."+JSON.stringify(res))
+    return res;
+  }catch(error){
+    console.log("error.."+error)
+    return error;
+  }    
+}
+
+module.exports.sendEmail= function(mailOptions){
   var transporter = nodemailer.createTransport({
     secure: false,
     host:'103.120.16.136',

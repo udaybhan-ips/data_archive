@@ -3,6 +3,60 @@ var utility = require('./../../public/javascripts/utility');
 
 module.exports = {
 
+  getTargetDate: async function (date_id) {
+    try {
+      const query = `SELECT max(date_set)::date as target_billing_month, max(date_set)::date as current_montth FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
+      const targetDateRes = await db.query(query, []);
+
+      if (targetDateRes.rows) {
+        return { 'target_billing_month': (targetDateRes.rows[0].target_billing_month), 'current_montth': (targetDateRes.rows[0].current_montth) };
+      }
+      return { err: 'not found' };
+    } catch (error) {
+      return error;
+    }
+  },
+
+
+  getAllCommissionCustomer: async function (customerId) {
+    try {
+
+      let WHERE = "";
+
+      if(customerId){
+        WHERE = `where customer_cd = '${customerId}' and is_deleted = false `
+      }else{
+        WHERE = `where is_deleted = false `
+      }
+
+      let customerList = []
+
+      const getAllCustomerList = `select id, customer_cd, customer_name, commission from m_customer ${WHERE} limit 3` ; 
+      const getAllCustomerListRes = await db.query(getAllCustomerList, [], true);
+
+      const getAllAgentList = `select agent_code from agent_incentive where edat_fini::date > now() and deleted=false  ` ; 
+      const getAllAgentListRes = await db.queryByokakin(getAllAgentList, []);
+      
+      if(getAllCustomerListRes && getAllCustomerListRes.rows && getAllCustomerListRes.rows.length > 0 && getAllAgentListRes 
+        && getAllAgentListRes.rows && getAllAgentListRes.rows.length>0 ) {
+
+        customerList = getAllCustomerListRes.rows.filter((obj) => {
+          let ind = -1
+          ind = getAllAgentListRes.rows.findIndex((ele) => (ele.agent_code==obj.customer_cd));
+          return ind === -1 ? false : true;      
+        })
+      }
+
+      console.log("customer list=="+JSON.stringify(customerList))
+
+      return customerList;
+      
+    } catch (error) {
+      return error;
+    }
+  },
+
+
   getCommissionConfig: async function (data) {
 
     try {
@@ -44,7 +98,7 @@ module.exports = {
     try {
 
       if(data && data.comp_code!==''){
-        const checkQuery = `select * from agent_commission_config where agent_id='${data.comp_code}' ` ;
+        const checkQuery = `select * from agent_commission_config where agent_id='${data.comp_code}' and deleted = false  ` ;
         let res = await db.queryByokakin(checkQuery, []) ;
         if(res && res.rows && res.rows.length > 0){
           throw new Error('Record already exist!');
@@ -88,7 +142,7 @@ module.exports = {
 
 
       if (data.payment_due_date_mode) {
-        updateData = `payment_due_date_mode= '${data.payment_plan_type}',`;
+        updateData = `payment_due_date_mode= '${data.payment_due_date_mode}',`;
       }
       if (data.email_content) {
         updateData = updateData + `email_content= '${data.email_content}',`;
@@ -235,6 +289,21 @@ module.exports = {
       console.log("error in getting commission details !" + error.message)
       throw new Error(error.message)
     }
+  },
+
+  deleteCommissionDetails: async function(comp_code, year, month){
+
+    const deleteCommissionProcessedData = `delete from agent_commission where agent_code ='${comp_code}' and bill_start::date ='${year}-${month}-01' ` ;    
+    const deleteCommissionProcessedData1 = `delete from agent_commission_details where agent_code ='${comp_code}' and bill_start::date ='${year}-${month}-01' ` ;    
+
+    console.log("deleteCommissionProcessedData.."+deleteCommissionProcessedData);
+    console.log("deleteCommissionProcessedData1.."+deleteCommissionProcessedData1);
+
+    // const deleteCommissionProcessedDataRes = await db.queryByokakin(deleteCommissionProcessedData, []);
+    // const deleteCommissionProcessedDataRes1 = await db.queryByokakin(deleteCommissionProcessedData1, []);
+
+    return null;
+
   },
 
   createCommissionDetails: async function ({ comp_code, year, month, payment_plan_date, createdBy }) {
@@ -402,7 +471,7 @@ module.exports = {
             total_bill, bill_start, bill_end, bill_issue, bill_due, bill_sum, bill_disc, bill_tax,   bill_total, reco_date, 
             reco_name, modi_date, modi_name, paid_flag, paidprocessby, paidprocessdate , serv_name) VALUES ('${comp_code}','${billNo}','0',
             '${totalCommissionAmt}',0,0,'${totalCommissionAmt}','${year}-${month}-01','${year}-${month}-${getNumberOfDaysInMonth}',now(),'${payment_plan_date}',
-             '${subTotalCommissionAmt}',0,'${taxCommissionAmt}', '${totalCommissionAmt}', now(),'${createdBy}', now(),'${createdBy}',
+             '${subTotalCommissionAmt}',0,'${taxCommissionAmt}', '${totalCommissionAmt}', now(),'${createdBy}', null,'',
              null, null, null, 'NTT-KDDI')`;
 
         const sumRes = await db.queryByokakin(insertSummaryData, []);
