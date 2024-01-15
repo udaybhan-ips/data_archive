@@ -26,14 +26,14 @@ var EmailController = require('../sougo/emailNotification.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var billingControllerJob = new CronJob ('47 11 * * *',function(){
+// var billingControllerJob = new CronJob ('19 9 * * *',function(){
 //     console.log('This is sougo  billing start');
 //     billingController.getData();
 //     console.log('This is sougo email notification end');
 
 // },null, true, 'Asia/Tokyo');
 
-// var billingControllerJob = new CronJob ('20 11 * * *',function(){
+// var billingControllerJob = new CronJob ('28 10 * * *',function(){
 //     console.log('This is sougo  billing start');
 //     billingController.getNewBillingData();
 //     console.log('This is sougo email notification end');

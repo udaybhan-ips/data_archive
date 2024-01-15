@@ -19,7 +19,7 @@ module.exports = {
           billingMonth='0'+ billingMonth;
         }
 
-        const [customerListRes,customerListErr] = await handleError(EmailNotification.getAllCommissionCustomer());
+        const [customerListRes,customerListErr] = await handleError(EmailNotification.getAllCommissionCustomer('00000439'));
         if(customerListErr) {
           throw new Error('Could not fetch customer list');  
         }
@@ -27,7 +27,7 @@ module.exports = {
         for(let i=0; i<customerListRes.length;i++){
 
                     
-          const [getEmailDetailsRes,getEmailDetailsErr] = await handleError(EmailNotification.getEmailDetails(customerListRes[i]['customer_cd']));
+          const [getEmailDetailsRes,getEmailDetailsErr] = await handleError(EmailNotification.getEmailDetails(customerListRes[i]['customer_cd'], billingYear, '11'));
           if(getEmailDetailsErr) {
                throw new Error('error while fetching data processed data');  
           }

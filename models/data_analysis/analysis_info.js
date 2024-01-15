@@ -104,7 +104,9 @@ module.exports = {
       ))
 
 
-      const queryKDDIKotehiIPS = `select 'KDDI' as carrier, lj.comp_acco__c as customercode,'kotehi' as calltype, lj.a+rj.b as ips_price,  
+      const queryKDDIKotehiIPS = `select 'KDDI' as carrier, case when lj.comp_acco__c!='' then lj.comp_acco__c else rj.comp_acco__c end as 
+      customercode,'kotehi' as calltype, 
+      (case when lj.a is null then rj.b else (case when rj.b is null then lj.a else lj.a+rj.b end )end ) as ips_price,  
       '${year}-${month}' as cdrmonth from (select comp_acco__c, sum(amount) as a from (select * from (select comp_acco__c, amount, 
        (select data_name from kddi_kotehi_a_service_details where data_code=gendetaildesc) as  gendetaildesc_name, datebill  
        from kddi_kotei_cdr_contents where  to_char(datebill::date, 'MM-YYYY')='${month}-${year}' ) as foo  where foo.gendetaildesc_name 

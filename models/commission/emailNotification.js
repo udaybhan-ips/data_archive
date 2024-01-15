@@ -55,10 +55,10 @@ module.exports = {
         }
       },
 
-    getEmailDetails: async function (customerId) {
+    getEmailDetails: async function (customerId, year, month) {
         
         try {
-          const query = `select * from agent_commission_config where agent_id ='${customerId}'  and deleted = false limit 1`;
+          const query = `select * from agent_commission_email_history where customer_id='${customerId}' and billing_month::date ='${year}-${month}-01' `;
             const ratesRes = await db.queryByokakin(query, []);
 
             if (ratesRes.rows) {
@@ -70,76 +70,12 @@ module.exports = {
         }
     },
 
-    getSummaryDataMysql: async function (targetDateWithTimezone, type_of_service) {
-
-        const day = new Date(targetDateWithTimezone).getDate();
-        let resData = [];
-        try {
-            for (let i = 0; i < day; i++) {
-
-                let startDate = new Date(targetDateWithTimezone);
-                startDate.setDate(startDate.getDate() - (day - i));
-                let year = startDate.getFullYear();
-                let month = startDate.getMonth() + 1;
-                let date = startDate.getDate();
-                let actualStartDate = year + "-" + month + "-" + date + " 15:00:00";
-
-                // console.log("year=="+year+" \n month=="+month+" \n day="+day);
-                // console.log("start Date="+startDate);
-                // console.log("actual start date="+actualStartDate)
-                let query = "";
-                if (type_of_service === 'Leafnet_0067745109') {
-                    query = `select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as day, 
-                    'Leafnet_0067745109' as  type_of_service from COLLECTOR_73 
-                    where EGCALLEDNUMBER in ( '345650514' ) and CALLSTATUS in (16,31)
-                    and INGRPSTNTRUNKNAME in ('GSX4TOGXL3','GSX4TOGXL4','GXL3TOGSX5','GXL4TOGSX5') and RECORDTYPEID=3 
-                    AND  starttime>='${actualStartDate}' and startTime < DATE_ADD("${actualStartDate}", INTERVAL 1 DAY) 
-                    group by cast(addtime(starttime,'09:00:00') as Date), type_of_service 
-                    order by cast(addtime(starttime,'09:00:00') as Date) asc`;
-
-                } else {
-                    query = `select count(*) as total, cast(addtime(starttime,'09:00:00') as Date) as day,
-                    'Leafnet_006751' as  type_of_service from COLLECTOR_73 
-                    where EGRTGNAME in ('IPSSHG5423J7','IPSSHGF59EJ', 'IPSKRG5A00J', 'IPSKRG6BIIJ', 'IPSFUS10NWJ' ) 
-                    AND BILLNUM = '5050506751' 
-                    AND RECORDTYPEID = 3 
-                    AND  starttime>='${actualStartDate}' and startTime < DATE_ADD("${actualStartDate}", INTERVAL 1 DAY) 
-                    group by cast(addtime(starttime,'09:00:00') as Date) , type_of_service
-                    order by cast(addtime(starttime,'09:00:00') as Date) asc`;
-                }
-
-
-                //console.log(query);
-                rawData = await db.mySQLQuery(query, []);
-                if (rawData.length) {
-                    resData = [...resData, rawData[0]];
-                }
-            }
-            //console.log(JSON.stringify(rawData));
-            return (resData);
-        } catch (error) {
-            return error;
-        }
-    },
-    createTable: async function (rawData, processData, type_of_service) {
-
-        let proDataLen = processData.length;
-        let rawDataLen = rawData.length;
-        let html = '';
-        let tableDiv = '';
-
-        console.log("proData=" + proDataLen);
-        console.log("rawData=" + rawDataLen);
-        if (rawDataLen > 0 && proDataLen > 0)
-            tableDiv = tableCreate(rawData, processData, type_of_service);
-        //console.log("html");
-        //console.log(html);
-
-        return tableDiv;
-    },
     sendEmail: async function (emailDetails, customerId) {
 
         console.log("email details .."+JSON.stringify(emailDetails))
+
+        console.log("current dir.."+__dirname);
+        
 
         if(emailDetails && emailDetails.length<=0){
             throw new Error('Email details are not valid! Please check email config for this customer Id '+customerId)
@@ -148,7 +84,11 @@ module.exports = {
 
 
         let emailSubject = emailDetails[0]['email_subject'] ; 
-        let emailContent = emailDetails[0]['email_content'] ; 
+        
+        let emailContent = emailDetails[0]['email_contents'].replace(/\n/g, "<br />"); ; 
+
+        
+
         let paymentDueDateMode = emailDetails[0]['payment_due_date_mode'] ; 
         let emailTo = emailDetails[0]['email_to'] ; 
         let emailCc = emailDetails[0]['email_cc'] ; 

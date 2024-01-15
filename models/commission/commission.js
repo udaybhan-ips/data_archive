@@ -3,6 +3,74 @@ var utility = require('./../../public/javascripts/utility');
 
 module.exports = {
 
+  onApproveRowData: async function (data) {
+    console.log("data..." + JSON.stringify(data))
+    
+    try {
+
+      if(data && data.agent_code!=='' && data.agent_code!==undefined){
+        const checkQuery = `select * from agent_commission_approve_status where customer_id='${data.agent_code}' and billing_period::date ='${data.bill_start}::date'  and deleted = false  ` ;
+        let res = await db.queryByokakin(checkQuery, []) ;
+        if(res && res.rows && res.rows.length > 0){
+          throw new Error('Record already exist!');
+        }
+
+      }else{
+        throw new Error('Invalid data!')
+      }
+
+
+      const query = `insert into agent_commission_approve_status  (customer_id, status, billing_period, added_by , date_added, updated_by, updated_date) 
+      values ('${data.agent_code}','${data.status}','${data.bill_start}','${data.approvedBy}',now(),'${data.approvedBy}',now())`;
+
+      const getCommissionEmailDetails = `select * from agent_commission_config where agent_id ='${data.agent_code}' and deleted =false limit 1` ; 
+
+      let getCommissionEmailDetailsRes = await db.queryByokakin(getCommissionEmailDetails, []);
+
+      if(getCommissionEmailDetailsRes && getCommissionEmailDetailsRes.rows.length> 0){
+
+        let dateTime = new Date(data.bill_start);
+        year = dateTime.getFullYear();
+        month = dateTime.getMonth()+1;
+
+        let emailContents = getCommissionEmailDetailsRes.rows[0]['email_content'];
+        let emailSubject = getCommissionEmailDetailsRes.rows[0]['email_subject'];
+        emailContents = emailContents.replace(/YYYY/g,year) ;
+        emailContents = emailContents.replace(/MM/g,month) ;
+
+        emailSubject = emailSubject.replace(/YYYY/g,year) ;
+        emailSubject = emailSubject.replace(/MM/g,month) ;
+
+        let emailTo = "uday@ipspro.co.jp";
+        let emailCC = "uday@ipspro.co.jp";
+        let emailBCC = "uday@ipspro.co.jp";
+
+        const emailScheduleQuery = `insert into agent_commission_email_history (customer_id, email_status, billing_month, email_contents, email_to,
+          email_cc, email_bcc, status, added_by, date_added, email_subject) values ('${data.agent_code}','pending','${data.bill_start}','${emailContents}','${emailTo}',
+          '${emailCC}', '${emailBCC}', '${data.status}','${data.approvedBy}', now(), '${emailSubject}') `;
+
+          const emailScheduleQueryRes = await db.queryByokakin(emailScheduleQuery, []);
+  
+      }
+
+      
+      
+      //  console.log("query.."+query)
+
+      const deleteRes = await db.queryByokakin(query, []);
+      
+
+      if (deleteRes ) {
+        return (deleteRes);
+      }
+      throw new Error('not found')
+
+    } catch (error) {
+      console.log("error in status update commission data !" + error.message)
+      throw new Error(error.message)
+    }
+  },
+
   getTargetDate: async function (date_id) {
     try {
       const query = `SELECT max(date_set)::date as target_billing_month, max(date_set)::date as current_montth FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
@@ -93,7 +161,7 @@ module.exports = {
   
   addCommissionConfig: async function (data) {
 
-    console.log("data..." + JSON.stringify(data))
+    //console.log("data..." + JSON.stringify(data))
     
     try {
 
@@ -243,7 +311,10 @@ module.exports = {
       if (comp_code != undefined && comp_code != '' && comp_code != null) {
         where += `AND agent_code='${comp_code}'`;
       }
-      const query = ` select * from agent_commission ${where} order by agent_code `;
+      const query = `select * from  (select * from agent_commission ${where})as lj left join (select status, customer_id from agent_commission_approve_status 
+        where billing_period::date ='${year}-${month}-1' ) as rj on (lj.agent_code = rj.customer_id) order by lj.agent_code `;
+
+      console.log("query.."+query)
       const summaryRes = await db.queryByokakin(query, []);
 
       if (summaryRes.rows) {

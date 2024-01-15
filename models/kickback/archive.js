@@ -22,7 +22,7 @@ module.exports = {
     console.log("Here!")
     try {
       const query = `select *, CALLDURATION*0.01 AS DURATION from cdr where  start_time>='${targetDate}' and  
-      start_time < DATE_ADD("${targetDate}", INTERVAL 30 DAY) and ingr_pstn_trunk_name ='INNET00'     ` ;
+      start_time < DATE_ADD("${targetDate}", INTERVAL 31 DAY) and ingr_pstn_trunk_name ='INNET00'     ` ;
       //const query = `select * from cdr where start_time>='${targetDate}' and  start_time < DATE_ADD("${targetDate}", INTERVAL 1 DAY) ` ;
 
       //STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
@@ -244,8 +244,8 @@ module.exports = {
     console.log("chunkArray len is ..."+chunkArray.length)
 
     try{
-      if(__type =='cdr_202311_new'){
-        ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetNewSonus, { table: 'cdr_202311_new' }) 
+      if(__type =='cdr_202312_new'){
+        ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetNewSonus, { table: 'cdr_202312_new' }) 
       }
       else if(__type == 'raw_cdr')  {
         ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetSonus, { table: tableName })           
@@ -254,7 +254,7 @@ module.exports = {
       }
       
       for (let i = 0; i < chunkArray.length; i++) {
-        if(__type =='cdr_202311_new'){
+        if(__type =='cdr_202312_new'){
           const data = await getNextInsertBatchNew(chunkArray[i], '', '');   
           res = await db.queryBatchInsert(data, 'ibs', ColumnSetValue);
         }

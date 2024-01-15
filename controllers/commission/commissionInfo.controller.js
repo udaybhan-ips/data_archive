@@ -1,6 +1,27 @@
 var CommissionInfo = require('../../models/commission/commission');
 let dateId = 12;
 module.exports = {
+
+  onApproveRowData: async function (req, res) {
+    //console.log("req..." + JSON.stringify(req.body))
+    try {
+      const [onApproveRowDataRes, onApproveRowDataResErr] = await handleError(CommissionInfo.onApproveRowData(req.body));
+
+
+      if (onApproveRowDataResErr) {
+
+        return res.status(500).json({
+          message: onApproveRowDataResErr.message
+        });
+      }
+      return res.status(200).json(onApproveRowDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
   
   getData: async function(req, res) {
     try {
@@ -101,7 +122,7 @@ module.exports = {
   },
 
   updateCommissionConfig: async function (req, res) {
-    console.log("req..." + JSON.stringify(req.body))
+    //console.log("req..." + JSON.stringify(req.body))
     try {
       const [updateCommConfigRes, updateCommConfigErr] = await handleError(CommissionInfo.updateCommissionConfig(req.body));
 
@@ -141,7 +162,7 @@ module.exports = {
   },
 
   createCommissionDetails: async function (req, res) {
-    console.log("req.." + JSON.stringify(req.body))
+    //console.log("req.." + JSON.stringify(req.body))
     try {
       const [createCommissionDetailsRes, createCommissionDetailsErr] = await handleError(CommissionInfo.createCommissionDetails(req.body));
       if (createCommissionDetailsErr) {
@@ -181,7 +202,7 @@ module.exports = {
   },
 
   getCommissionSummary: async function (req, res) {
-
+    console.log("req.." + JSON.stringify(req.body))
     try {
       const [getCommissionSummaryRes, getCommissionSummaryErr] = await handleError(CommissionInfo.getCommissionSummary(req.body));
       if (getCommissionSummaryErr) {

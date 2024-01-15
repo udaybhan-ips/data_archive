@@ -43,6 +43,8 @@ module.exports = {
     getSummaryDataMysql: async function (targetDateWithTimezone, type_of_service) {
 
         const day = new Date(targetDateWithTimezone).getDate();
+
+        console.log("day.."+day)
         let resData = [];
         try {
             for (let i = 0; i < day; i++) {

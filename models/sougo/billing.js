@@ -82,13 +82,14 @@ module.exports = {
   getAllCompCodeNewData: async function (year, month) {
     try {
       console.log("in get all comp code");
+      
       let query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
-      where company_code!='9999999999'
+      where company_code='1011000059'
       order by company_code `;
 
-      query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
-      where company_code ='1011000058'
-      order by company_code `;
+      // query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
+      // where company_code ='1011000058'
+      // order by company_code `;
 
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
@@ -116,14 +117,12 @@ module.exports = {
   },
 
   getTargetCDR: async function (company_code, year, month) {
-
-
     try {
       query = `select count(*) as total_calls,  trunc(sum(duration), 0) as total_duration , carrier_code, term_carrier_id 
           from billcdr_${year}${month} where duration>1 and company_code='${company_code}' group by carrier_code, term_carrier_id 
           order by carrier_code, term_carrier_id `;
 
-      console.log("query==" + query);
+     // console.log("query==" + query);
       const data = await db.queryIBS(query);
 
       return data.rows;
@@ -134,7 +133,6 @@ module.exports = {
   },
 
   getNewDataTargetCDR: async function (company_code, year, month) {
-
 
     try {
       query = `select count(*) as total_calls,  trunc(sum(duration_use::numeric), 0) as total_duration , orig_carrier_id as carrier_code, 
@@ -702,7 +700,7 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
       // monthly due date!
-      paymentDueDate = `${currentYear +1 }/01/04`;
+      paymentDueDate = `${currentYear }/01/31`;
     }
 
   await generateHeader(address, doc, totalCallAmount);

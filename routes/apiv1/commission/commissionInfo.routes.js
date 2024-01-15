@@ -13,6 +13,8 @@ router.post('/commission/getCommissionConfigData',  CommissionInfoController.get
 router.post('/commission/deleteCommissionConfigData',  CommissionInfoController.deleteCommissionConfig);
 router.post('/commission/addCommissionConfigData',  CommissionInfoController.addCommissionConfig);
 router.post('/commission/updateCommissionConfigData',  CommissionInfoController.updateCommissionConfig);
+router.post('/commission/onApproveRowData',  CommissionInfoController.onApproveRowData);
+
 
 
 module.exports = router;
