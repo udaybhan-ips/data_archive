@@ -4,13 +4,13 @@ var billingController = require('../byokakin/ntt_orix/billing.controller');
 var CDRsController = require('../byokakin/ntt_orix/cdr.controller');
 // var EmailController = require('../byokakin/emailNotification.controller');
 
-// var archiverJob = new CronJob ('15 16 * * *',function(){
+// var archiverJob = new CronJob ('23 18 * * *',function(){
 //     console.log('This is byokakin NTTORIX archiver start');
 //     archiveController.uploadKotehiNTTORIX();
 //     console.log('This is byokakin NTTORIX archiver End');  
 // },null, true, 'Asia/Tokyo');
 
-// var archiverJob = new CronJob ('21 16 * * *',function(){
+// var archiverJob = new CronJob ('27 18 * * *',function(){
 //     console.log('This is byokakin NTTORIX archiver start');
 //     archiveController.NTTORIXKotehiCharge();
 //     console.log('This is byokakin NTTORIX archiver End');  

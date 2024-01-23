@@ -2,6 +2,48 @@ var CommissionInfo = require('../../models/commission/commission');
 let dateId = 12;
 module.exports = {
 
+  updateCommissionBatchDetails: async function (req, res) {
+    //console.log("req..." + JSON.stringify(req.body))
+    try {
+      const [updateCommissionBatchDetailsRes, updateCommissionBatchDetailsErr] = await handleError(CommissionInfo.updateCommissionBatchDetails(req.body));
+
+
+      if (updateCommissionBatchDetailsErr) {
+
+        return res.status(500).json({
+          message: updateCommissionBatchDetailsErr.message
+        });
+      }
+      return res.status(200).json(updateCommissionBatchDetailsRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+  
+
+  getCommissionSchedule: async function (req, res) {
+    //console.log("req..." + JSON.stringify(req.body))
+    try {
+      const [getCommissionScheduleRes, getCommissionScheduleErr] = await handleError(CommissionInfo.getCommissionSchedule(req.body));
+
+
+      if (getCommissionScheduleErr) {
+
+        return res.status(500).json({
+          message: getCommissionScheduleErr.message
+        });
+      }
+      return res.status(200).json(getCommissionScheduleRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
   onApproveRowData: async function (req, res) {
     //console.log("req..." + JSON.stringify(req.body))
     try {
@@ -55,6 +97,12 @@ module.exports = {
           if(createSummaryErr) {
             throw new Error('Error while creating summary data '+ createSummaryErr);  
           }
+
+          const [createCommissionInvoiceRes, createCommissionInvoiceErr] = await handleError(CommissionInfo.createCommissionInvoice( { comp_code:customerListRes[i]['customer_cd'], year:billingYear, month:billingMonth, payment_plan_date:'2024-01-31', createdBy:'system' } ));
+          if(createCommissionInvoiceErr) {
+            throw new Error('Error while creating summary data '+ createCommissionInvoiceErr);  
+          }
+
         
         }
         console.log("done!!")        

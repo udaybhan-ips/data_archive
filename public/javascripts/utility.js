@@ -2,6 +2,7 @@ const fs=require('fs');
 var path = require('path');
 const iconv = require('iconv-lite');
 
+
  const dateVsMonths={'01':'Jan','02':'Feb','03':'March','04':'April','05':'May','06':'June','07':'July','08':'Augest','09':'Sept','10':'Oct','11':'Nov','12':'Dec'};
  
  const dateVsMonthsWithoutZero={'1':'Jan','2':'Feb','3':'March','4':'April','5':'May','6':'June','7':'July','8':'Augest','9':'Sept','10':'Oct','11':'Nov','12':'Dec'};
@@ -26,76 +27,7 @@ create CSV file
 
 var nodemailer = require('nodemailer');
 
-let arr=[ { StartTime: '2019-08-01T00:50:28.000Z',
-    StopTime: '2019-08-01T00:50:36.000Z',
-    OrigANI: '9099249661',
-    TermANI: '0032069062',
-    rate: 8,
-    GSX: 'nfpgsx4',
-    ten: '10' },
-  { StartTime: '2019-08-01T00:50:45.000Z',
-    StopTime: '2019-08-01T00:50:53.000Z',
-    OrigANI: '9099249661',
-    TermANI: '0032069062',
-    rate: 8,
-    GSX: 'nfpgsx4',
-    ten: '10' },
-  { StartTime: '2019-08-01T00:50:57.000Z',
-    StopTime: '2019-08-01T00:51:05.000Z',
-    OrigANI: '9099249661',
-    TermANI: '0032069062',
-    rate: 8,
-    GSX: 'nfpgsx4',
-    ten: '10' },
-  { StartTime: '2019-08-01T00:56:05.000Z',
-    StopTime: '2019-08-01T00:56:14.000Z',
-    OrigANI: '9099249661',
-    TermANI: '0032069062',
-    rate: 9,
-    GSX: 'nfpgsx4',
-    ten: '10' },
-  { StartTime: '2019-08-01T01:01:10.000Z',
-    StopTime: '2019-08-01T01:01:18.000Z',
-    OrigANI: '9099249661',
-    TermANI: '0032069062',
-    rate: 8,
-    GSX: 'nfpgsx4',
-    ten: '10' },
-  { StartTime: '2019-08-01T02:19:52.000Z',
-    StopTime: '2019-08-01T02:20:01.000Z',
-    OrigANI: '8051413502',
-    TermANI: '0032069062',
-    rate: 9,
-    GSX: 'nfpgsx4',
-    ten: '10' },
-  { StartTime: '2019-08-01T03:28:20.000Z',
-    StopTime: '2019-08-01T03:28:40.000Z',
-    OrigANI: '8013051576',
-    TermANI: '0032074510',
-    rate: 20,
-    GSX: 'nfpgsx4',
-    ten: '10' },
-  { StartTime: '2019-08-01T04:35:47.000Z',
-    StopTime: '2019-08-01T04:35:55.000Z',
-    OrigANI: '8094658814',
-    TermANI: '0032069487',
-    rate: 8,
-    GSX: 'nfpgsx4',
-    ten: '10' },
-  { StartTime: '2019-08-01T04:36:21.000Z',
-    StopTime: '2019-08-01T04:36:29.000Z',
-    OrigANI: '9019966208',
-    TermANI: '0032069487',
-    rate: 8,
-    GSX: 'nfpgsx4',
-    ten: '10' },
-  { StartTime: '2019-08-01T04:36:47.000Z',
-    StopTime: '2019-08-01T04:36:55.000Z',
-    OrigANI: '9041753190',
-    TermANI: '0032069487',
-    rate: 8,
-    GSX: 'nfpgsx4',
-    ten: '10' } ]
+
 
     
 function writeArrayToCSV(data,fileName){
@@ -197,7 +129,7 @@ module.exports.arrayToCsv= function (data,headers,fileName){
     writeArrayToCSV(csvRows,fileName);
 }
 
-module.exports.utcToDate=function(utcDate){
+module.exports.utcToDate= async function(utcDate){
   
   let newDate='';
   let stDate=utcDate.toISOString();
@@ -210,6 +142,31 @@ module.exports.utcToDate=function(utcDate){
   return newDate;  
 }
 
+
+module.exports.utcToDateNew= async function(utcDate){
+  
+  try {
+
+
+    //var d = new Date("2024-01-25T12:04:00.000Z"); 
+
+    let date =  new Date(utcDate) 
+
+    return date.toLocaleString();
+
+    // var newDate = new Date(date.getTime()+date.getTimezoneOffset()*60*1000);
+
+    // var offset = date.getTimezoneOffset() / 60;
+    // var hours = date.getHours();
+
+    // newDate.setHours(hours - offset);
+
+    return newDate;   
+  }catch(err){
+    console.log(err.message);
+  }
+  
+}
 
 
 // const headers=['通話開始時間','通話開始時間','通話元番号','通話先番号','通話時間（秒）','GSX','ten'];
@@ -323,6 +280,72 @@ module.exports.createFolder=function createFolder(folderName){
     }       
 
 }
+
+module.exports.getPaymentPlanDate = async function (mode, year, month){
+
+  let checkIfHolidayTableExistRes = await checkIfHolidayTableExist(year);
+
+  if(!checkIfHolidayTableExistRes){
+    await createHolidayTableAndAddHolidayRecords(year, month);
+  }
+
+   const getHolidayDataRes =  await getHolidayData(year, month);
+
+
+}
+
+async function checkIfHolidayTableExist(year){
+
+  const chcekHolidayTable = `SELECT EXISTS ( SELECT FROM information_schema.tables WHERE  table_schema ='public' AND table_name = 'jp_holiday_${year}' )` ;
+  let checkTableExistRes = await db.query(chcekHolidayTable,[], true);
+
+  if (checkTableExistRes && checkTableExistRes.rows) {
+    return checkTableExistRes.rows[0]['exists']
+  }else{
+    return false;
+  }
+}
+
+async function createHolidayTableAndAddHolidayRecords(year, month){
+  const query =` CREATE TABLE IF NOT EXISTS "jp_holiday_${year}" ("id" serial, "holiday_date" TIMESTAMP WITHout TIME ZONE not null , name VARCHAR ) ` ;
+  const tableCreationRes =await db.query(query, [], true);
+  
+  const res = await getHolidayData(year)
+
+  return res;
+  
+
+}
+
+
+var https = require("https");
+
+async function getHolidayData(year){
+
+  var connectApiHost = "holidays-jp.shogo82148.com"
+  var connectApiPath = `/${year}`;
+  
+  
+  var options = {
+    host: connectApiHost,
+    path: connectApiPath,
+    //headers: {"Authorization": "Key " + connectApiKey},
+    //port: 443,
+    method: "GET",
+  };
+  
+  https.request(options, function(res) {
+    console.log("STATUS: " + res.statusCode);
+    console.log("HEADERS: " + JSON.stringify(res.headers));
+    res.setEncoding("utf8");
+    res.on("data", function (chunk) {
+      console.log("BODY: " + chunk);
+    });
+  }).end();
+  
+}
+
+
 function pad(n){return n<10 ? '0'+n : n}
 
 module.exports.getCurrentYearMonthDay = function (date){

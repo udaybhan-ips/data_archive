@@ -169,6 +169,7 @@ insertByBatches: async function(records, ratesData, tableName) {
       try{
              
        let path = __dirname+`\\Invoice\\Leafnet${billingYear}${billingMonth}.pdf`;
+       
 
        const invoiceData = await getInvoiceData(billingYear, billingMonth);
        let totalCallAmount = 0;

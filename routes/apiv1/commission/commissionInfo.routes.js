@@ -14,7 +14,8 @@ router.post('/commission/deleteCommissionConfigData',  CommissionInfoController.
 router.post('/commission/addCommissionConfigData',  CommissionInfoController.addCommissionConfig);
 router.post('/commission/updateCommissionConfigData',  CommissionInfoController.updateCommissionConfig);
 router.post('/commission/onApproveRowData',  CommissionInfoController.onApproveRowData);
-
+router.post('/commission/getCommissionSchedule',  CommissionInfoController.getCommissionSchedule);
+router.post('/commission/updateCommissionBatchDetails',  CommissionInfoController.updateCommissionBatchDetails);
 
 
 module.exports = router;

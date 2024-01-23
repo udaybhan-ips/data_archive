@@ -9,7 +9,7 @@ var billingController = require('../commission/commissionInfo.controller');
 
 //  },null, true, 'Asia/Tokyo')
 
-// var billingControllerJob = new CronJob ('53 11 * * *',function(){
+// var billingControllerJob = new CronJob ('10 14 * * *',function(){
 //     console.log('This is commission  billing start');
 //     billingController.getData();
 //     console.log('This is commission email notification end');

@@ -22,12 +22,12 @@ module.exports = {
         }
   
         const tableName = `cdr_sonus_billing_${billingYear}${billingMonth}`;
-
+/*
         const checkTableExistRes = await BillingLeafnet.checkTableExist(tableName);
-       // const targetDay = new Date(Dates.targetDate).getDate();
+      
   
         if (!checkTableExistRes) {
-            // create table here
+           
             const checkTableExistRes = await BillingLeafnet.createBillingTable(tableName);          
         }
 
@@ -51,18 +51,18 @@ module.exports = {
         if(createSummaryErr) {
             throw new Error('Error while creating summary data '+ createSummaryErr);  
         }
-        
+       */ 
         const [createInvoiceRes, createInvoiceErr] = await handleError(BillingLeafnet.genrateInvoice(customerId, billingYear, billingMonth,Dates.current_montth));
 
         if(createInvoiceErr) {
             throw new Error('Error while creating invoice '+ createInvoiceErr.message);  
         }
         
-        const [sendNotificationRes, sendNotificationErr] = await handleError(BillingLeafnet.sendNotification(customerId, billingYear, billingMonth,Dates.current_montth));
+        // const [sendNotificationRes, sendNotificationErr] = await handleError(BillingLeafnet.sendNotification(customerId, billingYear, billingMonth,Dates.current_montth));
 
-        if(sendNotificationErr) {
-            throw new Error('Error while creating invoice '+ sendNotificationErr.message);  
-        }
+        // if(sendNotificationErr) {
+        //     throw new Error('Error while creating invoice '+ sendNotificationErr.message);  
+        // }
 
 
         return {
