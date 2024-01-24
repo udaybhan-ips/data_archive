@@ -5,11 +5,11 @@ var BillingController = require('../sonus_outbound/billing.controller');
 var CDRController = require('../sonus_outbound/cdr.controller');
 
 
-// var archiverJobSonusOut = new CronJob ('37 11 * * *',function(){
-//     console.log('You will see this message every second');
-//     archiveController.getData();
-//     console.log('You will see this message every second');
-// },null, true, 'Asia/Tokyo');
+var archiverJobSonusOut = new CronJob ('7 14 * * *',function(){
+    console.log('You will see this message every second');
+    archiveController.getData();
+    console.log('You will see this message every second');
+},null, true, 'Asia/Tokyo');
 
 
 // var emailNotificationJobOut = new CronJob ('1 14 * * *',function(){

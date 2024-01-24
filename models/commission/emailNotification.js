@@ -69,13 +69,14 @@ module.exports = {
             return error;
         }
     },
-
-    sendEmail: async function (emailDetails, customerId) {
+    
+    sendEmail: async function (emailDetails, customerId, customerDetails ,billingYear, billingMonth) {
 
         console.log("email details .."+JSON.stringify(emailDetails))
 
         console.log("current dir.."+__dirname);
         
+        let customerName = customerDetails.customer_name;
 
         if(emailDetails && emailDetails.length<=0){
             throw new Error('Email details are not valid! Please check email config for this customer Id '+customerId)
@@ -92,18 +93,32 @@ module.exports = {
         let paymentDueDateMode = emailDetails[0]['payment_due_date_mode'] ; 
         let emailTo = emailDetails[0]['email_to'] ; 
         let emailCc = emailDetails[0]['email_cc'] ; 
+
+
         //let payment_due_date_mode = emailDetails[0]['payment_due_date_mode'] ; 
 
         let html = '';
         
         html += emailContent ; 
 
+        let filename = `1${customerId}_${billingYear}${billingMonth}_${customerName}.pdf`;
+        let path = __dirname + `\\pdf\\1${customerId}_${billingYear}${billingMonth}_${customerName}.pdf`;;
+
+        console.log("file name is .."+filename)
+        console.log("path is .."+path)
+
         let mailOption = {
-            from: 'ips_tech@sysmail.ipsism.co.jp',
+            from: 'ipsp_billing@sysmail.ipspro.co.jp',
             to: emailTo,
-            cc:emailTo,
+            cc:'r_kobayashi@ipspro.co.jp',
             subject: emailSubject,
-            html
+            html,
+            attachments: [
+              {   // file on disk as an attachment
+                filename: filename,
+                path: path // stream this file
+            },
+            ]
         }
         console.log("1")
 

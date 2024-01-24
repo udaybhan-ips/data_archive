@@ -519,7 +519,7 @@ module.exports = {
       const getBillNoQuery = `select max(bill_numb) as max_bill_no from agent_commission `;
       const billNoRes = await db.queryByokakin(getBillNoQuery, []);
 
-      console.log("billNoRes.." + JSON.stringify(billNoRes))
+      //console.log("billNoRes.." + JSON.stringify(billNoRes))
 
       if (billNoRes.rows && billNoRes.rows.length > 0 && billNoRes.rows[0].max_bill_no !== null && billNoRes.rows[0].max_bill_no !== 'null') {
         billNo = parseInt(billNoRes.rows[0].max_bill_no, 10) + 1;
@@ -775,7 +775,7 @@ module.exports = {
       const allCustomerDetatils = await getCustomerDetails();
       const customerAddress = allCustomerDetatils.filter((obj) => (obj.customer_cd == comp_code ? true : false))
       const IPSAddress = allCustomerDetatils.filter((obj) => (obj.customer_cd == '00000130' ? true : false))
-      let path = __dirname + `\\pdf\\1${comp_code}${year}${month}.pdf`;
+     
       let totalCallAmount = 0;
 
 
@@ -789,7 +789,7 @@ module.exports = {
           return { ...obj, freedial_name: '' }
         }
       });
-      await createInvoice(comp_code, year, month, invoiceData, path, totalCallAmount, customerAddress, IPSAddress, invoiceDataSummary);
+      await createInvoice(comp_code, year, month, invoiceData,  totalCallAmount, customerAddress, IPSAddress, invoiceDataSummary);
       console.log("Done...")
     } catch (err) {
       console.log("error...." + err.message);
@@ -797,13 +797,22 @@ module.exports = {
   },
 }
 
-async function createInvoice(company_code, billingYear, billingMonth, invoice, path, subTotal, customerAddress, IPSAddress, invoiceDataSummary) {
+async function createInvoice(company_code, billingYear, billingMonth, invoice, subTotal, customerAddress, IPSAddress, invoiceDataSummary) {
 
   let tax = parseInt(subTotal * .1);
   let totalCallAmount = parseInt(subTotal) + (tax);
   let doc = new PDFDocument({ margin: 50 });
   let MAXY = doc.page.height - 50;
   let fontpath = (__dirname + '\\..\\..\\controllers\\font\\ipaexg.ttf');
+
+  let path = "";
+
+  if(customerAddress && customerAddress.length> 0) {
+    let customerName = customerAddress[0]['customer_name'];
+    path = __dirname + `\\pdf\\1${company_code}_${billingYear}${billingMonth}_${customerName}.pdf`;
+  }
+  
+
   doc.font(fontpath);
   await generateHeader(customerAddress, doc, totalCallAmount);
   let billIssueDate = new Date();

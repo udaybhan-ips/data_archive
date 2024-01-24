@@ -88,15 +88,15 @@ module.exports = {
         for(let i=0; i<customerListRes.length;i++){
 
                     
-          const [deleteSummaryRes, deleteSummaryErr] = await handleError(CommissionInfo.deleteCommissionDetails(customerListRes[i]['customer_cd'], billingYear, billingMonth));
-          if(deleteSummaryErr) {
-            throw new Error('Error while delete summary data '+ deleteSummaryErr);  
-          } 
+          // const [deleteSummaryRes, deleteSummaryErr] = await handleError(CommissionInfo.deleteCommissionDetails(customerListRes[i]['customer_cd'], billingYear, billingMonth));
+          // if(deleteSummaryErr) {
+          //   throw new Error('Error while delete summary data '+ deleteSummaryErr);  
+          // } 
 
-          const [createSummaryRes, createSummaryErr] = await handleError(CommissionInfo.createCommissionDetails( { comp_code:customerListRes[i]['customer_cd'], year:billingYear, month:billingMonth, payment_plan_date:'2024-01-31', createdBy:'system' } ));
-          if(createSummaryErr) {
-            throw new Error('Error while creating summary data '+ createSummaryErr);  
-          }
+          // const [createSummaryRes, createSummaryErr] = await handleError(CommissionInfo.createCommissionDetails( { comp_code:customerListRes[i]['customer_cd'], year:billingYear, month:billingMonth, payment_plan_date:'2024-01-31', createdBy:'system' } ));
+          // if(createSummaryErr) {
+          //   throw new Error('Error while creating summary data '+ createSummaryErr);  
+          // }
 
           const [createCommissionInvoiceRes, createCommissionInvoiceErr] = await handleError(CommissionInfo.createCommissionInvoice( { comp_code:customerListRes[i]['customer_cd'], year:billingYear, month:billingMonth, payment_plan_date:'2024-01-31', createdBy:'system' } ));
           if(createCommissionInvoiceErr) {

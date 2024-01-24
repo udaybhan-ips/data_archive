@@ -442,6 +442,8 @@ async function getCompanyInfo(trunkPort, customerInfo = [], incallednumber) {
 
   let startFiveDigitofInCallNum = incallednumber.substring(0, 5) + '%';
 
+  
+
   // let trunkPortsArr = customerInfo[j]['trunk_port'].split(",");
   // customerInfo.forEach(item => {
   //   let res = {}
@@ -453,15 +455,22 @@ async function getCompanyInfo(trunkPort, customerInfo = [], incallednumber) {
 
   //console.log("customer info.."+JSON.stringify(customerInfo));
 
+  console.log("incallednumber.."+incallednumber)
+  console.log("trunkPort.."+trunkPort)
+
   try {
 
     for (j = 0; j < customerInfo.length; j++) {
 
-      if (customerInfo[j]['incallednumber']) {
-        if (customerInfo[j]['incallednumber'] === startDigitofInCallNum || customerInfo[j]['incallednumber'] === startFiveDigitofInCallNum) {
-          res['comp_code'] = customerInfo[j]['customer_id'];
+      if (customerInfo[j]['incallednumber']!='' && customerInfo[j]['incallednumber']!=undefined && customerInfo[j]['incallednumber']!=null) {
+        if (customerInfo[j]['incallednumber'] === startDigitofInCallNum || customerInfo[j]['incallednumber'] === startFiveDigitofInCallNum ) {
+          let trunkPortsArr = customerInfo[j]['trunkport'].split(",");
+          if(trunkPortsArr.includes(trunkPort)){
+            res['comp_code'] = customerInfo[j]['customer_id'];
 
-          break;
+            break;
+          }
+          
         }
       } else {
         let trunkPortsArr = customerInfo[j]['trunkport'].split(",");
@@ -472,6 +481,9 @@ async function getCompanyInfo(trunkPort, customerInfo = [], incallednumber) {
       }
 
     }
+
+ console.log("res info.."+JSON.stringify(res));
+   
 
   } catch (e) {
     console.log("Erro in get custoemr info--" + e.message);

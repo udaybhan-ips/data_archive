@@ -27,12 +27,12 @@ module.exports = {
         for(let i=0; i<customerListRes.length;i++){
 
                     
-          const [getEmailDetailsRes,getEmailDetailsErr] = await handleError(EmailNotification.getEmailDetails(customerListRes[i]['customer_cd'], billingYear, '11'));
+          const [getEmailDetailsRes,getEmailDetailsErr] = await handleError(EmailNotification.getEmailDetails(customerListRes[i]['customer_cd'], billingYear, billingMonth));
           if(getEmailDetailsErr) {
                throw new Error('error while fetching data processed data');  
           }
   
-          const sendEmailRes = await EmailNotification.sendEmail(getEmailDetailsRes, customerListRes[i]['customer_cd']);
+          const sendEmailRes = await EmailNotification.sendEmail(getEmailDetailsRes, customerListRes[i]['customer_cd'], customerListRes[i]  ,billingYear, billingMonth);
           // if(sendEmailErr) {
           //      throw new Error('error while sending email');  
           // }
