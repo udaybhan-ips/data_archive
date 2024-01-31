@@ -30,7 +30,7 @@ module.exports = {
     
           let customerList = []
     
-          const getAllCustomerList = `select id, customer_cd, customer_name, commission from m_customer ${WHERE} limit 3` ; 
+          const getAllCustomerList = `select id, customer_cd, customer_name, commission from m_customer ${WHERE} ` ; 
           const getAllCustomerListRes = await db.query(getAllCustomerList, [], true);
     
           const getAllAgentList = `select agent_code from agent_incentive where edat_fini::date > now() and deleted=false  ` ; 
@@ -74,13 +74,17 @@ module.exports = {
 
         console.log("email details .."+JSON.stringify(emailDetails))
 
+        let lengthEmail = emailDetails.length;
+
+        if(lengthEmail==0){
+          throw new Error('Email details are not valid! Please check email config for this customer Id '+customerId)
+      }
+
         console.log("current dir.."+__dirname);
         
         let customerName = customerDetails.customer_name;
 
-        if(emailDetails && emailDetails.length<=0){
-            throw new Error('Email details are not valid! Please check email config for this customer Id '+customerId)
-        }
+       
 
 
 
@@ -110,7 +114,7 @@ module.exports = {
         let mailOption = {
             from: 'ipsp_billing@sysmail.ipspro.co.jp',
             to: emailTo,
-            cc:'r_kobayashi@ipspro.co.jp',
+            cc:emailCc,
             subject: emailSubject,
             html,
             attachments: [

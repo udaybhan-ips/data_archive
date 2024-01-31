@@ -809,7 +809,7 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, s
 
   if(customerAddress && customerAddress.length> 0) {
     let customerName = customerAddress[0]['customer_name'];
-    path = __dirname + `\\pdf\\1${company_code}_${billingYear}${billingMonth}_${customerName}.pdf`;
+    path = __dirname + `\\pdf\\10${company_code}_${billingYear}${billingMonth}_${customerName}.pdf`;
   }
   
 
@@ -908,9 +908,9 @@ function customTableFC(doc, y, data, MAXY) {
     height = height + 20;
     textInRowFirst(doc, i + 1, 50, height, "center", 15);
     textInRowFirst(doc, data[i].freedial_name, 65, height, null, 265);
-    textInRowFirst(doc, data[i].serv_name, 330, height, "right", 50);
-    textInRowFirst(doc, ((data[i].call_sort)), 380, height, "right", 60);
-    textInRowFirst(doc, (parseFloat(data[i].amnt_conv * 100).toFixed(3)), 440, height, "right", 50);
+    textInRowFirst(doc, data[i].serv_name, 330, height, "center", 50);
+    textInRowFirst(doc, ((data[i].call_sort)), 380, height, "center", 60);
+    textInRowFirst(doc, (parseFloat(data[i].amnt_conv * 100).toFixed(3)+'%'), 440, height, "center", 50);
     textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].comm_amnt)) + '円', 490, height, "right", 70);
     // textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].total_amount)), 400, height, "right");
 

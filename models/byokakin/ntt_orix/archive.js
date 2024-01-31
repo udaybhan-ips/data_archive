@@ -160,36 +160,65 @@ module.exports = {
     }
   },
 
+
   getNTTORIXKotehiProcessedData: async function ({ year, month, carrier }) {
     try {
-      console.log("in orix year , month .." + year, month);
-      
+      console.log("year, month ntt .." + year, month);
+
       let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
       const lastYear = lastMonthDate.year;
       const lastMonth = lastMonthDate.month;
 
-      const query = ` select lj.*, rj.date_added, rj.added_by from  ( select * from (select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  
-      sum (kingaku) as amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' 
-      group by substring(split_part(bill_code, '-',2),4)) as lj 
-      left join 
-      (select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as prev_comp_code,  
-      sum (kingaku) as prev_amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}' 
-      group by substring(split_part(bill_code, '-',2),4)) as last_month 
-      on (lj.comp_code= last_month.prev_comp_code)) lj
-
-      left join (
-        select date_added, added_by, substring(comp_acco__c,5) as comp_code from 
+      const query = `select id, bill_code, comp_acco__c, kaisenbango, riyougaisya, seikyuuuchiwake, kingaku, ips_amount from
+       ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' `;
+      
+      const  summaryQuery = ` select  id , date_added, added_by, substring(comp_acco__c,5) as comp_code, bill_sum__c as amount from 
         ntt_koteihi_bill_summary where to_char(bill_start__c::date, 'MM-YYYY') ='${month}-${year}' 
-        and deleted=false 
-       ) as rj on (lj.comp_code=rj.comp_code) `;
+        and deleted=false  `;
+
+      //console.log("query..." + query)
 
       const getNTTORIXKotehiProcessedDataRes = await db.queryByokakin(query, []);
-      return getNTTORIXKotehiProcessedDataRes.rows;
+
+      const getNTTORIXKotehiProcessedDataSummaryRes = await db.queryByokakin(summaryQuery, []);
+      
+      return {details:getNTTORIXKotehiProcessedDataRes.rows, summary:getNTTORIXKotehiProcessedDataSummaryRes.rows};
     } catch (e) {
-      console.log("err in get ntt kotehi billing summary =" + e.message);
+      console.log("err in get ntt orix kotehi billing summary =" + e.message);
       return e;
     }
   },
+
+  // getNTTORIXKotehiProcessedData: async function ({ year, month, carrier }) {
+  //   try {
+  //     console.log("in orix year , month .." + year, month);
+      
+  //     let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
+  //     const lastYear = lastMonthDate.year;
+  //     const lastMonth = lastMonthDate.month;
+
+  //     const query = ` select lj.*, rj.date_added, rj.added_by from  ( select * from (select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as comp_code,  
+  //     sum (kingaku) as amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}' 
+  //     group by substring(split_part(bill_code, '-',2),4)) as lj 
+  //     left join 
+  //     (select  row_number() over() as id, substring(split_part(bill_code, '-',2),4) as prev_comp_code,  
+  //     sum (kingaku) as prev_amount from ntt_koteihi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${lastMonth}-${lastYear}' 
+  //     group by substring(split_part(bill_code, '-',2),4)) as last_month 
+  //     on (lj.comp_code= last_month.prev_comp_code)) lj
+
+  //     left join (
+  //       select date_added, added_by, substring(comp_acco__c,5) as comp_code from 
+  //       ntt_koteihi_bill_summary where to_char(bill_start__c::date, 'MM-YYYY') ='${month}-${year}' 
+  //       and deleted=false 
+  //      ) as rj on (lj.comp_code=rj.comp_code) `;
+
+  //     const getNTTORIXKotehiProcessedDataRes = await db.queryByokakin(query, []);
+  //     return getNTTORIXKotehiProcessedDataRes.rows;
+  //   } catch (e) {
+  //     console.log("err in get ntt kotehi billing summary =" + e.message);
+  //     return e;
+  //   }
+  // },
 
   deleteKotehiProcessedData: async function ({ billing_month, customer_cd, deleted_by }) {
     try {

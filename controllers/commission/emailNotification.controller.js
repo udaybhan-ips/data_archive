@@ -19,7 +19,7 @@ module.exports = {
           billingMonth='0'+ billingMonth;
         }
 
-        const [customerListRes,customerListErr] = await handleError(EmailNotification.getAllCommissionCustomer('00000439'));
+        const [customerListRes,customerListErr] = await handleError(EmailNotification.getAllCommissionCustomer());
         if(customerListErr) {
           throw new Error('Could not fetch customer list');  
         }
@@ -32,13 +32,17 @@ module.exports = {
                throw new Error('error while fetching data processed data');  
           }
   
-          const sendEmailRes = await EmailNotification.sendEmail(getEmailDetailsRes, customerListRes[i]['customer_cd'], customerListRes[i]  ,billingYear, billingMonth);
-          // if(sendEmailErr) {
-          //      throw new Error('error while sending email');  
-          // }
+          if(getEmailDetailsRes && getEmailDetailsRes.length>0){
+            const sendEmailRes = await EmailNotification.sendEmail(getEmailDetailsRes, customerListRes[i]['customer_cd'], customerListRes[i]  ,billingYear, billingMonth);
+            // if(sendEmailErr) {
+            //      throw new Error('error while sending email');  
+            // }
+  
+            console.log("Send Email res"+JSON.stringify(sendEmailRes));
+          
+          }
 
-          console.log("Send Email res"+JSON.stringify(sendEmailRes));
-        
+          
         }
       
       

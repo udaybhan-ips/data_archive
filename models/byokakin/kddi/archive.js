@@ -176,7 +176,8 @@ module.exports = {
 
   getKDDIFreeDialNumList: async function () {
     try {
-      const query = `select data_idno, cust_code__c, carr_comp__c, free_numb__c from  ntt_kddi_freedial_c where carr_comp__c='KDDI' order by free_numb__c`
+      const query = `select data_idno, cust_code__c, carr_comp__c, free_numb__c from  ntt_kddi_freedial_c 
+      where carr_comp__c='KDDI' order by free_numb__c`
       const getKDDIFreeDialNumListRes = await db.queryByokakin(query, []);
       return getKDDIFreeDialNumListRes.rows;
     } catch (e) {
@@ -280,7 +281,7 @@ module.exports = {
       console.log("year, month, com code.." + year, month, comp_code);
 
       if (comp_code && year && month) {
-        where = ` where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}' and substring(split_part(bill_numb__c, '-',2),4) as comp_code ='${comCode}'`;
+        where = ` where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}' and substring(split_part(bill_numb__c, '-',2),4) as comp_code ='${comp_code}'`;
       } else if (!comp_code && year && month) {
         where = `where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}'`;
       } else {
@@ -309,28 +310,46 @@ module.exports = {
       //const query = `select  substring(split_part(bill_numb__c, '-',2),4) as comp_code,  sum (amount) from kddi_kotei_bill_details 
       //where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_numb__c, '-',2),4) `;
 
-      const query = `select lj.*, rj.date_added, rj.added_by from (select * from (select  substring(split_part(bill_numb__c, '-',2),4) as comp_code, 
-       sum (amount) from kddi_kotei_bill_details  where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' 
-       group by substring(split_part(bill_numb__c, '-',2),4)) as current_month  
-       left join 
-       (select  substring(split_part(bill_numb__c, '-',2),4) as prev_comp_code, sum (amount) as prev_amount 
-       from kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}' 
-       group by substring(split_part(bill_numb__c, '-',2),4) ) as prev_month 
-       on (current_month.comp_code=prev_month.prev_comp_code)) lj
+      // const query = `select lj.*, rj.date_added, rj.added_by from (select * from (select  substring(split_part(bill_numb__c, '-',2),4) as comp_code, 
+      //  sum (amount) from kddi_kotei_bill_details  where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' 
+      //  group by substring(split_part(bill_numb__c, '-',2),4)) as current_month  
+      //  left join 
+      //  (select  substring(split_part(bill_numb__c, '-',2),4) as prev_comp_code, sum (amount) as prev_amount 
+      //  from kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}' 
+      //  group by substring(split_part(bill_numb__c, '-',2),4) ) as prev_month 
+      //  on (current_month.comp_code=prev_month.prev_comp_code)) lj
 
-       left join (
-        select date_added, added_by, substring(split_part(bill_numb__c, '-',2),4) as comp_code from 
-        kddi_kotei_bill_summary where to_char(bill_start__c::date, 'MM-YYYY') ='${month}-${year}' and deleted=false
+      //  left join (
+      //   select date_added, added_by, substring(split_part(bill_numb__c, '-',2),4) as comp_code from 
+      //   kddi_kotei_bill_summary where to_char(bill_start__c::date, 'MM-YYYY') ='${month}-${year}' and deleted=false
 
-       ) as rj on (lj.comp_code=rj.comp_code)
+      //  ) as rj on (lj.comp_code=rj.comp_code)
        
-       `;
+      //  `;
 
 
 
 
-      const getKDDIKotehiProcessedDataRes = await db.queryByokakin(query, []);
-      return getKDDIKotehiProcessedDataRes.rows;
+      // const getKDDIKotehiProcessedDataRes = await db.queryByokakin(query, []);
+      // return getKDDIKotehiProcessedDataRes.rows;
+
+
+
+      const query = `select id, bill_numb__c, comp_acco__c,  account, productname, amount, ips_amount from
+      kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' `;
+     
+     const  summaryQuery = ` select  id , date_added, added_by, substring(comp_acco__c,5) as comp_code, amount from 
+     kddi_kotei_bill_summary where to_char(bill_start__c::date, 'MM-YYYY') ='${month}-${year}' 
+       and deleted=false  `;
+
+     //console.log("query..." + query)
+
+     const getKDDIKotehiProcessedDataRes = await db.queryByokakin(query, []);
+
+     const getKDDIKotehiProcessedDataSummaryRes = await db.queryByokakin(summaryQuery, []);
+     
+     return {details:getKDDIKotehiProcessedDataRes.rows, summary:getKDDIKotehiProcessedDataSummaryRes.rows};
+
     } catch (e) {
       console.log("err in get kddi last month list=" + e.message);
       return e;

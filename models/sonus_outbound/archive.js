@@ -455,8 +455,8 @@ async function getCompanyInfo(trunkPort, customerInfo = [], incallednumber) {
 
   //console.log("customer info.."+JSON.stringify(customerInfo));
 
-  console.log("incallednumber.."+incallednumber)
-  console.log("trunkPort.."+trunkPort)
+  // console.log("incallednumber.."+incallednumber)
+  // console.log("trunkPort.."+trunkPort)
 
   try {
 
@@ -482,7 +482,7 @@ async function getCompanyInfo(trunkPort, customerInfo = [], incallednumber) {
 
     }
 
- console.log("res info.."+JSON.stringify(res));
+//  console.log("res info.."+JSON.stringify(res));
    
 
   } catch (e) {
