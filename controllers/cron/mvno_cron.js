@@ -5,14 +5,14 @@ var BillingController = require('../mvno/billing.controller');
 var CDRController = require('../mvno/cdr.controller');
 
 
-// var archiverJobSonusOut = new CronJob ('34 11 * * *',function(){
+// var archiverJobSonusOut = new CronJob ('57 14 * * *',function(){
 //     console.log('You will see this message every second');
 //     archiveController.getData();
 //     console.log('You will see this message every second');
 
 // },null, true, 'Asia/Tokyo');
 
-// var archiverJobSonusOut = new CronJob ('36 11 * * *',function(){
+// var archiverJobSonusOut = new CronJob ('10 16 * * *',function(){
 //     console.log('You will see this message every second');
 //     archiveController.getDataFPhoneALeg();
 //     console.log('You will see this message every second');
@@ -20,14 +20,14 @@ var CDRController = require('../mvno/cdr.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var archiverJobSonusOut = new CronJob ('55 11 * * *',function(){
+// var archiverJobSonusOut = new CronJob ('20 16 * * *',function(){
 //     console.log('You will see this message every second');
 //     archiveController.getDataFPhoneBLeg();
 //     console.log('You will see this message every second');
 
 //  },null, true, 'Asia/Tokyo');
 
-// var archiverJobSonusOut = new CronJob ('57 11 * * *',function(){
+// var archiverJobSonusOut = new CronJob ('23 16 * * *',function(){
 //     console.log('You will see this message every second');
 //     archiveController.getDataFPhoneALegXMOBILE();
 //     console.log('You will see this message every second');
@@ -50,7 +50,7 @@ var CDRController = require('../mvno/cdr.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var BillingControllerJob = new CronJob ('13 12 * * *',function(){
+// var BillingControllerJob = new CronJob ('47 16 * * *',function(){
 //     console.log('You will see this message every second');
 //     BillingController.getData();
 //     console.log('You will see this message every second');

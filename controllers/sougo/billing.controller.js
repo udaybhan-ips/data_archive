@@ -124,6 +124,8 @@ module.exports = {
 
       console.log("length==" + getCompListRes.length);
 
+    
+
       const [getCarrierInfoRes, getCarrierInfoErr] = await handleError(BillingSougo.getCarrierInfo());
       if (getCarrierInfoErr) {
         throw new Error('Could not fetch carrier list details');
@@ -148,15 +150,20 @@ module.exports = {
           bill_no = parseInt(BillNoArr.max_bill_no, 10) + 1;
        
 
-        // const [getCDRRes, getCDRResErr] = await handleError(BillingSougo.getNewDataTargetCDR(getCompListRes[i]['company_code'], billingYear, billingMonth));
-        // if (getCDRResErr) {
-        //   throw new Error('Could not fetch CDRes');
-        // }
+        const [getCDRRes, getCDRResErr] = await handleError(BillingSougo.getNewDataTargetCDR(getCompListRes[i]['company_code'], billingYear, billingMonth));
+        if (getCDRResErr) {
+          throw new Error('Could not fetch CDRes');
+        }
 
-        // const [createDetailDataRes, createDetailDataErr] = await handleError(BillingSougo.createNewDetailData(bill_no, getCompListRes[i]['company_code'], billingYear, billingMonth,ratesDetails, getCDRRes  ,getCarrierInfoRes));
-        // if (createDetailDataErr) {
-        //   throw new Error('Could not fetch CDRes');
-        // }
+      //    const [deleteSummaryRes, deleteSummaryErr] = await handleError(BillingSougo.deleteSummaryData(customerId, billingYear, billingMonth));
+      //  if(deleteSummaryErr) {
+      //      throw new Error('Error while delete summary data '+ deleteSummaryErr);  
+      // }
+
+        const [createDetailDataRes, createDetailDataErr] = await handleError(BillingSougo.createNewDetailData(bill_no, getCompListRes[i]['company_code'], billingYear, billingMonth,ratesDetails, getCDRRes  ,getCarrierInfoRes));
+        if (createDetailDataErr) {
+          throw new Error('Could not fetch CDRes');
+        }
 
         const [createInvoiceFCRes, createInvoiceFCErr] = await handleError(BillingSougo.genrateInvoice(getCompListRes[i]['company_code'], billingYear, billingMonth, Dates.current_month, 'new'));
 

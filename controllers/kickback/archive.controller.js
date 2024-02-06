@@ -14,7 +14,7 @@ module.exports = {
         throw new Error('Could not fetch target date');
       }
       const getTargetBillableNewCDRRes = await ArchiveKickback.getTargetNewCDR(Dates.targetDate);
-      const getDataBillabeRes = await ArchiveKickback.insertByBatches(getTargetBillableNewCDRRes, null, null, null, null, 'cdr_202312_new', null);
+      const getDataBillabeRes = await ArchiveKickback.insertByBatches(getTargetBillableNewCDRRes, null, null, null, null, 'new_migration_data','cdr_202401_new');
 
       const [updateBatchControlRes, updateBatchControlErr] = await handleError(ArchiveKickback.updateBatchControl(dateId, Dates.targetDate));
       if (updateBatchControlErr) {

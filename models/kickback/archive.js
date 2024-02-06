@@ -244,8 +244,8 @@ module.exports = {
     console.log("chunkArray len is ..."+chunkArray.length)
 
     try{
-      if(__type =='cdr_202312_new'){
-        ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetNewSonus, { table: 'cdr_202312_new' }) 
+      if(__type =='new_migration_data'){
+        ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetNewSonus, { table: tableName }) 
       }
       else if(__type == 'raw_cdr')  {
         ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSetSonus, { table: tableName })           
@@ -254,7 +254,7 @@ module.exports = {
       }
       
       for (let i = 0; i < chunkArray.length; i++) {
-        if(__type =='cdr_202312_new'){
+        if(__type =='new_migration_data'){
           const data = await getNextInsertBatchNew(chunkArray[i], '', '');   
           res = await db.queryBatchInsert(data, 'ibs', ColumnSetValue);
         }
@@ -646,15 +646,10 @@ async function getNextInsertBatchNew(data) {
         console.log("data[i]['START_TIME']"+data[i]['START_TIME'])
       }
 
-      const companyCode = await getCompanyCodeNew(data[i]['ORIG_IOI']);
+      const {companyCode, origCarrierId} = await getCompanyCodeNew(data[i]['ORIG_IOI']);
       const termCarrierId = await getTermCarrierId(data[i]['CALLED_NUMBER']);
 
-      let origCarrierId = "";
-      if(companyCode =='1011000056'){
-        origCarrierId = '5001'
-      }else if(companyCode=='1011000057'){
-        origCarrierId = '5007'
-      }
+      
       
       let obj = {};
       obj['cdr_id'] = data[i]['ID'];
@@ -665,13 +660,11 @@ async function getNextInsertBatchNew(data) {
       obj['callduration'] = parseFloat(data[i]['DURATION']);
       obj['duration_use'] = await getDurationUse(data[i]['DURATION']);
       obj['sonus_duration'] = parseFloat(data[i]['CALLDURATION']);
-
       obj['disconnect_reason'] = data[i]['DISCONNECT_REASON'];;
       obj['calltype_id'] = data[i]['CALL_TYPE_ID'];;
       obj['calling_number'] = data[i]['CALLING_NUMBER'];;
       obj['called_number'] = data[i]['CALLED_NUMBER'];;
       obj['ingr_pstn_trunk_name'] = data[i]['INGR_PSTN_TRUNK_NAME'];;
-     
       obj['calling_name'] = data[i]['CALLING_NAME'];
       obj['orig_ioi'] = data[i]['ORIG_IOI'];
       obj['term_ioi'] = data[i]['TERM_IOI'];
@@ -703,15 +696,23 @@ async function getNextInsertBatchNew(data) {
 }
 
 async function getCompanyCodeNew(origIOI){
-  let res = "9999999999";
+  let companyCode = "9999999999", origCarrierId = "";
 
   if(origIOI.includes("ntt-east")){
-    res = "1011000056";
+    companyCode = "1011000056";
+    origCarrierId = "5001"
   }else if(origIOI.includes("ntt-west")){
-    res = "1011000057";
+    companyCode = "1011000057";
+    origCarrierId = "5007"
+  }else if(origIOI.includes("softbank")){
+    companyCode = "1011000058";
+    origCarrierId = "2013";
+  }else if(origIOI.includes("ntt.com")){
+    companyCode = "1011000059";
+    origCarrierId = "5020";
   } 
 
-  return res;
+  return {companyCode, origCarrierId};
 
 }
 
