@@ -17,5 +17,9 @@ router.post('/commission/onApproveRowData',  CommissionInfoController.onApproveR
 router.post('/commission/getCommissionSchedule',  CommissionInfoController.getCommissionSchedule);
 router.post('/commission/updateCommissionBatchDetails',  CommissionInfoController.updateCommissionBatchDetails);
 
+router.post('/commission/getApprovalStatus',  CommissionInfoController.getApprovalStatus);
+router.post('/commission/addApprovalStatus',  CommissionInfoController.addApprovalStatus);
+
+
 
 module.exports = router;

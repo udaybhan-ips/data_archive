@@ -5,7 +5,60 @@ var fs = require("fs");
 var common = require('./../common/common')
 module.exports = {
 
-  
+  addApprovalStatus: async function (data) {
+
+    console.log("data..." + JSON.stringify(data))
+
+    try {
+
+      if (data && data.year !== '' && data.month !=='') {
+        const checkQuery = `select * from agent_commission_approval_flow where billing_period::date ='${data.year}-${data.month}-01' 
+        and deleted = false   `;
+        let res = await db.queryByokakin(checkQuery, []);
+        if (res && res.rows && res.rows.length > 0) {
+          throw new Error('Record already exist!');
+        }
+
+      } else {
+        throw new Error('Invalid data!')
+      }
+
+
+      const query = `insert into agent_commission_approval_flow  (billing_period, approval_status,  date_added, added_by) 
+      values ('${data.year}-${data.month}-01','${data.approval_status}',now(),'${data.added_by}')`;
+
+      //  console.log("query.."+query)
+
+      const deleteRes = await db.queryByokakin(query, []);
+
+
+      if (deleteRes) {
+        return (deleteRes);
+      }
+      throw new Error('not found')
+
+    } catch (error) {
+      console.log("error in adding in approval status !" + error.message)
+      throw new Error(error.message)
+    }
+  },
+
+  getApprovalStatus: async function ({ year, month }) {
+    try {
+      const query = `select * from agent_commission_approval_flow where billing_period::date ='${year}-${month}-01' and deleted = false `;
+      const approvalData = await db.queryByokakin(query, []);
+
+      if (approvalData.rows) {
+        return approvalData.rows;
+      }
+      throw new Error('not found')
+    } catch (error) {
+      console.log('Error!!'+error.message)
+      throw new Error('Error!!'+error.message)
+     // return error;
+    }
+  },
+
   updateCommissionBatchDetails: async function (data) {
     try {
 

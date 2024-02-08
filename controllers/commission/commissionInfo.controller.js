@@ -2,6 +2,48 @@ var CommissionInfo = require('../../models/commission/commission');
 let dateId = 12;
 module.exports = {
 
+  addApprovalStatus: async function (req, res) {
+    //console.log("req..." + JSON.stringify(req.body))
+    try {
+      const [addApprovalStatusRes, addApprovalStatusErr] = await handleError(CommissionInfo.addApprovalStatus(req.body));
+
+
+      if (addApprovalStatusErr) {
+
+        return res.status(500).json({
+          message: addApprovalStatusErr.message
+        });
+      }
+      return res.status(200).json(addApprovalStatusRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+  
+  getApprovalStatus: async function (req, res) {
+    //console.log("req..." + JSON.stringify(req.body))
+    try {
+      const [getApprovalStatusRes, getApprovalStatusErr] = await handleError(CommissionInfo.getApprovalStatus(req.body));
+
+
+      if (getApprovalStatusErr) {
+
+        return res.status(500).json({
+          message: getApprovalStatusErr.message
+        });
+      }
+      return res.status(200).json(getApprovalStatusRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
   updateCommissionBatchDetails: async function (req, res) {
     //console.log("req..." + JSON.stringify(req.body))
     try {
