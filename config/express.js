@@ -58,10 +58,10 @@ var initApp = function() {
   app.set('port', config.PORT);
 
   app.use(bodyParser.urlencoded({
-    limit: '70mb',
+    limit: '100mb',
     extended: true
   }));
-  app.use(bodyParser.json({limit: '70mb'}));
+  app.use(bodyParser.json({limit: '100mb'}));
 
 
   app.use(morgan('short'));
