@@ -52,10 +52,16 @@ module.exports = {
             <div> Thank you </div>
         </div>`;
 
+        let emailTo = "telecom@ipspro.co.jp";
+        let emailCC ="uday@ipspro.co.jp,y_ito@ipspro.co.jp" ;
+
+        emailCC ="uday@ipspro.co.jp"
+        emailTo ="uday@ipspro.co.jp"
+
         let mailOption={
             from: 'ips_tech@sysmail.ipsism.co.jp',
-            to: 'telecom@ipsism.co.jp,jinzai_assistance@ipsism.co.jp',
-            cc:'uday@ipsism.co.jp,y_ito@ipsism.co.jp',
+            to: emailTo,
+            cc:emailCC,
             subject,
             html
         }

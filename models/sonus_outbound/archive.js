@@ -65,10 +65,17 @@ module.exports = {
         added_by from ips_kotehi_cdr_bill 
           where to_char(datebill::date, 'MM-YYYY')='${month}-${year}'
           group by comp_acco__c, companyname, added_by `;
+
+      const detailsQuery = `select * from ips_kotehi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}'` ;
+
+
+
       const processedKotehiData = await db.queryByokakin(query, []);
+      const detailsQueryRes = await db.queryByokakin(detailsQuery, []);
+
       //console.log(targetDateRes);
-      if (processedKotehiData && processedKotehiData.rows) {
-        return processedKotehiData.rows;
+      if (processedKotehiData && processedKotehiData.rows && detailsQueryRes && detailsQueryRes.rows) {
+        return {summary:processedKotehiData.rows , details: detailsQueryRes.rows}
       }
       throw new Error("Error!" + processedKotehiData)
     } catch (error) {

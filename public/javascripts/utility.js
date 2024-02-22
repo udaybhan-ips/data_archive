@@ -174,7 +174,26 @@ module.exports.utcToDateNew= async function(utcDate){
 // arrayToCSV(arr,headers,fileName);
 /****************** send email ***************/
 
-
+module.exports.sendEmailIPSPro= async function(mailOptions){
+  var transporter = nodemailer.createTransport({
+    secure: false,
+    host:'103.120.16.136',
+    port:587,
+    auth: {
+      user: 'ipsp_billing@sysmail.ipspro.co.jp',
+      pass: '3aThu7rlMu1oSwl*Rim6'
+    }
+  });
+  
+  try {
+    let res = await transporter.sendMail(mailOptions);    
+    console.log("res.."+JSON.stringify(res))
+    return res;
+  }catch(error){
+    console.log("error.."+error)
+    return error;
+  }    
+}
 
 module.exports.sendEmailTesting= async function(mailOptions){
   var transporter = nodemailer.createTransport({

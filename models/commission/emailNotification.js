@@ -23,7 +23,7 @@ module.exports = {
           let WHERE = "";
     
           if(customerId){
-            WHERE = `where customer_cd = '${customerId}' and is_deleted = false `
+            WHERE = `where customer_cd in ( '${customerId}' ) and is_deleted = false `
           }else{
             WHERE = `where is_deleted = false `
           }
@@ -83,30 +83,51 @@ module.exports = {
         console.log("current dir.."+__dirname);
         
         let customerName = customerDetails.customer_name;
-
-       
-
-
-
         let emailSubject = emailDetails[0]['email_subject'] ; 
-        
         let emailContent = emailDetails[0]['email_contents'].replace(/\n/g, "<br />"); ; 
 
-        
-
         let paymentDueDateMode = emailDetails[0]['payment_due_date_mode'] ; 
+        
         let emailTo = emailDetails[0]['email_to'] ; 
         let emailCc = emailDetails[0]['email_cc'] ; 
+
+       console.log(emailDetails[0]['email_to'])
+       console.log(emailDetails[0]['email_cc'])
+
+         //emailTo = 'uday@ipspro.co.jp' ; 
+         //emailCc = 'r_kobayashi@ipspro.co.jp' ; 
+         let emailBCC = 'uday@ipspro.co.jp';
+       //  emailSubject = "テストメール（株式会社アイ・ピー・エス・プロ）";
+
 
 
         //let payment_due_date_mode = emailDetails[0]['payment_due_date_mode'] ; 
 
         let html = '';
+
+        // html = `関係者各位 <br /><br />
+        // お世話になっております。 <br />
+        // 株式会社アイ・ピー・エス・プロです。<br /> <br />
+        // 当メールはテストメールです。<br />
+        // 無事届いておりましたら、恐れ入りますが <br />
+        // 下記までご一報いただけますでしょうか。 <br /> <br />
+        // To:r_kobayashi@ipspro.co.jp (小林宛) <br />
+        // Cc:y_tominaga@ipspro.co.jp <br />  <br />
+        // お手数をおかけしますが、何卒宜しくお願い致します。<br /> <br />
+        // 株式会社アイ・ピー・エス・プロ
+
+        // `;
         
-        html += emailContent ; 
+         html += emailContent ; 
+
+
 
         let filename = `1${customerId}_${billingYear}${billingMonth}_${customerName}.pdf`;
-        let path = __dirname + `\\pdf\\1${customerId}_${billingYear}${billingMonth}_${customerName}.pdf`;;
+        let path = __dirname + `\\pdf\\1${customerId}_${billingYear}${billingMonth}_${customerName}.pdf`;
+
+  //       filename = `コミッション通知書(テスト).pdf`;
+    //     path = __dirname + `\\pdf\\コミッション通知書(テスト).pdf`;
+
 
         console.log("file name is .."+filename)
         console.log("path is .."+path)
@@ -115,6 +136,7 @@ module.exports = {
             from: 'ipsp_billing@sysmail.ipspro.co.jp',
             to: emailTo,
             cc:emailCc,
+            bcc:emailBCC,
             subject: emailSubject,
             html,
             attachments: [
@@ -126,7 +148,7 @@ module.exports = {
         }
         console.log("1")
 
-       let res = await utility.sendEmailTesting(mailOption);
+       let res = await utility.sendEmailIPSPro(mailOption);
         console.log("2")
        
         return res ;

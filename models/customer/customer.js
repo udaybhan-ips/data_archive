@@ -9,7 +9,7 @@ module.exports = {
     try {
 
       const query = `select id, customer_cd, customer_name, post_number, email, tel_number,upd_id,fax_number,  
-      upd_date, address, staff_name, commission,
+      upd_date, address, staff_name, commission, eli,
       service_type ->> 'kddi_customer' as kddi_customer,  service_type ->> 'ntt_customer' as ntt_customer, 
       service_type ->> 'ntt_orix_customer' as ntt_orix_customer, service_type  from  m_customer 
       where is_deleted=false order by customer_cd desc`;
@@ -291,12 +291,12 @@ module.exports = {
     let updateData = '';
     try {
       const query = `INSERT INTO m_customer_history (customer_cd, customer_name, address, tel_number, email, staff_name, 
-      logo, upd_id, upd_date, post_number, fax_number, pay_type, is_deleted, service_type ) VALUES 
-      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14 ) returning customer_cd`;
+      logo, upd_id, upd_date, post_number, fax_number, pay_type, is_deleted, service_type, eli ) VALUES 
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15 ) returning customer_cd`;
 
       const value = [data.customer_cd, data.customer_name, data.address, data.tel_number,
       data.email, data.staff_name, data.logo, data.upd_id, 'now()', data.post_number,
-      data.fax_number, data.pay_type, data.is_deleted, JSON.stringify(data.service_type)];
+      data.fax_number, data.pay_type, data.is_deleted, JSON.stringify(data.service_type), data.eli];
 
       const res = await db.query(query, value, true);
 
@@ -329,7 +329,7 @@ module.exports = {
       }
 
 
-      updateData = updateData + `upd_date= now(), commission=${data.commission} , upd_id= '${data.updated_by}' `;
+      updateData = updateData + `upd_date= now(), commission=${data.commission} , eli=${data.eli} , upd_id= '${data.updated_by}' `;
 
       const queryUpdate = `update m_customer set ${updateData} where  id='${data.id}'`;
 
