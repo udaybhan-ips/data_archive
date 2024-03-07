@@ -324,6 +324,62 @@ module.exports = {
     }
   },
 
+  
+
+  updateKotehiProcessedData: async function ({updated_by, records, selectedData, totalAmount}) {
+
+    try {
+
+      if(records && records.length>0){
+        let customerCode = records[0]['comp_acco__c'];
+
+        let updateRecordsCount = 0
+
+        for(let i=0; i<records.length; i++){
+          let updateQuery = `update ntt_koteihi_cdr_bill set kingaku=${records[i]['kingaku']}, updated_by='${updated_by}' , updated_date=now()
+           where id='${records[i]['id']}' `;
+
+           //console.log("update query is "+updateQuery)
+
+           let resData = await db.queryByokakin(updateQuery,[]);
+           updateRecordsCount += resData.rowCount;
+           //console.log("res data" + JSON.stringify(resData));
+
+        }
+
+          let updateSummaryQuery = `update ntt_koteihi_bill_summary set amount=${totalAmount} , updated_by='${updated_by}',
+          updated_date=now() 
+          where bill_start__c::date ='${selectedData.year}-${selectedData.month}-01' and comp_acco__c='${customerCode}' `; 
+
+          //console.log("update query is "+updateSummaryQuery)
+
+          let resSummary = await db.queryByokakin(updateSummaryQuery, []);
+
+          return updateRecordsCount;
+
+        }else{
+          throw new Error('Request is invalid!');
+        }
+
+      // console.log("year, month .." + billing_month, customer_cd);
+
+      // const query = `delete from ntt_koteihi_cdr_bill where to_char(datebill,'YYYY-MM') ='${billing_month}' and comp_acco__c='${customer_cd}' `;
+      // const deleteKotehiProcessedDataRes = await db.queryByokakin(query, []);
+
+      // const querySumarry = `update ntt_koteihi_bill_summary set deleted = true, deleted_by='${deleted_by}' 
+      // where to_char(bill_start__c,'YYYY-MM') ='${billing_month}' and comp_acco__c='${customer_cd}' and carrier= 'NTT'`;
+      // const deleteKotehiProcessedSummaryDataRes = await db.queryByokakin(querySumarry, []);
+
+
+      // console.log(JSON.stringify(deleteKotehiProcessedDataRes))
+
+      // return deleteKotehiProcessedDataRes;
+    } catch (e) {
+      console.log("err in get kddi last month list=" + e.message);
+      return e;
+    }
+  },
+
   deleteKotehiProcessedData: async function ({ billing_month, customer_cd, deleted_by }) {
     try {
       console.log("year, month .." + billing_month, customer_cd);

@@ -17,6 +17,7 @@ router.get('/byokakin/kddi/aBasicServiceData',  KDDIKotehiController.getKDDIKote
 router.get('/byokakin/kddi/customerList',  KDDIKotehiController.getKDDICustomer);
 router.post('/byokakin/kddi/processedData',  KDDIKotehiController.getKDDIKotehiProcessedData);
 router.post('/byokakin/kddi/deleteProcessedKotehiData',  KDDIKotehiController.deleteKotehiProcessedData);
+router.post('/byokakin/kddi/updateKotehiProcessedData',  KDDIKotehiController.updateKotehiProcessedData);
 
 //router.post('/byokakin/kddi/kotehi/upload_kotehi',  KDDIKotehiController.getKDDIKotehiProcessedData);
 

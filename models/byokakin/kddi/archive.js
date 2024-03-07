@@ -303,38 +303,6 @@ module.exports = {
     try {
       console.log("year, month .." + year, month);
 
-      let lastMonthDate = utility.getPreviousYearMonth(`${year}-${month}`);
-      const lastYear = lastMonthDate.year;
-      const lastMonth = lastMonthDate.month;
-
-      //const query = `select  substring(split_part(bill_numb__c, '-',2),4) as comp_code,  sum (amount) from kddi_kotei_bill_details 
-      //where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' group by substring(split_part(bill_numb__c, '-',2),4) `;
-
-      // const query = `select lj.*, rj.date_added, rj.added_by from (select * from (select  substring(split_part(bill_numb__c, '-',2),4) as comp_code, 
-      //  sum (amount) from kddi_kotei_bill_details  where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' 
-      //  group by substring(split_part(bill_numb__c, '-',2),4)) as current_month  
-      //  left join 
-      //  (select  substring(split_part(bill_numb__c, '-',2),4) as prev_comp_code, sum (amount) as prev_amount 
-      //  from kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY')='${lastMonth}-${lastYear}' 
-      //  group by substring(split_part(bill_numb__c, '-',2),4) ) as prev_month 
-      //  on (current_month.comp_code=prev_month.prev_comp_code)) lj
-
-      //  left join (
-      //   select date_added, added_by, substring(split_part(bill_numb__c, '-',2),4) as comp_code from 
-      //   kddi_kotei_bill_summary where to_char(bill_start__c::date, 'MM-YYYY') ='${month}-${year}' and deleted=false
-
-      //  ) as rj on (lj.comp_code=rj.comp_code)
-       
-      //  `;
-
-
-
-
-      // const getKDDIKotehiProcessedDataRes = await db.queryByokakin(query, []);
-      // return getKDDIKotehiProcessedDataRes.rows;
-
-
-
       const query = `select id, bill_numb__c, comp_acco__c,  account, productname, amount, ips_amount from
       kddi_kotei_bill_details where to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' `;
      
@@ -349,6 +317,51 @@ module.exports = {
      const getKDDIKotehiProcessedDataSummaryRes = await db.queryByokakin(summaryQuery, []);
      
      return {details:getKDDIKotehiProcessedDataRes.rows, summary:getKDDIKotehiProcessedDataSummaryRes.rows};
+
+    } catch (e) {
+      console.log("err in get kddi last month list=" + e.message);
+      return e;
+    }
+  },
+
+  
+  updateKotehiProcessedData: async function ({updated_by, records, selectedData, totalAmount}) {
+    try {
+
+      //console.log("req is "+JSON.stringify(records))
+      //console.log("req is "+JSON.stringify(selectedData))
+
+      if(records && records.length>0){
+        let customerCode = records[0]['comp_acco__c'];
+
+        let updateRecordsCount = 0
+
+        for(let i=0; i<records.length; i++){
+          let updateQuery = `update kddi_kotei_bill_details set amount=${records[i]['amount']}, updated_by='${updated_by}' , updated_date=now()
+           where id='${records[i]['id']}'  `;
+
+           //console.log("update query is "+updateQuery)
+
+           let resData = await db.queryByokakin(updateQuery,[]);
+           updateRecordsCount += resData.rowCount;
+           //console.log("res data" + JSON.stringify(resData));
+
+        }
+
+          let updateSummaryQuery = `update kddi_kotei_bill_summary set bill_sum__c=${totalAmount} , updated_by='${updated_by}',
+          updated_date=now() where bill_start__c::date ='${selectedData.year}-${selectedData.month}-01' and 
+          comp_acco__c='${customerCode}'  and carrier ='NTT' `; 
+
+          //console.log("update query is "+updateSummaryQuery)
+
+          let resSummary = await db.queryByokakin(updateSummaryQuery, []);
+
+          return updateRecordsCount;
+          
+
+      }else{
+        throw new Error('Request is invalid!');
+      }
 
     } catch (e) {
       console.log("err in get kddi last month list=" + e.message);

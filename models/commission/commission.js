@@ -165,13 +165,17 @@ module.exports = {
         emailSubject = emailSubject.replace(/YYYY/g, year);
         emailSubject = emailSubject.replace(/MM/g, month);
 
-        let emailTo = "uday@ipspro.co.jp";
-        let emailCC = "uday@ipspro.co.jp";
+        let emailTo = getCommissionEmailDetailsRes.rows[0]['email_to'];
+        let emailCC = getCommissionEmailDetailsRes.rows[0]['email_cc'];
+
         let emailBCC = "uday@ipspro.co.jp";
 
+
+
+
         const emailScheduleQuery = `insert into agent_commission_email_history (customer_id, email_status, billing_month, email_contents, email_to,
-          email_cc, email_bcc, status, added_by, date_added, email_subject) values ('${data.agent_code}','pending','${data.bill_start}','${emailContents}','${emailTo}',
-          '${emailCC}', '${emailBCC}', '${data.status}','${data.approvedBy}', now(), '${emailSubject}') `;
+          email_cc, email_bcc, status, added_by, date_added, email_subject) values ('${data.agent_code}','pending','${data.bill_start}',
+          '${emailContents}','${emailTo}','${emailCC}', '${emailBCC}', '${data.status}','${data.approvedBy}', now(), '${emailSubject}') `;
 
         const emailScheduleQueryRes = await db.queryByokakin(emailScheduleQuery, []);
 
@@ -515,7 +519,7 @@ module.exports = {
 
 
 
-  createCommissionDetails: async function ({ comp_code, year, month, payment_plan_date, createdBy }) {
+  createCommissionDetails: async function ({ comp_code, year, month, createdBy }) {
 
     let billNo = 1000;
     const getNumberOfDaysInMonth = utility.daysInMonth(month, year);
@@ -818,8 +822,33 @@ module.exports = {
     }
   },
 
+  sendEmail: async function ({ year, month, createdBy }) {
 
-  createCommissionInvoice: async function ({ comp_code, year, month, payment_plan_date, createdBy }) {
+    let emailCc = '', emailTo='uday@ipspro.co.jp', emailBCC='';
+
+    let emailSubject = `Free Dial Commission || ${year} || ${month} ` ;
+
+    let html = `Hi <br/>  <br/>
+    Free Dial Commission  has been finished. <br/>
+    Please check on the IPSP portal. <br/> <br/>
+    Thank you
+    `
+
+    let mailOption = {
+      from: 'ipsp_billing@sysmail.ipspro.co.jp',
+      to: emailTo,
+      cc:emailCc,
+      bcc:emailBCC,
+      subject: emailSubject,
+      html,      
+  }
+ let res = await utility.sendEmailIPSPro(mailOption);
+  return res ;
+
+  },
+
+
+  createCommissionInvoice: async function ({ comp_code, year, month, createdBy }) {
 
     try {
 

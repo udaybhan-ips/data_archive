@@ -3,7 +3,7 @@ var InvoiceKickback = require('../../models/kickback/invoice');
 module.exports = {
   getInvoice: async function(req, res) {
     try {
-        const [invoiceRes,invoiceError] = await handleError(InvoiceKickback.getInvoiceData());
+        const [invoiceRes,invoiceError] = await handleError(InvoiceKickback.getInvoiceData(req.body));
         if(invoiceError) {
              throw new Error('Could not fetch the invoice');  
         }

@@ -22,7 +22,7 @@ module.exports = {
     console.log("Here!")
     try {
       const query = `select *, CALLDURATION*0.01 AS DURATION from cdr where  start_time>='${targetDate}' and  
-      start_time < DATE_ADD("${targetDate}", INTERVAL 31 DAY) and ingr_pstn_trunk_name ='INNET00'     ` ;
+      start_time < DATE_ADD("${targetDate}", INTERVAL 29 DAY) and ingr_pstn_trunk_name ='INNET00'     ` ;
       //const query = `select * from cdr where start_time>='${targetDate}' and  start_time < DATE_ADD("${targetDate}", INTERVAL 1 DAY) ` ;
 
       //STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
@@ -710,6 +710,9 @@ async function getCompanyCodeNew(origIOI){
   }else if(origIOI.includes("ntt.com")){
     companyCode = "1011000059";
     origCarrierId = "5020";
+  }else if(origIOI.includes("sanntsu.com")){
+    companyCode = "1011000060";
+    origCarrierId = "6010";
   } 
 
   return {companyCode, origCarrierId};

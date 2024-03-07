@@ -84,7 +84,7 @@ module.exports = {
       console.log("in get all comp code");
       
       let query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
-      where company_code in ('1011000058','1011000059')  order by company_code `;
+      where company_code  in ('1011000056')  order by company_code `;
 
       // query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
       // where company_code ='1011000058'
@@ -699,7 +699,7 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
       // monthly due date!
-      paymentDueDate = `${currentYear }/02/29`;
+      paymentDueDate = `${currentYear }/03/29`;
     }
 
   await generateHeader(address, doc, totalCallAmount);

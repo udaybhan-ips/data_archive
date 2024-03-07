@@ -88,7 +88,6 @@ module.exports = {
         return res.status(400).json({
           message: 'error while sending email'
         });
-
       }
 
       return res.status(200).json({

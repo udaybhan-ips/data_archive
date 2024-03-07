@@ -248,8 +248,27 @@ module.exports = {
       });
     }
   },
-
   
+  async updateKotehiProcessedData(req, res) {
+    try {
+      console.log("req.body.."+JSON.stringify(req.body))
+
+      const [updateKotehiProcessedDataRes, updateKotehiProcessedDataErr] = await handleError(ArchiveKDDI.updateKotehiProcessedData(req.body));
+
+      if (updateKotehiProcessedDataErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: updateKotehiProcessedDataErr.message
+        });
+      }
+      return res.status(200).json({'rowCount':updateKotehiProcessedDataRes});
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
 
   async deleteKotehiProcessedData(req, res) {
     try {

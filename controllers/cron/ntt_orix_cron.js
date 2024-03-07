@@ -16,19 +16,19 @@ var CDRsController = require('../byokakin/ntt_orix/cdr.controller');
 //     console.log('This is byokakin NTTORIX archiver End');  
 // },null, true, 'Asia/Tokyo');
 
-// var archiverJob = new CronJob ('12 10 * * *',function(){
+// var archiverJob = new CronJob ('33 16 * * *',function(){
 //     console.log('This is byokakin archiver start');
 //     archiveController.uploadNTTORIXRAW();
 //     console.log('This is byokakin archiver End');  
 // },null, true, 'Asia/Tokyo');
 
-// var CDRProcessingControllerJob = new CronJob ('19 10 * * *',function(){
+// var CDRProcessingControllerJob = new CronJob ('45 16 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.cdrProcessing();
 //     console.log('This is byokakin email notification end');
 // },null, true, 'Asia/Tokyo');
 
-// var billingControllerJob = new CronJob ('23 10 * * *',function(){
+// var billingControllerJob = new CronJob ('49 16 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.getData();
 //     console.log('This is byokakin email notification end');

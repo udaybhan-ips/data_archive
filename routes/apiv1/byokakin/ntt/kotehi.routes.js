@@ -23,6 +23,7 @@ router.get('/byokakin/ntt/NNumberList',  NTTKotehiController.getNTT_N_NumList);
 router.get('/byokakin/ntt/customerList',  NTTKotehiController.getNTTCustomer);
 router.post('/byokakin/ntt/processedData',  NTTKotehiController.getNTTKotehiProcessedData);
 router.post('/byokakin/ntt/deleteProcessedKotehiData',  NTTKotehiController.deleteKotehiProcessedData);
+router.post('/byokakin/ntt/updateKotehiProcessedData',  NTTKotehiController.updateKotehiProcessedData);
 
 //router.post('/byokakin/ntt/kotehi/upload_kotehi',  NTTKotehiController.getNTTKotehiProcessedData);
 

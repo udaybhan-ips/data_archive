@@ -261,6 +261,24 @@ async deleteNTTKotehiDataByUI(req, res) {
 
   
 
+  async updateKotehiProcessedData(req, res) {
+    try {
+      const [updateKotehiProcessedDataRes, updateKotehiProcessedDataErr] = await handleError(ArchiveNTT.updateKotehiProcessedData(req.body));
+      if (updateKotehiProcessedDataErr) {
+        //throw new Error('Could not fetch the summary');
+        return res.status(500).json({
+          message: updateKotehiProcessedDataErr.message
+        });
+      }
+      return res.status(200).json({'deleted_rows':updateKotehiProcessedDataRes});
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
   async deleteKotehiProcessedData(req, res) {
     try {
       const [deleteKotehiProcessedDataRes, deleteKotehiProcessedDataErr] = await handleError(ArchiveNTT.deleteKotehiProcessedData(req.body));

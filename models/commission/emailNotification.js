@@ -3,207 +3,137 @@ var db = require('./../../config/database');
 
 module.exports = {
 
-    getTargetDate: async function (date_id) {
-        try {
-          const query = `SELECT max(date_set)::date as target_billing_month, max(date_set)::date as current_montth FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
-          const targetDateRes = await db.query(query, []);
-    
-          if (targetDateRes.rows) {
-            return { 'target_billing_month': (targetDateRes.rows[0].target_billing_month), 'current_montth': (targetDateRes.rows[0].current_montth) };
-          }
-          return { err: 'not found' };
-        } catch (error) {
-          return error;
-        }
-      },
+  getTargetDate: async function (date_id) {
+    try {
+      const query = `SELECT max(date_set)::date as target_billing_month, max(date_set)::date as current_montth FROM batch_date_control where date_id=${date_id} and deleted=false limit 1`;
+      const targetDateRes = await db.query(query, []);
 
-      getAllCommissionCustomer: async function (customerId) {
-        try {
-    
-          let WHERE = "";
-    
-          if(customerId){
-            WHERE = `where customer_cd in ( '${customerId}' ) and is_deleted = false `
-          }else{
-            WHERE = `where is_deleted = false `
-          }
-    
-          let customerList = []
-    
-          const getAllCustomerList = `select id, customer_cd, customer_name, commission from m_customer ${WHERE} ` ; 
-          const getAllCustomerListRes = await db.query(getAllCustomerList, [], true);
-    
-          const getAllAgentList = `select agent_code from agent_incentive where edat_fini::date > now() and deleted=false  ` ; 
-          const getAllAgentListRes = await db.queryByokakin(getAllAgentList, []);
-          
-          if(getAllCustomerListRes && getAllCustomerListRes.rows && getAllCustomerListRes.rows.length > 0 && getAllAgentListRes 
-            && getAllAgentListRes.rows && getAllAgentListRes.rows.length>0 ) {
-    
-            customerList = getAllCustomerListRes.rows.filter((obj) => {
-              let ind = -1
-              ind = getAllAgentListRes.rows.findIndex((ele) => (ele.agent_code==obj.customer_cd));
-              return ind === -1 ? false : true;      
-            })
-          }
-    
-          console.log("customer list=="+JSON.stringify(customerList))
-    
-          return customerList;
-          
-        } catch (error) {
-          return error;
-        }
-      },
+      if (targetDateRes.rows) {
+        return { 'target_billing_month': (targetDateRes.rows[0].target_billing_month), 'current_montth': (targetDateRes.rows[0].current_montth) };
+      }
+      return { err: 'not found' };
+    } catch (error) {
+      return error;
+    }
+  },
 
-    getEmailDetails: async function (customerId, year, month) {
-        
-        try {
-          const query = `select * from agent_commission_email_history where customer_id='${customerId}' and billing_month::date ='${year}-${month}-01' `;
-            const ratesRes = await db.queryByokakin(query, []);
+  getAllCommissionCustomer: async function (customerId) {
+    try {
 
-            if (ratesRes.rows) {
-                return (ratesRes.rows);
-            }
-            return { err: 'not found' };
-        } catch (error) {
-            return error;
-        }
-    },
-    
-    sendEmail: async function (emailDetails, customerId, customerDetails ,billingYear, billingMonth) {
+      let WHERE = "";
 
-        console.log("email details .."+JSON.stringify(emailDetails))
-
-        let lengthEmail = emailDetails.length;
-
-        if(lengthEmail==0){
-          throw new Error('Email details are not valid! Please check email config for this customer Id '+customerId)
+      if (customerId) {
+        WHERE = `where customer_cd in ( '${customerId}' ) and is_deleted = false `
+      } else {
+        WHERE = `where is_deleted = false `
       }
 
-        console.log("current dir.."+__dirname);
-        
-        let customerName = customerDetails.customer_name;
-        let emailSubject = emailDetails[0]['email_subject'] ; 
-        let emailContent = emailDetails[0]['email_contents'].replace(/\n/g, "<br />"); ; 
+      let customerList = []
 
-        let paymentDueDateMode = emailDetails[0]['payment_due_date_mode'] ; 
-        
-        let emailTo = emailDetails[0]['email_to'] ; 
-        let emailCc = emailDetails[0]['email_cc'] ; 
+      const getAllCustomerList = `select id, customer_cd, customer_name, commission from m_customer ${WHERE} `;
+      const getAllCustomerListRes = await db.query(getAllCustomerList, [], true);
 
-       console.log(emailDetails[0]['email_to'])
-       console.log(emailDetails[0]['email_cc'])
+      const getAllAgentList = `select agent_code from agent_incentive where edat_fini::date > now() and deleted=false  `;
+      const getAllAgentListRes = await db.queryByokakin(getAllAgentList, []);
 
-         //emailTo = 'uday@ipspro.co.jp' ; 
-         //emailCc = 'r_kobayashi@ipspro.co.jp' ; 
-         let emailBCC = 'uday@ipspro.co.jp';
-       //  emailSubject = "テストメール（株式会社アイ・ピー・エス・プロ）";
+      if (getAllCustomerListRes && getAllCustomerListRes.rows && getAllCustomerListRes.rows.length > 0 && getAllAgentListRes
+        && getAllAgentListRes.rows && getAllAgentListRes.rows.length > 0) {
+
+        customerList = getAllCustomerListRes.rows.filter((obj) => {
+          let ind = -1
+          ind = getAllAgentListRes.rows.findIndex((ele) => (ele.agent_code == obj.customer_cd));
+          return ind === -1 ? false : true;
+        })
+      }
+
+      console.log("customer list==" + JSON.stringify(customerList))
+
+      return customerList;
+
+    } catch (error) {
+      return error;
+    }
+  },
+
+  getEmailDetails: async function (customerId, year, month) {
+
+    try {
+      const query = `select * from agent_commission_email_history where customer_id='${customerId}' and billing_month::date ='${year}-${month}-01' `;
+      const ratesRes = await db.queryByokakin(query, []);
+
+      if (ratesRes.rows) {
+        return (ratesRes.rows);
+      }
+      return { err: 'not found' };
+    } catch (error) {
+      return error;
+    }
+  },
+
+  sendEmail: async function (emailDetails, customerId, customerDetails, billingYear, billingMonth) {
+
+    console.log("email details .." + JSON.stringify(emailDetails))
+
+    let lengthEmail = emailDetails.length;
+
+    if (lengthEmail == 0) {
+      throw new Error('Email details are not valid! Please check email config for this customer Id ' + customerId)
+    }
+
+    console.log("current dir.." + __dirname);
+
+    let customerName = customerDetails.customer_name;
+    let emailSubject = emailDetails[0]['email_subject'];
+    let emailContent = emailDetails[0]['email_contents'].replace(/\n/g, "<br />");;
+
+    let paymentDueDateMode = emailDetails[0]['payment_due_date_mode'];
+
+    let emailTo = emailDetails[0]['email_to'];
+    let emailCc = emailDetails[0]['email_cc'];
+
+    console.log(emailDetails[0]['email_to'])
+    console.log(emailDetails[0]['email_cc'])
+
+    //emailTo = 'uday@ipspro.co.jp';
+    //emailCc = 'uday@ipspro.co.jp';
+    let emailBCC = 'uday@ipspro.co.jp';
+    //  emailSubject = "テストメール（株式会社アイ・ピー・エス・プロ）";
+
+    let html = '';
+    html += emailContent;
 
 
 
-        //let payment_due_date_mode = emailDetails[0]['payment_due_date_mode'] ; 
+    let filename = `10${customerId}_${billingYear}${billingMonth}_${customerName}.pdf`;
+    let path = __dirname + `\\pdf\\10${customerId}_${billingYear}${billingMonth}_${customerName}.pdf`;
 
-        let html = '';
-
-        // html = `関係者各位 <br /><br />
-        // お世話になっております。 <br />
-        // 株式会社アイ・ピー・エス・プロです。<br /> <br />
-        // 当メールはテストメールです。<br />
-        // 無事届いておりましたら、恐れ入りますが <br />
-        // 下記までご一報いただけますでしょうか。 <br /> <br />
-        // To:r_kobayashi@ipspro.co.jp (小林宛) <br />
-        // Cc:y_tominaga@ipspro.co.jp <br />  <br />
-        // お手数をおかけしますが、何卒宜しくお願い致します。<br /> <br />
-        // 株式会社アイ・ピー・エス・プロ
-
-        // `;
-        
-         html += emailContent ; 
-
-
-
-        let filename = `1${customerId}_${billingYear}${billingMonth}_${customerName}.pdf`;
-        let path = __dirname + `\\pdf\\1${customerId}_${billingYear}${billingMonth}_${customerName}.pdf`;
-
-  //       filename = `コミッション通知書(テスト).pdf`;
+    //       filename = `コミッション通知書(テスト).pdf`;
     //     path = __dirname + `\\pdf\\コミッション通知書(テスト).pdf`;
 
 
-        console.log("file name is .."+filename)
-        console.log("path is .."+path)
+    console.log("file name is .." + filename)
+    console.log("path is .." + path)
 
-        let mailOption = {
-            from: 'ipsp_billing@sysmail.ipspro.co.jp',
-            to: emailTo,
-            cc:emailCc,
-            bcc:emailBCC,
-            subject: emailSubject,
-            html,
-            attachments: [
-              {   // file on disk as an attachment
-                filename: filename,
-                path: path // stream this file
-            },
-            ]
-        }
-        console.log("1")
-
-       let res = await utility.sendEmailIPSPro(mailOption);
-        console.log("2")
-       
-        return res ;
-    },
-
-}
-
-
-function tableCreate(rawData, processData, type_of_service) {
-    console.log("create table---");
-    let tableRows = '';
-
-    let length = rawData.length, locS, locSA, locE, locEA;
-
-    locS = new Date(rawData[0]['day']);
-    locSA = locS.toLocaleString().split(",");
-    locE = new Date(rawData[length - 1]['day']);
-    locEA = locE.toLocaleString().split(",");
-
-    //    console.log("1="+locEA[0]);
-
-    for (let i = 0; i < rawData.length; i++) {
-        let diff = rawData[i]['total'] - processData[i]['total'];
-        let rawValue = utility.numberWithCommas(rawData[i]['total']);
-        let processValue = utility.numberWithCommas(processData[i]['total']);
-        tableRows += '<tr>';
-        tableRows += `<td class="day">${utility.formatDate(rawData[i]['day'])}</td>`;
-        tableRows += `<td style="text-align:right" class="Raw Data">${rawValue}</td>`;
-        tableRows += `<td style="text-align:right" class="Processed Data">${processValue}</td>`;
-        tableRows += `<td style="text-align:right" class="Difference">${diff}</td>`;
-        tableRows = tableRows + '</tr>'
+    let mailOption = {
+      from: 'ipsp_billing@sysmail.ipspro.co.jp',
+      to: emailTo,
+      cc: emailCc,
+      bcc: emailBCC,
+      subject: emailSubject,
+      html,
+      attachments: [
+        {   // file on disk as an attachment
+          filename: filename,
+          path: path // stream this file
+        },
+      ]
     }
-    
-    let table = '';
-    const style = `thead { text-align: left;background-color: #4CAF50; color: white; }`
+    console.log("1")
 
-    try {
-        table += `<table class='some-table' border="2" style='${style}'>
-             <thead> <tr> <th>DATE</th> <th>SONUS RAW(10.168.11.252</th> <th>PRO(10.168.11.41)</th> <th> DIFFERENCE </th></tr> </thead>
-        <tbody>
-        ${tableRows}    
-        </tbody>
-        </table>`;
+    let res = await utility.sendEmailIPSPro(mailOption);
+    console.log("2")
 
+    return res;
+  },
 
-    } catch (err) {
-        throw Error("Error !" + err);
-    }
-    let h1 = `<h2> Service Type ${type_of_service} </h2>`
-
-    let div = h1 + `<div style="margin: auto;width: 50%;padding: 10px;">${table}</div>`;
-    
-    //html += div;
-    //html += "Thank you";
-    // console.log("sdfsdf"+html);
-
-    return div;
 }
