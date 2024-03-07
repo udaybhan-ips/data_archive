@@ -350,7 +350,7 @@ module.exports = {
 
           let updateSummaryQuery = `update kddi_kotei_bill_summary set bill_sum__c=${totalAmount} , updated_by='${updated_by}',
           updated_date=now() where bill_start__c::date ='${selectedData.year}-${selectedData.month}-01' and 
-          comp_acco__c='${customerCode}'  and carrier ='NTT' `; 
+          comp_acco__c='${customerCode}'   `; 
 
           //console.log("update query is "+updateSummaryQuery)
 
