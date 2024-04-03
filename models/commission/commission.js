@@ -11,7 +11,7 @@ module.exports = {
 
     try {
 
-      if (data && data.year !== '' && data.month !=='') {
+      if (data && data.year !== '' && data.month !== '') {
         const checkQuery = `select * from agent_commission_approval_flow where billing_period::date ='${data.year}-${data.month}-01' 
         and deleted = false   `;
         let res = await db.queryByokakin(checkQuery, []);
@@ -23,13 +23,35 @@ module.exports = {
         throw new Error('Invalid data!')
       }
 
+      let emailSubject = `Commission || ${data.year}  || ${data.month} || Approval Status`;
+      let html = ""
+
+
+      html = `Hi <br/>  <br/>
+        Free Dial Commission  has been ${data.approval_status}. <br/>
+        Please check on the IPSP portal. <br/> <br/>
+        Thank you
+        `
+      let emailCc = 'telecom@ipspro.co.jp', emailTo = 'y_hayashi@ipspro.co.jp,r_kobayashi@ipspro.co.jp', emailBCC = 'uday@ipspro.co.jp';
+    
 
       const query = `insert into agent_commission_approval_flow  (billing_period, approval_status,  date_added, added_by) 
       values ('${data.year}-${data.month}-01','${data.approval_status}',now(),'${data.added_by}')`;
 
-      //  console.log("query.."+query)
+      
 
       const deleteRes = await db.queryByokakin(query, []);
+
+
+      let mailOption = {
+        from: 'ipsp_billing@sysmail.ipspro.co.jp',
+        to: emailTo,
+        cc: emailCc,
+        bcc: emailBCC,
+        subject: emailSubject,
+        html,
+      }
+      let res = await utility.sendEmailIPSPro(mailOption);
 
 
       if (deleteRes) {
@@ -53,18 +75,18 @@ module.exports = {
       }
       throw new Error('not found')
     } catch (error) {
-      console.log('Error!!'+error.message)
-      throw new Error('Error!!'+error.message)
-     // return error;
+      console.log('Error!!' + error.message)
+      throw new Error('Error!!' + error.message)
+      // return error;
     }
   },
 
   updateCommissionBatchDetails: async function (data) {
     try {
 
-      console.log("data.."+JSON.stringify(data));
+      console.log("data.." + JSON.stringify(data));
 
-      let batchId = "", updateData="";
+      let batchId = "", updateData = "";
 
       if (data.batch_id !== undefined && data.batch_id !== null && data.batch_id !== '') {
         batchId = data.batch_id;
@@ -74,17 +96,17 @@ module.exports = {
 
 
       if (data.email_commission_execution_date) {
-        const execution_date =await utility.utcToDateNew(data.email_commission_execution_date)
+        const execution_date = await utility.utcToDateNew(data.email_commission_execution_date)
         updateData = `execution_date= '${execution_date}',`;
       }
-    
+
 
       if (data.create_comm_execution_date) {
-        const execution_date =await utility.utcToDateNew(data.create_comm_execution_date)
+        const execution_date = await utility.utcToDateNew(data.create_comm_execution_date)
         updateData = updateData + `execution_date= '${execution_date}',`;
       }
 
-    
+
       if (data.enable_value) {
         updateData = updateData + `enable= '${data.enable}',`;
       }
@@ -93,7 +115,7 @@ module.exports = {
 
       const query = `update cron_batch_execution_date_time  set ${updateData} where batch_id ='${batchId}' `;
 
-    //    console.log("query.."+query)
+      //    console.log("query.."+query)
 
       const updateRecord = await db.query(query, []);
 
@@ -104,12 +126,12 @@ module.exports = {
 
     } catch (error) {
 
-      console.log("Error .."+error.message)
+      console.log("Error .." + error.message)
       throw new Error(error.message)
       //return error;
     }
   },
-  
+
   getCommissionSchedule: async function (date_id) {
     try {
       const query = `SELECT *, (select execution_date from cron_batch_execution_date_time where batch_id=date_id),
@@ -436,7 +458,7 @@ module.exports = {
         throw new Error('Invalid Request!')
       }
 
-      const yearMonth = `${year}-${month}-1` ;
+      const yearMonth = `${year}-${month}-1`;
       const dateObj = utility.getPreviousYearMonth(yearMonth)
 
       const prevYear = dateObj.year
@@ -567,7 +589,7 @@ module.exports = {
 
       console.log("validPayemt date is " + validPaymentPlanDate);
 
- 
+
 
       const query = ` select * from agent_incentive where agent_code='${comp_code}' and deleted=false and  
       edat_fini::date > now() order by freedial_code`;
@@ -824,9 +846,9 @@ module.exports = {
 
   sendEmail: async function ({ year, month, createdBy }) {
 
-    let emailCc = '', emailTo='uday@ipspro.co.jp', emailBCC='';
+    let emailCc = 'telecom@ipspro.co.jp', emailTo = 'y_hayashi@ipspro.co.jp,r_kobayashi@ipspro.co.jp', emailBCC = 'uday@ipspro.co.jp';
 
-    let emailSubject = `Free Dial Commission || ${year} || ${month} ` ;
+    let emailSubject = `Free Dial Commission || ${year} || ${month} `;
 
     let html = `Hi <br/>  <br/>
     Free Dial Commission  has been finished. <br/>
@@ -837,13 +859,13 @@ module.exports = {
     let mailOption = {
       from: 'ipsp_billing@sysmail.ipspro.co.jp',
       to: emailTo,
-      cc:emailCc,
-      bcc:emailBCC,
+      cc: emailCc,
+      bcc: emailBCC,
       subject: emailSubject,
-      html,      
-  }
- let res = await utility.sendEmailIPSPro(mailOption);
-  return res ;
+      html,
+    }
+    let res = await utility.sendEmailIPSPro(mailOption);
+    return res;
 
   },
 
@@ -857,7 +879,7 @@ module.exports = {
       const allCustomerDetatils = await getCustomerDetails();
       const customerAddress = allCustomerDetatils.filter((obj) => (obj.customer_cd == comp_code ? true : false))
       const IPSAddress = allCustomerDetatils.filter((obj) => (obj.customer_cd == '00000130' ? true : false))
-     
+
       let totalCallAmount = 0;
 
 
@@ -871,7 +893,7 @@ module.exports = {
           return { ...obj, freedial_name: '' }
         }
       });
-      await createInvoice(comp_code, year, month, invoiceData,  totalCallAmount, customerAddress, IPSAddress, invoiceDataSummary);
+      await createInvoice(comp_code, year, month, invoiceData, totalCallAmount, customerAddress, IPSAddress, invoiceDataSummary);
       console.log("Done...")
     } catch (err) {
       console.log("error...." + err.message);
@@ -889,11 +911,11 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, s
 
   let path = "";
 
-  if(customerAddress && customerAddress.length> 0) {
+  if (customerAddress && customerAddress.length > 0) {
     let customerName = customerAddress[0]['customer_name'];
     path = __dirname + `\\pdf\\10${company_code}_${billingYear}${billingMonth}_${customerName}.pdf`;
   }
-  
+
 
   doc.font(fontpath);
   await generateHeader(customerAddress, doc, totalCallAmount);
@@ -992,7 +1014,7 @@ function customTableFC(doc, y, data, MAXY) {
     textInRowFirst(doc, data[i].freedial_name, 65, height, null, 265);
     textInRowFirst(doc, data[i].serv_name, 330, height, "center", 50);
     textInRowFirst(doc, ((data[i].call_sort)), 380, height, "center", 60);
-    textInRowFirst(doc, (parseFloat(data[i].amnt_conv * 100).toFixed(3)+'%'), 440, height, "center", 50);
+    textInRowFirst(doc, (parseFloat(data[i].amnt_conv * 100).toFixed(3) + '%'), 440, height, "center", 50);
     textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].comm_amnt)) + '円', 490, height, "right", 70);
     // textInRowFirst(doc, utility.numberWithCommas(parseInt(data[i].total_amount)), 400, height, "right");
 
@@ -1182,18 +1204,18 @@ async function getValidDate(billingDueYear, billingDueMonth, billingDueDay, getH
     return billingDueDay;
   }
 
-  async function callRec(billingDueYear, billingDueMonth,actualBillingMonth,  actualDayValue, getHolidays) {
+  async function callRec(billingDueYear, billingDueMonth, actualBillingMonth, actualDayValue, getHolidays) {
 
     const checkIfWeekend = await common.checkIfWeekend(billingDueYear, actualBillingMonth, actualDayValue);
     const checkIfHoilday = await common.checkIfHoilday(billingDueYear, billingDueMonth, actualDayValue, getHolidays);
     if (checkIfWeekend || checkIfHoilday) {
       actualDayValue = actualDayValue - 1;
-      return await callRec(billingDueYear, billingDueMonth,actualBillingMonth, actualDayValue, getHolidays)
+      return await callRec(billingDueYear, billingDueMonth, actualBillingMonth, actualDayValue, getHolidays)
     } else {
       return actualDayValue;
     }
   }
 
-  return  await callRec(billingDueYear, billingDueMonth, actualBillingMonth, actualDayValue, getHolidays) ;
+  return await callRec(billingDueYear, billingDueMonth, actualBillingMonth, actualDayValue, getHolidays);
 
 }

@@ -19,6 +19,7 @@ const pgp = require('pg-promise')({
 const db_pgp = pgp(config.DATABASE_URL_BYOKAKIN);
 const db_sonus_pgp = pgp(config.DATABASE_URL_SONUS_DB);
 const db_ibs_pgp = pgp(config.DATABASE_URL_IBS);
+const db_ips_portal_pgp = pgp(config.DATABASE_URL_IPS_PORTAL);
 
 var connectionStringPortal = config.DATABASE_URL_IPS_PORTAL;
 var connectionString = config.DATABASE_URL_SONUS_DB;
@@ -123,6 +124,27 @@ module.exports = {
       console.log("error while bulk data inserting:" + e.message)
     }
     return res;
+  },
+  queryBatchInsertIPSPortal: async function (data, ColumnSet, tableName) {
+
+    console.log("data length=" + data.length);
+    console.log("data length=" + JSON.stringify(data[0]));
+    //console.log("data length=" + JSON.stringify(ColumnSet));
+
+    let query;
+    try {
+      const ColumnSetValue = new pgp.helpers.ColumnSet(ColumnSet, tableName)
+      query = await pgp.helpers.insert(data, ColumnSetValue);
+      res = await db_ips_portal_pgp.none(query)
+      return res;
+
+    } catch (e) {
+      console.log("error while bulk data inserting:" + e.message)
+    }
+
+
+    //console.log("3")
+    // return res;
   },
 
   queryBatchInsertByokakin: async function (data, ColumnSet, tableName) {

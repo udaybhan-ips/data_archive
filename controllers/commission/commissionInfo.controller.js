@@ -151,9 +151,9 @@ module.exports = {
 
 
         const sendEmailRes = await CommissionInfo.sendEmail({ year:billingYear, month:billingMonth, createdBy:'system' });
-        // if(sendEmailErr) {
-        //      throw new Error('error while sending email');  
-        // }
+        if(sendEmailErr) {
+             throw new Error('error while sending email');  
+        }
 
 
         console.log("done!!")        

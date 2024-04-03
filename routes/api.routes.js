@@ -15,6 +15,12 @@ router.use('/v1', require('./apiv1/leafnet/invoice.routes'));
 router.use('/v1', require('./apiv1/leafnet/cdr.routes'));
 router.use('/v1', require('./apiv1/leafnet/approval.routes'));
 
+//ameyo  license
+router.use('/v1', require('./apiv1/ameyo_license/billing.summary.routes'));
+router.use('/v1', require('./apiv1/ameyo_license/approval.routes'));
+router.use('/v1', require('./apiv1/ameyo_license/archive.data.routes'));
+
+
 //sonus outbound
 router.use('/v1', require('./apiv1/sonus_outbound/billing.summary.routes'));
 router.use('/v1', require('./apiv1/sonus_outbound/rates.routes'));
