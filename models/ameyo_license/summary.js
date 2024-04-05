@@ -89,6 +89,22 @@ module.exports = {
             return error;
         }
     },  
+
+    
+
+    getALLAmeyoProductData: async function() {
+        try {
+            const query=`select * from ameyo_license_product_items where deleted = false`;
+            const ratesRes= await db.query(query,[], true);
+            
+            if(ratesRes.rows){
+                return (ratesRes.rows);              
+            }
+            return {err:'not found'};
+        } catch (error) {
+            return error;
+        }
+    },
     
     getSummary: async function() {
       try {

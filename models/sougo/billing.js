@@ -84,7 +84,7 @@ module.exports = {
       console.log("in get all comp code");
       
       let query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
-      where company_code  in ('1011000056')  order by company_code `;
+      where company_code  in ('1011000057')  order by company_code `;
 
       // query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
       // where company_code ='1011000058'
@@ -395,10 +395,12 @@ async function getResInfoNew (data, company_code, ratesInfo, carrierInfo, billin
 
     let newOicName = data['term_carrier_id'] == '5039' ? '0ABJ' : '050IP' ;
 
+    let IPText = (data['calling_type'] == 'GSTN' && data['term_carrier_id']=='5040' ) ? '（メタルIP）' : '' ;
+
     case1['call_count'] = data['total_calls'];
     case1['line_no'] = lineCounter * 6 + 1;
     case1['item_type'] = 1;
-    case1['item_name'] = data['calling_type'] + '-' + carrierName + "発信分 通話回数（国内）";
+    case1['item_name'] = data['calling_type'] + '-' + carrierName + IPText + "発信分 通話回数（国内）";
     case1['call_sec'] = data['total_calls'];
     case1['amount'] = data['total_calls'] * rate['rate_setup'];
     case1['rate'] = rate['rate_setup'];
@@ -407,7 +409,7 @@ async function getResInfoNew (data, company_code, ratesInfo, carrierInfo, billin
     case2['call_count'] = 0;
     case2['line_no'] = lineCounter * 6 + 2;
     case2['item_type'] = 2;
-    case2['item_name'] =data['calling_type'] + '-' + carrierName + "発信分 通話秒数（国内）";
+    case2['item_name'] =data['calling_type'] + '-' + carrierName + IPText + "発信分 通話秒数（国内）";
     case2['call_sec'] = data['total_duration'];
     case2['amount'] = data['total_duration'] * rate['rate_sec'];
     case2['rate'] = rate['rate_sec'];
@@ -417,7 +419,7 @@ async function getResInfoNew (data, company_code, ratesInfo, carrierInfo, billin
     case3['call_count'] = data['total_duration'];
     case3['line_no'] = lineCounter * 6 + 3;
     case3['item_type'] = 3;
-    case3['item_name'] = data['calling_type'] + '-' + carrierName + "発信分 ﾄﾗﾝｸﾎﾟｰﾄ接続料（国内）";
+    case3['item_name'] = data['calling_type'] + '-' + carrierName  + "発信分 ﾄﾗﾝｸﾎﾟｰﾄ接続料（国内）";
     case3['call_sec'] = data['total_duration'];
     case3['amount'] = rate['rate_trunk_port'] * data['total_duration'];
     case3['rate'] = rate['rate_trunk_port'];

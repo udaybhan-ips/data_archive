@@ -16,6 +16,22 @@ module.exports = {
       });
     }    
   },
+  
+  getALLAmeyoProductData: async function(req, res) {
+    try {
+        const [summaryRes,summaryErr] = await handleError(SummaryAmeyoLicense.getALLAmeyoProductData());
+        if(summaryErr) {
+             throw new Error('Could not fetch the summary');  
+        }
+        return res.status(200).json(summaryRes);
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+
+  
 
   getSummary: async function(req, res) {
     try {
