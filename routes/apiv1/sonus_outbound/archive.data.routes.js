@@ -13,6 +13,7 @@ router.post('/sonus_outbound/addKotehiData',  archiveController.addKotehiData);
 router.post('/sonus_outbound/deleteProcessedKotehiData',  archiveController.deleteKotehiProcessedData);
 
 router.post('/sonus_outbound/processedData',  archiveController.getProcessedKotehiData);
+router.post('/sonus_outbound/updateKotehiProcessedData',  archiveController.updateKotehiProcessedData);
 
 
 module.exports = router;

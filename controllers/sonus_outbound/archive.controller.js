@@ -176,6 +176,20 @@ module.exports = {
     }
   },
 
+  async updateKotehiProcessedData(req, res) {
+    try {
+      const updateKotehiProcessedDataRes = await ArchiveSonusOutbound.updateKotehiProcessedData(req.body);
+      return res.status(200).json(updateKotehiProcessedDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+  
+  
+  
   async getProcessedKotehiData(req, res) {
     try {
       const getProcessedKotehiDataRes = await ArchiveSonusOutbound.getProcessedKotehiData(req.body);

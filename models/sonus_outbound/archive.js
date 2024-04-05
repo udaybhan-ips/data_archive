@@ -58,6 +58,51 @@ module.exports = {
     }
   },
 
+
+  updateKotehiProcessedData: async function({updated_by, records, selectedData, totalAmount}){
+    try {
+
+      //console.log("req is "+JSON.stringify(records))
+      //console.log("req is "+JSON.stringify(selectedData))
+
+      if(records && records.length>0){
+        let customerCode = records[0]['comp_acco__c'];
+
+        let updateRecordsCount = 0
+
+        for(let i=0; i<records.length; i++){
+          let updateQuery = `update ips_kotehi_cdr_bill set amount=${records[i]['amount']}, updated_by='${updated_by}' , updated_date=now()
+           where id='${records[i]['id']}'  `;
+
+           //console.log("update query is "+updateQuery)
+
+           let resData = await db.queryByokakin(updateQuery,[]);
+           updateRecordsCount += resData.rowCount;
+           //console.log("res data" + JSON.stringify(resData));
+
+        }
+
+          // let updateSummaryQuery = `update kddi_kotei_bill_summary set amount=${totalAmount} , updated_by='${updated_by}',
+          // updated_date=now() where bill_start__c::date ='${selectedData.year}-${selectedData.month}-01' and 
+          // comp_acco__c='${customerCode}'  and deleted= false `; 
+
+          // //console.log("update query is "+updateSummaryQuery)
+
+          // let resSummary = await db.queryByokakin(updateSummaryQuery, []);
+
+          return updateRecordsCount;
+          
+
+      }else{
+        throw new Error('Request is invalid!');
+      }
+
+    } catch (e) {
+      console.log("err in get kddi last month list=" + e.message);
+      return e;
+    }
+  },
+
   getProcessedKotehiData: async function ({ year, month, comCode }) {
     try {
 
