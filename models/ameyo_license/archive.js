@@ -5,7 +5,7 @@ const pgp = require('pg-promise')({
   capSQL: true
 });
 
-let ColumnSetAmeyoMonthlyBillDetail = ['bill_numb__c', 'bill_start__c', 'customer_code', 'product_code', 'items','quantity' ,'sales_unit_price', 'added_by', 'date_added'];
+let ColumnSetAmeyoMonthlyBillDetail = ['bill_numb__c', 'bill_start__c', 'customer_code', 'product_code', 'items', 'quantity', 'sales_unit_price', 'added_by', 'date_added', 'record_type','amount'];
 let tableNameAmeyoMonthlyBillDetail = { table: 'ameyo_monthly_bill_details' };
 const INTERVAL = 1;
 
@@ -37,7 +37,7 @@ module.exports = {
           where to_char(datebill::date, 'MM-YYYY')='${month}-${year}'
           group by comp_acco__c, companyname, added_by `;
 
-      const detailsQuery = `select * from ips_kotehi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}'` ;
+      const detailsQuery = `select * from ips_kotehi_cdr_bill where to_char(datebill::date, 'MM-YYYY')='${month}-${year}'`;
 
 
 
@@ -46,7 +46,7 @@ module.exports = {
 
       //console.log(targetDateRes);
       if (processedKotehiData && processedKotehiData.rows && detailsQueryRes && detailsQueryRes.rows) {
-        return {summary:processedKotehiData.rows , details: detailsQueryRes.rows}
+        return { summary: processedKotehiData.rows, details: detailsQueryRes.rows }
       }
       throw new Error("Error!" + processedKotehiData)
     } catch (error) {
@@ -54,29 +54,105 @@ module.exports = {
     }
   },
 
+  updateMonthlySingleData: async function (reqData) {
+
+    console.log("data..." + JSON.stringify(reqData));
+
+    try {
+
+      const [{ data }, { deleted }, { currentUser }] = reqData;
+
+      if (data.id === undefined || data.id === '' || data.id === null) {
+        throw new Error('request data is invalid');
+      }
+
+      // insert history record
+
+      const insertHistoryRecord = `insert into ameyo_data_history (id, customer_code, start_date, stop_date, product_code, items, quantity
+        , sales_unit_price, date_added, update_date, added_by, updated_by, deleted, remarks, record_type)
+        select id, customer_code, start_date, stop_date, product_code, items, quantity
+        , sales_unit_price, date_added, update_date, added_by, updated_by, deleted, remarks, record_type from ameyo_data where id='${data.id}' `;
+
+      const insertHistoryRecordRes = await db.query(insertHistoryRecord, [], true);
+
+      //update record
+
+      let query = '', remarks = "";
+
+      if(data.remarks!==undefined && data.remarks!=='null' && data.remarks!==null){
+        remarks = data.remarks ;
+      }
+
+      if (deleted) {
+        query = `update ameyo_data set quantity='${data.quantity}', sales_unit_price='${data.sales_unit_price}', 
+        remarks='${remarks}', record_type ='${data.record_type}', updated_by='${currentUser}', update_date=now(), deleted= true where id='${data.id}' `;
+      } else {
+        query = `update ameyo_data set quantity='${data.quantity}', sales_unit_price='${data.sales_unit_price}', 
+        remarks='${remarks}', record_type ='${data.record_type}',  updated_by='${currentUser}', update_date=now() where id='${data.id}' `;
+      }
+
+
+      const updateSingleData = await db.query(query, [], true);
+
+      return updateSingleData;
+
+    } catch (e) {
+      console.log("err in add ameyo monthly single data !" + e.message);
+      throw new Error(e.message);
+    }
+  },
+
+
+  addMonthlySingleData: async function (reqData) {
+    console.log("data..." + JSON.stringify(reqData));
+
+    try {
+
+      const [{ data }, { currentUser }] = reqData;
+
+      if (data.comp_code === undefined || data.comp_code === '' || data.comp_code === null) {
+        throw new Error('request data is invalid');
+      }
+
+      const compCodeArr = data.comp_code.split(",");
+
+      const query = `insert into ameyo_data (customer_code,record_type, product_code, items, quantity, sales_unit_price, date_added, added_by) Values(
+        '${compCodeArr[0]}','${data.record_type}', '${data.product_code}','${data.product_item}','${data.quantity}','${data.sales_unit_price}',now(),'${currentUser}'
+      ) `
+
+      const insertNewSingleData = await db.query(query, [], true);
+
+      return insertNewSingleData;
+
+    } catch (e) {
+      console.log("err in add ameyo monthly single data !" + e.message);
+      throw new Error(e.message);
+    }
+  },
+
 
   addMonthlyData: async function (reqData) {
     console.log("data..." + JSON.stringify(reqData));
     try {
-      const [{ data }, { currentUser }] = reqData;
-      let billingData, comCode = '', comCode4Dig = '';
 
-      if (data.length > 0) {
+      //{"id":194,"customer_code":"00001448","start_date":"2024-01-01 00:00:00","stop_date":"9999-01-01 00:00:00","product_code":"T11110023","items":"SIPﾄﾗﾝｸｻｰﾋﾞｽ利用料","quantity":3,"sales_unit_price":"10000","date_added":"2024-03-08 17:26:20.222082","update_date":null,"added_by":"system","updated_by":null,"deleted":false,"remarks":null,"record_type":null,"amount":"30000","customer_name":"株式会社トゥモロー・ネット","billing_period":"2024-02"}
+
+      const [{ data }, {selectedData} , { currentUser }] = reqData;
+      let comCode = '', comCode4Dig = '' , month = "", year ="";
+
+      if (data.length > 0 && selectedData.month!==undefined && selectedData.year!==undefined) {
         comCode = data[0]['customer_code']
         comCode4Dig = comCode.slice(comCode.length - 4);
-        billingData = data[0]['start_date'];
+        month = selectedData.month;
+        year = selectedData.year;
       } else {
         throw new Error('request data not available');
       }
 
-      const year = new Date(billingData).getFullYear();
-      let month = new Date(billingData).getMonth() + 1;
-      if (parseInt(month, 10) < 10) {
-        month = '0' + month;
-      }
+      
 
       const query = ` select * from ameyo_monthly_bill_details where   
-      to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' and  customer_code = '${comCode}' `;
+      to_char(bill_start__c::date, 'MM-YYYY')='${month}-${year}' `;
 
       const checkProcessedData = await db.query(query, [], true);
 
@@ -97,14 +173,16 @@ module.exports = {
           tmpObj['items'] = data[i]['items'];
           tmpObj['quantity'] = data[i]['quantity'];
           tmpObj['sales_unit_price'] = data[i]['sales_unit_price'];
-
+          tmpObj['remarks'] = data[i]['remarks'];
           tmpObj['added_by'] = currentUser;
-         
           tmpObj['date_added'] = new Date();
+          tmpObj['record_type'] = data[i]['record_type'] ;
+          tmpObj['amount'] = data[i]['amount'] ;
+
           tmpData.push(tmpObj);
         }
 
-        console.log("Data..+" + JSON.stringify(data))
+        //console.log("Data..+" + JSON.stringify(data))
 
         const insertKotehiDataRes = await cusInsertByBatches(tmpData);
 
@@ -168,7 +246,7 @@ module.exports = {
 
       if (customerId) {
         where = ` customer_id= '${customerId}' and deleted= false `;
-       // where = ` customer_id in ('00001401','00001420') and deleted= false `;
+        // where = ` customer_id in ('00001401','00001420') and deleted= false `;
       } else {
         where = ` deleted = false  `;
       }
@@ -190,13 +268,13 @@ module.exports = {
     }
   },
 
-  deleteTargetDateCDR: async function (targetDate, customerId ) {
+  deleteTargetDateCDR: async function (targetDate, customerId) {
     try {
       let ANDclo = "";
 
-      if (customerId ) {
+      if (customerId) {
         ANDclo = `AND  billing_comp_code  = '${customerId}'  `;
-       // ANDclo = `AND  billing_comp_code in ('00001401','00001420') `;
+        // ANDclo = `AND  billing_comp_code in ('00001401','00001420') `;
       }
       const query = `delete FROM cdr_sonus_outbound where START_TIME::date = '${targetDate}'::date ${ANDclo}`;
       const deleteTargetDateRes = await db.query(query, []);
@@ -421,7 +499,7 @@ async function getCompanyInfo(trunkPort, customerInfo = [], incallednumber) {
 
   let startFiveDigitofInCallNum = incallednumber.substring(0, 5) + '%';
 
-  
+
 
   // let trunkPortsArr = customerInfo[j]['trunk_port'].split(",");
   // customerInfo.forEach(item => {
@@ -441,15 +519,15 @@ async function getCompanyInfo(trunkPort, customerInfo = [], incallednumber) {
 
     for (j = 0; j < customerInfo.length; j++) {
 
-      if (customerInfo[j]['incallednumber']!='' && customerInfo[j]['incallednumber']!=undefined && customerInfo[j]['incallednumber']!=null) {
-        if (customerInfo[j]['incallednumber'] === startDigitofInCallNum || customerInfo[j]['incallednumber'] === startFiveDigitofInCallNum ) {
+      if (customerInfo[j]['incallednumber'] != '' && customerInfo[j]['incallednumber'] != undefined && customerInfo[j]['incallednumber'] != null) {
+        if (customerInfo[j]['incallednumber'] === startDigitofInCallNum || customerInfo[j]['incallednumber'] === startFiveDigitofInCallNum) {
           let trunkPortsArr = customerInfo[j]['trunkport'].split(",");
-          if(trunkPortsArr.includes(trunkPort)){
+          if (trunkPortsArr.includes(trunkPort)) {
             res['comp_code'] = customerInfo[j]['customer_id'];
 
             break;
           }
-          
+
         }
       } else {
         let trunkPortsArr = customerInfo[j]['trunkport'].split(",");
@@ -461,8 +539,8 @@ async function getCompanyInfo(trunkPort, customerInfo = [], incallednumber) {
 
     }
 
-//  console.log("res info.."+JSON.stringify(res));
-   
+    //  console.log("res info.."+JSON.stringify(res));
+
 
   } catch (e) {
     console.log("Erro in get custoemr info--" + e.message);

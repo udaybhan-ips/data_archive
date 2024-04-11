@@ -5,6 +5,9 @@ router.get('/ameyo_license/getLastMonthData',  archiveController.getLastMonthDat
 router.post('/ameyo_license/addMonthlyData',  archiveController.addMonthlyData);
 router.post('/ameyo_license/updateMonthlyData',  archiveController.updateMonthlyData);
 
+router.post('/ameyo_license/addMonthlySingleData',  archiveController.addMonthlySingleData);
+router.post('/ameyo_license/updateMonthlySingleData',  archiveController.updateMonthlySingleData);
+
 
 
 

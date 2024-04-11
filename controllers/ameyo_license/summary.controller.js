@@ -3,6 +3,21 @@ var SummaryAmeyoLicense = require('../../models/ameyo_license/summary');
 module.exports = {
 
   
+
+  getAmeyoProcessedData: async function(req, res) {
+    try {
+        const [summaryRes,summaryErr] = await handleError(SummaryAmeyoLicense.getAmeyoProcessedData(req.body));
+        if(summaryErr) {
+             throw new Error('Could not fetch the summary');  
+        }
+        return res.status(200).json(summaryRes);
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+
   getALLAmeyoData: async function(req, res) {
     try {
         const [summaryRes,summaryErr] = await handleError(SummaryAmeyoLicense.getALLAmeyoData());

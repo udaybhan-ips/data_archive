@@ -195,6 +195,8 @@ module.exports = {
         //AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
         //AND (INGRPSTNTRUNKNAME IN ('IPSCSQFFFFJ7','IPSCSQ0000J7') ) 
 
+
+
       const data = await db.mySQLQuery(query, [], 'kickback');
       return data;
     } catch (error) {

@@ -18,6 +18,45 @@ module.exports = {
       });
     }
   },
+
+  async updateMonthlySingleData(req, res) {
+    try {
+      const [addMonthlyDataRes, addMonthlyDataErr] = await handleError(ArchiveAmeyoLicense.updateMonthlySingleData(req.body));
+
+      if(addMonthlyDataErr){
+        return res.status(500).json({
+          message: addMonthlyDataErr.message
+        });
+      }
+
+      return res.status(200).json(addMonthlyDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+  async addMonthlySingleData(req, res) {
+    try {
+      const [addMonthlyDataRes, addMonthlyDataErr] = await handleError(ArchiveAmeyoLicense.addMonthlySingleData(req.body));
+
+      if(addMonthlyDataErr){
+        return res.status(500).json({
+          message: addMonthlyDataErr.message
+        });
+      }
+
+      return res.status(200).json(addMonthlyDataRes);
+
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  },
+
+
   async addMonthlyData(req, res) {
     try {
       const [addMonthlyDataRes, addMonthlyDataErr] = await handleError(ArchiveAmeyoLicense.addMonthlyData(req.body));

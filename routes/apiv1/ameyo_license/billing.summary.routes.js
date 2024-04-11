@@ -7,6 +7,9 @@ router.post('/ameyo_license/getDetailDataByMonth',  SummaryController.getDetails
 
 router.get('/ameyo_license/all_data',  SummaryController.getALLAmeyoData);
 router.get('/ameyo_license/all_product_data',  SummaryController.getALLAmeyoProductData);
+router.post('/ameyo_license/get_processed_data',  SummaryController.getAmeyoProcessedData);
+
+
 
 
 

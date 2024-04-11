@@ -75,10 +75,28 @@ module.exports = {
         }
     },
     
+    
+    getAmeyoProcessedData: async function({year, month}) {
+        try {
+
+//            console.log("data is "+JSON.stringify(data))
+
+            const query=`select * from ameyo_monthly_bill_details where to_char(bill_start__c, 'YYYY-MM') ='${year}-${month}' `;
+            const ratesRes= await db.query(query,[], true);
+            
+            if(ratesRes.rows){
+                return (ratesRes.rows);              
+            }
+            return {err:'not found'};
+        } catch (error) {
+            return error;
+        }
+    },
+
 
     getALLAmeyoData: async function() {
         try {
-            const query=`select *, quantity*sales_unit_price as amount from ameyo_data where deleted = false`;
+            const query=`select *, quantity*sales_unit_price as amount from ameyo_data order by customer_code asc `;
             const ratesRes= await db.query(query,[], true);
             
             if(ratesRes.rows){
