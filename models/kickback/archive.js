@@ -126,7 +126,7 @@ module.exports = {
       const query =` CREATE TABLE IF NOT EXISTS "${tableName}" (cdr_id bigint not null, date_bill timestamp without time zone not null, 
         company_code varchar(10) not null, carrier_code varchar(6) not null, in_outbound integer not null , call_type integer  not null, 
         trunk_port_target integer not null,duration numeric not null, start_time timestamp without time zone not null, 
-        stop_time timestamp without time zone not null, orig_ani varchar(30), term_ani varchar(30) not null, route_info  varchar not null, 
+        stop_time timestamp without time zone not null, orig_ani varchar(30), term_ani varchar(30) not null, route_info  varchar , 
         date_update timestamp without time zone not null, orig_carrier_id varchar(10), term_carrier_id varchar(10),transit_carrier_id varchar(50), 
         selected_carrier_id varchar(10), trunk_port_name varchar(25), gw varchar(25), session_id varchar(30), call_status integer, 
         kick_company varchar(10),term_use integer ) ` ;
@@ -190,7 +190,7 @@ module.exports = {
         AND (GW IN ('NFPGSX4','IPSGSX5')) 
         AND (CALLDURATION > 0)
         AND RECORDTYPEID = 3 
-        AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
+        AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7','INSIP21','INSIP22') )
         order by STARTTIME asc ` ;
         //AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
         //AND (INGRPSTNTRUNKNAME IN ('IPSCSQFFFFJ7','IPSCSQ0000J7') ) 
@@ -854,7 +854,7 @@ async function getDurationUse(duration) {
 async function getInOutbound(INGRESSPROTOCOLVARIANT, INGRPSTNTRUNKNAME) {
   //"JAPAN,0,0,,,,,,,,,32000,,,1,0,,,,,,,,1,,,0xfc,5039,,,,,,,,,,,,,,,,,,,,,,,,,,,,32000,0x03,,,,2,0,,,0,,,0x3
   //,,,,,,,,,,,,,,,,,,,,,,,,,,,,,3,0,0,,,,0,1,,,4,,,,,,,,,,,,,,,0,0,,,32000,32000,,,,,,1-1,1-0,,,,,,,,,,,,,,,,,
-  //,,,,,,,1,0xfe,2233,32000,0x22,1,0xfe,2013,47600,,1,0xfb,2030,,,,,,,,,,"
+  //,,,,,,,1,0xfe,2233,32000,0x22,1,0xfe,2013,47600,,1,0xfb,2030,,,,,,,,,,"XFC
   let XFB = "", XFC = "", XFD = "", XFE = "", XFEF = "", XFEL = "", INOU = 0, INDO = 0, XFEC = 0, TRUNKPORT = 0;
 
   //return { TRUNKPORT, XFB, XFC, XFD, XFE, XFEF, XFEL, INOU, INDO, XFEC };

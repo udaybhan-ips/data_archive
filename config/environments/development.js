@@ -39,7 +39,7 @@ const MSSQLServer = {
 }
 
 const IPSPortal={
-  host     : (process.env.POSTGRES_PORT || '10.168.11.41'),
+  host     : (process.env.POSTGRES_PORT || '10.168.11.42'),
   database : (process.env.POSTGRES_DATABASE || 'ips_portal'),
   user     : (process.env.POSTGRES_USER ||'postgres'),
   password : (process.env.POSTGRESL_PASSWORD || ''),
@@ -47,14 +47,14 @@ const IPSPortal={
 }
 
 const IBS={
-  host     : (process.env.POSTGRES_PORT || '10.168.11.41'),
+  host     : (process.env.POSTGRES_PORT || '10.168.11.42'),
   database : (process.env.POSTGRES_DATABASE || 'ibs'),
   user     : (process.env.POSTGRES_USER ||'postgres'),
   password : (process.env.POSTGRESL_PASSWORD || ''),
   timezone: 'Z'
 }
 const Byokakin={
-  host     : (process.env.POSTGRES_PORT || '10.168.11.41'),
+  host     : (process.env.POSTGRES_PORT || '10.168.11.42'),
   database : (process.env.POSTGRES_DATABASE || 'byokakin'),
   user     : (process.env.POSTGRES_USER ||'postgres'),
   password : (process.env.POSTGRESL_PASSWORD || ''),
@@ -70,7 +70,7 @@ const Byokakin={
 }
 
 const SONUSDB={
-  host     : (process.env.POSTGRES_PORT || '10.168.11.41'),
+  host     : (process.env.POSTGRES_PORT || '10.168.11.42'),
   database : (process.env.POSTGRES_DATABASE || 'sonus_db'),
   user     : (process.env.POSTGRES_USER ||'postgres'),
   password : (process.env.POSTGRESL_PASSWORD || ''),
@@ -84,7 +84,7 @@ const SONUSDB={
   }
 }
 const SONUSDBWITHOUTTIMEZONE={
-  host     : (process.env.POSTGRES_PORT || '10.168.11.41'),
+  host     : (process.env.POSTGRES_PORT || '10.168.11.42'),
   database : (process.env.POSTGRES_DATABASE || 'sonus_db'),
   user     : (process.env.POSTGRES_USER ||'postgres'),
   password : (process.env.POSTGRESL_PASSWORD || ''),

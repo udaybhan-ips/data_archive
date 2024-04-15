@@ -77,10 +77,16 @@ module.exports = {
 
       //update record
 
-      let query = '', remarks = "";
+      let query = '', remarks = "", month_of_cost_incurred = false;
 
       if(data.remarks!==undefined && data.remarks!=='null' && data.remarks!==null){
         remarks = data.remarks ;
+      }
+
+      if(data.month_of_cost_incurred === undefined || data.month_of_cost_incurred === null){
+        month_of_cost_incurred = false
+      }else{
+        month_of_cost_incurred = data.month_of_cost_incurred;
       }
 
       if (deleted) {
@@ -88,7 +94,7 @@ module.exports = {
         remarks='${remarks}', record_type ='${data.record_type}', updated_by='${currentUser}', update_date=now(), deleted= true where id='${data.id}' `;
       } else {
         query = `update ameyo_data set quantity='${data.quantity}', sales_unit_price='${data.sales_unit_price}', 
-        remarks='${remarks}', record_type ='${data.record_type}',  updated_by='${currentUser}', update_date=now() where id='${data.id}' `;
+        remarks='${remarks}', record_type ='${data.record_type}',month_of_cost_incurred=${month_of_cost_incurred},  updated_by='${currentUser}', update_date=now() where id='${data.id}' `;
       }
 
 
@@ -114,10 +120,18 @@ module.exports = {
         throw new Error('request data is invalid');
       }
 
+      let monthOfCostIncurred = false;
+
+      if(data.month_of_cost_incurred==='on'){
+        monthOfCostIncurred = true;
+      }
+
       const compCodeArr = data.comp_code.split(",");
 
-      const query = `insert into ameyo_data (customer_code,record_type, product_code, items, quantity, sales_unit_price, date_added, added_by) Values(
-        '${compCodeArr[0]}','${data.record_type}', '${data.product_code}','${data.product_item}','${data.quantity}','${data.sales_unit_price}',now(),'${currentUser}'
+      const query = `insert into ameyo_data (customer_code,record_type, product_code, items, quantity, sales_unit_price,
+         date_added, added_by, remarks, month_of_cost_incurred) Values(
+        '${compCodeArr[0]}','${data.record_type}', '${data.product_code}','${data.product_item}','${data.quantity}',
+        '${data.sales_unit_price}',now(),'${currentUser}' ,'${data.remarks}',${monthOfCostIncurred}
       ) `
 
       const insertNewSingleData = await db.query(query, [], true);

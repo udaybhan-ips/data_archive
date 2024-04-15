@@ -11,13 +11,13 @@ var EmailController = require('../kickback/emailNotification.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var archiverJob = new CronJob ('17 12 * * *',function(){
+// var archiverJob = new CronJob ('21 9 * * *',function(){
 //     console.log('This is kickback archiver start');
 //     archiveController.getData();
 //     console.log('This is kickback archiver End');  
 // },null, true, 'Asia/Tokyo');
   
-// var archiverProJob = new CronJob ('5 16 * * *',function(){
+// var archiverProJob = new CronJob ('48 17 * * *',function(){
 //     console.log('This is kickback Pro archiver start');
 //     archiveController.getProData();
 //     console.log('This is kickback Pro archiver End');  
