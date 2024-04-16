@@ -77,26 +77,32 @@ module.exports = {
 
       //update record
 
-      let query = '', remarks = "", month_of_cost_incurred = false;
+      let query = '', remarks = "", one_time_payment = false, month_of_cost_incurred = "";
 
       if(data.remarks!==undefined && data.remarks!=='null' && data.remarks!==null){
         remarks = data.remarks ;
       }
 
-      if(data.month_of_cost_incurred === undefined || data.month_of_cost_incurred === null){
-        month_of_cost_incurred = false
+      
+      if(data.month_of_cost_incurred!==undefined && data.month_of_cost_incurred!=='null' && data.month_of_cost_incurred!==null){
+        month_of_cost_incurred = data.month_of_cost_incurred ;
+      }
+
+      if(data.one_time_payment === undefined || data.one_time_payment === null){
+        one_time_payment = false
       }else{
-        month_of_cost_incurred = data.month_of_cost_incurred;
+        one_time_payment = data.one_time_payment;
       }
 
       if (deleted) {
-        query = `update ameyo_data set quantity='${data.quantity}', sales_unit_price='${data.sales_unit_price}', 
-        remarks='${remarks}', record_type ='${data.record_type}', updated_by='${currentUser}', update_date=now(), deleted= true where id='${data.id}' `;
+        query = `update ameyo_data set record_type ='${data.record_type}', updated_by='${currentUser}', update_date=now(), 
+        deleted= true where id='${data.id}' `;
       } else {
         query = `update ameyo_data set quantity='${data.quantity}', sales_unit_price='${data.sales_unit_price}', 
-        remarks='${remarks}', record_type ='${data.record_type}',month_of_cost_incurred=${month_of_cost_incurred},  updated_by='${currentUser}', update_date=now() where id='${data.id}' `;
+        remarks='${remarks}', record_type ='${data.record_type}',month_of_cost_incurred='${month_of_cost_incurred}' 
+        ,one_time_payment=${one_time_payment},
+         updated_by='${currentUser}', update_date=now() where id='${data.id}' `;
       }
-
 
       const updateSingleData = await db.query(query, [], true);
 
@@ -120,18 +126,18 @@ module.exports = {
         throw new Error('request data is invalid');
       }
 
-      let monthOfCostIncurred = false;
+      let one_time_payment = false;
 
-      if(data.month_of_cost_incurred==='on'){
-        monthOfCostIncurred = true;
+      if(data.one_time_payment==='on'){
+        one_time_payment = true;
       }
 
       const compCodeArr = data.comp_code.split(",");
 
       const query = `insert into ameyo_data (customer_code,record_type, product_code, items, quantity, sales_unit_price,
-         date_added, added_by, remarks, month_of_cost_incurred) Values(
+         date_added, added_by, remarks, month_of_cost_incurred, one_time_payment) Values(
         '${compCodeArr[0]}','${data.record_type}', '${data.product_code}','${data.product_item}','${data.quantity}',
-        '${data.sales_unit_price}',now(),'${currentUser}' ,'${data.remarks}',${monthOfCostIncurred}
+        '${data.sales_unit_price}',now(),'${currentUser}' ,'${data.remarks}','${data.month_of_cost_incurred}',${one_time_payment}
       ) `
 
       const insertNewSingleData = await db.query(query, [], true);
