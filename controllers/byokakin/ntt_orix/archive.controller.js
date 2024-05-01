@@ -2,7 +2,7 @@ var ArchiveNTTORIX = require('../../../models/byokakin/ntt_orix/archive');
 var ArchiveNTT = require('../../../models/byokakin/ntt/archive');
 
 
-const billingMonth = "02";
+const billingMonth = "03";
 const billingYear ="2024";
 const carrier = 'NTTORIX';
 

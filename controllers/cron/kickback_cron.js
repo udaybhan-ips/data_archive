@@ -11,19 +11,19 @@ var EmailController = require('../kickback/emailNotification.controller');
 // },null, true, 'Asia/Tokyo');
 
 
-// var archiverJob = new CronJob ('21 9 * * *',function(){
-//     console.log('This is kickback archiver start');
-//     archiveController.getData();
-//     console.log('This is kickback archiver End');  
-// },null, true, 'Asia/Tokyo');
+var archiverJob = new CronJob ('35 17 * * *',function(){
+    console.log('This is kickback archiver start');
+    archiveController.getData();
+    console.log('This is kickback archiver End');  
+},null, true, 'Asia/Tokyo');
   
-// var archiverProJob = new CronJob ('48 17 * * *',function(){
-//     console.log('This is kickback Pro archiver start');
-//     archiveController.getProData();
-//     console.log('This is kickback Pro archiver End');  
-// },null, true, 'Asia/Tokyo');
+var archiverProJob = new CronJob ('10 17 * * *',function(){
+    console.log('This is kickback Pro archiver start');
+    archiveController.getProData();
+    console.log('This is kickback Pro archiver End');  
+},null, true, 'Asia/Tokyo');
 
-// var emailNotificationJob = new CronJob ('30 16 * * *',function(){
+// var emailNotificationJob = new CronJob ('44 10 * * *',function(){
 //     console.log('This is kickback email notification start');
 //     EmailController.sendEmail();
 //     console.log('This is kickback email notification end');

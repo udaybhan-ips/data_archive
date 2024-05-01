@@ -38,7 +38,7 @@ module.exports = {
     getAllKickComp: async function (targetDate, billcdrTableName) {
         try {
             console.log("in get all kick comp");
-            const query = ` select distinct(kick_company) as customer_cd from ${billcdrTableName}  order by kick_company`;
+            const query = ` select distinct(kick_company) as customer_cd from ${billcdrTableName}   order by kick_company`;
             const kickCompRes = await db.queryIBS(query, []);
             return kickCompRes.rows;
         } catch (error) {
@@ -49,7 +49,7 @@ module.exports = {
     getAllKickCompEmail: async function () {
         try {
             console.log("in get all kick comp email");
-            const query = ` select * from kickback_cdr_carrier where ( east_link_flag=1 and mail_address!='') OR (email_type='multiple') order by customer_cd`;
+            const query = ` select * from kickback_cdr_carrier where customer_cd ='00000705' and (( east_link_flag=1 and mail_address!='') OR (email_type='multiple')) order by customer_cd`;
             const kickCompRes = await db.queryIBS(query, []);
             return kickCompRes.rows;
 
@@ -568,9 +568,9 @@ module.exports = {
             let emailTO = `${customerInfo['mail_address']}`;
             let emailCC = `${customerInfo['east_link_address']}`;
 
-            //emailTO = 'uday@ipspro.co.jp';
-            //emailCC = 'uday@ipspro.co.jp';
-            //  emailCC = 'y_ito@ipspro.co.jp';
+          //  emailTO = 'uday@ipspro.co.jp';
+           // emailCC = 'uday@ipspro.co.jp,y_watanabe@ipspro.co.jp';
+            //emailCC = 'y_ito@ipspro.co.jp';
 
             if (!emailTO) {
                 emailTO = "uday@ipspro.co.jp";

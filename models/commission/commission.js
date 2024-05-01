@@ -23,16 +23,19 @@ module.exports = {
         throw new Error('Invalid data!')
       }
 
-      let emailSubject = `Commission || ${data.year}  || ${data.month} || Approval Status`;
+      let emailSubject = `承認通知】FDコミッション金額 || ${data.year}  || ${data.month}`;
       let html = ""
 
 
-      html = `Hi <br/>  <br/>
-        Free Dial Commission  has been ${data.approval_status}. <br/>
-        Please check on the IPSP portal. <br/> <br/>
+      html = `各位 <br/>
+        お疲れ様です。<br/>  <br/>
+        FDコミッション金額が確定しましたので <br/>
+        IPSPポータルにログインして頂き、ご確認をお願い致します。<br/> <br/>
+        *IPSPportal URL:http://billing.toadm.com/commission <br/> <br/>       
+       
         Thank you
         `
-      let emailCc = 'telecom@ipspro.co.jp', emailTo = 'y_hayashi@ipspro.co.jp,r_kobayashi@ipspro.co.jp', emailBCC = 'uday@ipspro.co.jp';
+      let emailCc = 'keiri_zaimu@ipspro.co.jp,r_kobayashi@ipspro.co.jp,y_hayashi@ipspro.co.jp', emailTo = 'takuya_yamada@ipspro.co.jp', emailBCC = 'uday@ipspro.co.jp';
     
 
       const query = `insert into agent_commission_approval_flow  (billing_period, approval_status,  date_added, added_by) 

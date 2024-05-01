@@ -259,8 +259,7 @@ module.exports = {
         if(__type =='new_migration_data'){
           const data = await getNextInsertBatchNew(chunkArray[i], '', '');   
           res = await db.queryBatchInsert(data, 'ibs', ColumnSetValue);
-        }
-        else if (__type == 'raw_cdr') {       
+        } else if (__type == 'raw_cdr') {       
           const data = await getNextInsertBatch(chunkArray[i], getCompanyCodeInfoRes, getRemoteControlNumberDataRes);   
           res = await db.queryBatchInsert(data, 'sonus', ColumnSetValue);
         } else if (__type == 'bill_cdr') {

@@ -46,6 +46,34 @@ module.exports = {
     }    
   },
 
+  addAmeyoProductItemData: async function(req, res) {    
+    try {
+        const [addRecordRes,addRecordErr] = await handleError(SummaryAmeyoLicense.addAmeyoProductItemData(req.body));
+        if(addRecordErr) {
+             throw new Error('Could not add record');  
+        }
+        return res.status(200).json(addRecordRes);
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+
+ updateAmeyoProductItemData: async function(req, res) {
+    try {
+        const [updateRecordRes,updateRecordErr] = await handleError(SummaryAmeyoLicense.updateAmeyoProductItemData(req.body));
+        if(updateRecordErr) {
+             throw new Error('Could not update record');  
+        }
+        return res.status(200).json(updateRecordRes);
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+
   
 
   getSummary: async function(req, res) {

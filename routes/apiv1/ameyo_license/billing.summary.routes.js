@@ -9,6 +9,9 @@ router.get('/ameyo_license/all_data',  SummaryController.getALLAmeyoData);
 router.get('/ameyo_license/all_product_data',  SummaryController.getALLAmeyoProductData);
 router.post('/ameyo_license/get_processed_data',  SummaryController.getAmeyoProcessedData);
 
+router.post('/ameyo_license/add_ameyo_product_item',  SummaryController.addAmeyoProductItemData);
+router.post('/ameyo_license/update_ameyo_product_item',  SummaryController.updateAmeyoProductItemData);
+
 
 
 
