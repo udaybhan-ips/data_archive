@@ -194,6 +194,50 @@ module.exports = {
     }
   },
 
+  getApprovalStatusData: async function(data){
+    try {
+      const query = `select * from ameyo_license_approve_status where deleted = false order by id desc limit 10`;
+      const  getApprovalStatusRes = await db.query(query, [], true);
+
+      if (getApprovalStatusRes.rows) {
+        return getApprovalStatusRes.rows;
+      }
+      return { err: "not found" };
+    } catch (error) {
+      return error;
+    }
+  },
+
+  addApprovalStatusData: async function(data){
+    console.log("data..." + JSON.stringify(data))
+
+    try {
+
+      if (data && data.billing_period !== '' && data.billing_period !== undefined) {
+        const checkQuery = `select * from ameyo_license_approve_status where billing_period::date ='${data.billing_period}'::date  and deleted = false  `;
+        let res = await db.query(checkQuery, [], true);
+        if (res && res.rows && res.rows.length > 0) {
+          throw new Error('Record already exist!');
+        }else{
+          const query = `insert into ameyo_license_approve_status  (approval_status, billing_period, added_by , date_added) 
+          values ('${data.approval_status}','${data.billing_period}','${data.added_by}',now())`;
+          let resData = await db.query(query, [], true);
+          if(resData){
+            return 'Added'
+          }else{
+            throw new Error("Error in adding approval status!")
+          }
+        }
+
+      } else {
+        throw new Error('Invalid data!')
+      }
+    }catch(err){
+      console.log("Error in adding approval status"+err.message)
+      throw new Error(err.message)
+    }
+  },
+
   addAmeyoProductItemData: async function (data) {
     console.log("data..." + JSON.stringify(data));
 

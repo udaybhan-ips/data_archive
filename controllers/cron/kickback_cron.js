@@ -4,26 +4,26 @@ var billingController = require('../kickback/billing.controller');
 var CDRsController = require('../kickback/cdr.controller');
 var EmailController = require('../kickback/emailNotification.controller');
 
-// var archiverJob = new CronJob ('46 11 * * *',function(){
+// var archiverJob = new CronJob ('33 18 * * *',function(){
 //     console.log('This is kickback archiver start');
 //     archiveController.getNewData();
 //     console.log('This is kickback archiver End');  
 // },null, true, 'Asia/Tokyo');
 
 
-var archiverJob = new CronJob ('35 17 * * *',function(){
-    console.log('This is kickback archiver start');
-    archiveController.getData();
-    console.log('This is kickback archiver End');  
-},null, true, 'Asia/Tokyo');
+// var archiverJob = new CronJob ('45 14 * * *',function(){
+//     console.log('This is kickback archiver start');
+//     archiveController.getData();
+//     console.log('This is kickback archiver End');  
+// },null, true, 'Asia/Tokyo');
   
-var archiverProJob = new CronJob ('10 17 * * *',function(){
-    console.log('This is kickback Pro archiver start');
-    archiveController.getProData();
-    console.log('This is kickback Pro archiver End');  
-},null, true, 'Asia/Tokyo');
+// var archiverProJob = new CronJob ('18 15 * * *',function(){
+//     console.log('This is kickback Pro archiver start');
+//     archiveController.getProData();
+//     console.log('This is kickback Pro archiver End');  
+// },null, true, 'Asia/Tokyo');
 
-// var emailNotificationJob = new CronJob ('44 10 * * *',function(){
+// var emailNotificationJob = new CronJob ('37 15 * * *',function(){
 //     console.log('This is kickback email notification start');
 //     EmailController.sendEmail();
 //     console.log('This is kickback email notification end');
@@ -37,7 +37,7 @@ var archiverProJob = new CronJob ('10 17 * * *',function(){
 // },null, true, 'Asia/Tokyo');
 
 
-// var billingControllerJob = new CronJob ('3 20 * * *',function(){
+// var billingControllerJob = new CronJob ('26 12 * * *',function(){
 //     console.log('This is kickback  billing start');
 //     billingController.getData();
 //     console.log('This is kickback billing end');

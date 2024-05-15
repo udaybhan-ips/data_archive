@@ -26,7 +26,7 @@ module.exports = {
 
       const query = `select details_invoice, customer_id, landline as landline_rate, mobile as mobile_rate from sonus_outbound_rates where 
       customer_id in (select customer_cd from m_customer where service_type ->>'sonus_outbound' =  'true') 
-      and ${where}
+      and ${where} 
       order by customer_id`;
       const getAllSonusOutboundCustRes = await db.query(query, [], true);
       if (getAllSonusOutboundCustRes.rows) {

@@ -64,6 +64,8 @@ module.exports = {
                 throw new Error('Invalid request');
             }
 
+            const insertHistory = ` insert into  _03numbers_history ` ;
+
 
 
             const query = `update _03numbers set customer_cd='${param.customer_cd}', modi_name='${updatedBy}', 

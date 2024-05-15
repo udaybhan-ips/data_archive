@@ -13,7 +13,8 @@ router.post('/ameyo_license/add_ameyo_product_item',  SummaryController.addAmeyo
 router.post('/ameyo_license/update_ameyo_product_item',  SummaryController.updateAmeyoProductItemData);
 
 
-
+router.get('/ameyo_license/getApprovalStatus',  SummaryController.getApprovalStatusData);
+router.post('/ameyo_license/addApprovalStatus',  SummaryController.addApprovalStatusData);
 
 
 module.exports = router;

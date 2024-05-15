@@ -49,7 +49,7 @@ module.exports = {
     getAllKickCompEmail: async function () {
         try {
             console.log("in get all kick comp email");
-            const query = ` select * from kickback_cdr_carrier where customer_cd ='00000705' and (( east_link_flag=1 and mail_address!='') OR (email_type='multiple')) order by customer_cd`;
+            const query = ` select * from kickback_cdr_carrier where  ( east_link_flag=1 and mail_address!='') OR (email_type='multiple') order by customer_cd`;
             const kickCompRes = await db.queryIBS(query, []);
             return kickCompRes.rows;
 
@@ -468,7 +468,7 @@ module.exports = {
                 where  ((INCALLEDNUMBER LIKE '35050%') OR (INCALLEDNUMBER LIKE '36110%') OR (INCALLEDNUMBER LIKE '50505%')) 
                 AND RECORDTYPEID = 3 
                 AND (CALLDURATION > 0)
-                AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
+                AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7','INSIP21','INSIP22') )
                 AND starttime>='${actualStartDate}' and startTime < DATE_ADD("${actualStartDate}", INTERVAL 1 DAY) 
                 group by cast(addtime(starttime,'09:00:00') as Date) 
                 order by cast(addtime(starttime,'09:00:00') as Date) asc`;
@@ -506,7 +506,7 @@ module.exports = {
                 day from COLLECTOR_73 
                 where  RECORDTYPEID = 3 
                 AND (CALLDURATION > 0)
-                AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7') )
+                AND (INGRPSTNTRUNKNAME IN ('IPSFUS10NWJ','IPSKRG5A00J','IPSKRG6BIIJ','IPSSHGF59EJ','IPSSHG5423J7','INSIP21','INSIP22') )
                 AND starttime>='${actualStartDate}' and startTime < DATE_ADD("${actualStartDate}", INTERVAL 1 DAY) 
                 group by cast(addtime(starttime,'09:00:00') as Date) 
                 order by cast(addtime(starttime,'09:00:00') as Date) asc`;
@@ -568,8 +568,8 @@ module.exports = {
             let emailTO = `${customerInfo['mail_address']}`;
             let emailCC = `${customerInfo['east_link_address']}`;
 
-          //  emailTO = 'uday@ipspro.co.jp';
-           // emailCC = 'uday@ipspro.co.jp,y_watanabe@ipspro.co.jp';
+            //emailTO = 'uday@ipspro.co.jp';
+          //  emailCC = 'uday@ipspro.co.jp';
             //emailCC = 'y_ito@ipspro.co.jp';
 
             if (!emailTO) {
@@ -584,8 +584,8 @@ module.exports = {
                 from: 'relay@sysmail.elijp.tokyo',
                 to: emailTO,
                 cc: emailCC,
-                //  cc: 'y_ito@ipsism.co.jp',
-                bcc: 'uday@ipspro.co.jp,telecom@ipspro.co.jp',
+                //  cc: 'y_ito@ipspro.co.jp',
+                bcc: 'uday@ipspro.co.jp,telecom@ipspro.co.jp,y_ito@ipspro.co.jp',
 
                 subject,
                 html
@@ -599,7 +599,7 @@ module.exports = {
             to: 'telecom@ipspro.co.jp',
             //to: 'uday@ipspro.co.jp',
             cc: 'y_ito@ipspro.co.jp,uday@ipspro.co.jp',
-           // cc: 'uday@ipspro.co.jp',
+            //cc: 'uday@ipspro.co.jp',
             subject,
             html
         }

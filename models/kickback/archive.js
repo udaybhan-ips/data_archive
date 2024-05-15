@@ -11,7 +11,7 @@ const BILLCDR_CS = 'billcdr_cs';
 
 let ColumnSetNewSonus = ['cdr_id', 'gw', 'session_id', 'start_time', 'stop_time', 'callduration', 'disconnect_reason', 'calltype_id','calling_number',
  'called_number', 'ingr_pstn_trunk_name', 'calling_name', 'orig_ioi', 'term_ioi', 'calling_type','called_type', 'date_added', 'duration_use', 
- 'sonus_duration','company_code','term_carrier_id', 'orig_carrier_id'];
+ 'sonus_duration','company_code','term_carrier_id', 'orig_carrier_id', 'cpc'];
 
 let ColumnSetSonus = ['date_bill', 'orig_ani', 'term_ani', 'start_time', 'stop_time', 'duration', 'duration_use', 'in_outbound','dom_int_call', 'orig_carrier_id', 'term_carrier_id', 'transit_carrier_id', 'selected_carrier_id', 'billing_company_code', 'trunk_port','sonus_session_id', 'sonus_start_time', 'sonus_disconnect_time', 'sonus_call_duration', 'sonus_call_duration_second', 'sonus_anani','sonus_incallednumber', 'sonus_ingressprotocolvariant', 'registerdate', 'sonus_ingrpstntrunkname', 'sonus_gw', 'sonus_callstatus','sonus_callingnumber', 'sonus_egcallednumber'];
 
@@ -22,7 +22,7 @@ module.exports = {
     console.log("Here!")
     try {
       const query = `select *, CALLDURATION*0.01 AS DURATION from cdr where  start_time>='${targetDate}' and  
-      start_time < DATE_ADD("${targetDate}", INTERVAL 31 DAY) and ingr_pstn_trunk_name ='INNET00'     ` ;
+      start_time < DATE_ADD("${targetDate}", INTERVAL 30 DAY) and ingr_pstn_trunk_name ='INNET00'     ` ;
       //const query = `select * from cdr where start_time>='${targetDate}' and  start_time < DATE_ADD("${targetDate}", INTERVAL 1 DAY) ` ;
 
       //STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)  
@@ -675,6 +675,7 @@ async function getNextInsertBatchNew(data) {
       obj['term_carrier_id'] = termCarrierId;
       obj['orig_carrier_id'] = origCarrierId;
       obj['date_added'] = 'now()';
+      obj['cpc'] = data[i]['CPC'];
 
       // obj['sonus_anani'] = data[i]['INANI'];
       // obj['sonus_incallednumber'] = INCALLEDNUMBER;
@@ -701,10 +702,20 @@ async function getCompanyCodeNew(origIOI){
 
   if(origIOI.includes("ntt-east")){
     companyCode = "1011000056";
-    origCarrierId = "5001"
+    if(origIOI.includes("GSTN")){
+      origCarrierId = "2233"
+    }    
+    else if(origIOI.includes("IEEE")){
+      origCarrierId = "5001"
+    }
   }else if(origIOI.includes("ntt-west")){
     companyCode = "1011000057";
-    origCarrierId = "5007"
+    if(origIOI.includes("GSTN")){
+      origCarrierId = "2234"
+    }    
+    else if(origIOI.includes("IEEE")){
+      origCarrierId = "5007"
+    }
   }else if(origIOI.includes("softbank")){
     companyCode = "1011000058";
     origCarrierId = "2013";
@@ -714,6 +725,9 @@ async function getCompanyCodeNew(origIOI){
   }else if(origIOI.includes("sanntsu.com")){
     companyCode = "1011000060";
     origCarrierId = "6010";
+  }else if(origIOI.includes("stnet.ne.jp")){
+    companyCode = "1011000061";
+    origCarrierId = "5016";
   } 
 
   return {companyCode, origCarrierId};

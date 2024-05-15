@@ -136,7 +136,8 @@ module.exports = {
     try {
       const query = `select customer_id, service_type, cell_phone_limit from kickback_billable 
 
-       where  deleted=false  order by  customer_id     `;
+       where  customer_id in ('00001032','00001476') and
+       deleted=false  order by  customer_id     `;
 
       //where  deleted=false and customer_id in ('00001101','00001282') order by  customer_id     `;
       const getKickCompListRes = await db.queryIBS(query, []);

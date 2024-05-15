@@ -68,7 +68,7 @@ module.exports = {
     try {
       console.log("in get all comp code");
       const query = `select distinct(company_code) as company_code from billcdr_${year}${month}  
-    
+      
       order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
@@ -84,7 +84,7 @@ module.exports = {
       console.log("in get all comp code");
       
       let query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
-      where company_code  in ('1011000057')  order by company_code `;
+      where company_code in ('1011000061')  order by company_code `;
 
       // query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
       // where company_code ='1011000058'
@@ -134,8 +134,10 @@ module.exports = {
   getNewDataTargetCDR: async function (company_code, year, month) {
 
     try {
-      query = `select count(*) as total_calls,  trunc(sum(duration_use::numeric), 0) as total_duration , orig_carrier_id as carrier_code, 
-      term_carrier_id , split_part(calling_type,'.',1) as calling_type from cdr_${year}${month}_new where  company_code='${company_code}' 
+      query = `select count(*) as total_calls,  trunc(sum(duration_use::numeric), 0) as total_duration , 
+      orig_carrier_id as carrier_code, term_carrier_id , split_part(calling_type,'.',1) as calling_type from 
+      cdr_${year}${month}_new 
+      where  company_code='${company_code}' and cpc!='test'
      
       group by orig_carrier_id, term_carrier_id ,split_part(calling_type,'.',1)
       order by orig_carrier_id, term_carrier_id `;
@@ -695,13 +697,13 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
         
     } else if (tmpPaymentDate == 'half_yearly') {
       if (parseInt(billingMonth) > 10 && parseInt(billingMonth) >=3 )
-        paymentDueDate = `${billingYear +1}/4/30`;
+        paymentDueDate = `${billingYear +1}/10/31`;
       else
-        paymentDueDate = `${currentYear}/04/30`;
+        paymentDueDate = `${currentYear}/10/31`;
     } else {
       //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
       // monthly due date!
-      paymentDueDate = `${currentYear }/04/30`;
+      paymentDueDate = `${currentYear }/05/31`;
     }
 
   await generateHeader(address, doc, totalCallAmount);

@@ -60,6 +60,35 @@ module.exports = {
     }    
   },
 
+  
+
+  getApprovalStatusData: async function(req, res) {    
+    try {
+        const [getApprovalStatusRes,getApprovalStatusErr] = await handleError(SummaryAmeyoLicense.getApprovalStatusData(req.body));
+        if(getApprovalStatusErr) {
+             throw new Error(getApprovalStatusErr);  
+        }
+        return res.status(200).json(getApprovalStatusRes);
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+  addApprovalStatusData: async function(req, res) {    
+    try {
+        const [addApprovalStatusRes,addApprovalStatusErr] = await handleError(SummaryAmeyoLicense.addApprovalStatusData(req.body));
+        if(addApprovalStatusErr) {
+             throw new Error(addApprovalStatusErr);  
+        }
+        return res.status(200).json(addApprovalStatusRes);
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }    
+  },
+
  updateAmeyoProductItemData: async function(req, res) {
     try {
         const [updateRecordRes,updateRecordErr] = await handleError(SummaryAmeyoLicense.updateAmeyoProductItemData(req.body));
