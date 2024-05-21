@@ -5,7 +5,7 @@ var BillingController = require('../sonus_outbound/billing.controller');
 var CDRController = require('../sonus_outbound/cdr.controller');
 
 
-// var archiverJobSonusOut = new CronJob ('57 15 * * *',function(){
+// var archiverJobSonusOut = new CronJob ('45 9 * * *',function(){
 //     console.log('You will see this message every second');
 //     archiveController.getData();
 //     console.log('You will see this message every second');
