@@ -51,11 +51,11 @@ module.exports = {
         
         }
 
-        const [sendNotificationRes, sendNotificationErr] = await handleError(BillingSonusOutbound.sendNotification( billingYear, billingMonth));
+        // const [sendNotificationRes, sendNotificationErr] = await handleError(BillingSonusOutbound.sendNotification( billingYear, billingMonth));
 
-        if(sendNotificationErr) {
-            throw new Error('Error while sending motification '+ sendNotificationErr.message);  
-        }
+        // if(sendNotificationErr) {
+        //     throw new Error('Error while sending motification '+ sendNotificationErr.message);  
+        // }
 
         console.log("done!!")
          

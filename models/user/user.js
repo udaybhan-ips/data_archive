@@ -124,7 +124,7 @@ module.exports = {
 
   updatePassword: function(data) {
 
-    console.log("data.."+JSON.stringify(data))
+    //console.log("data.."+JSON.stringify(data))
     return new Promise(function(resolve, reject) {
       if (!data.email || !data.password) {
         reject('error: email and/or password missing')
@@ -181,7 +181,7 @@ module.exports = {
   },
 
   authenticate: function(data) {
-    console.log("user data is..."+JSON.stringify(data))
+    //console.log("user data is..."+JSON.stringify(data))
     return new Promise(function(resolve, reject) {
       if (!data.email || !data.password) {
         reject('error: email and/or password missing')

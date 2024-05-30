@@ -143,13 +143,8 @@ module.exports = {
           const [createCommissionInvoiceRes, createCommissionInvoiceErr] = await handleError(CommissionInfo.createCommissionInvoice( { comp_code:customerListRes[i]['customer_cd'], year:billingYear, month:billingMonth, createdBy:'system' } ));
           if(createCommissionInvoiceErr) {
             throw new Error('Error while creating summary data '+ createCommissionInvoiceErr);  
-          }
-
-       
-        
+          }               
        }
-
-
         const [sendEmailRes,sendEmailErr] = await handleError(CommissionInfo.sendEmail({ year:billingYear, month:billingMonth, createdBy:'system' }));
         if(sendEmailErr) {
              throw new Error('error while sending email');  

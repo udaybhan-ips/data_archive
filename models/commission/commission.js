@@ -245,7 +245,7 @@ module.exports = {
       let WHERE = "";
 
       if (customerId) {
-        WHERE = `where customer_cd = '${customerId}' and is_deleted = false `
+        WHERE = `where customer_cd in ('${customerId}') and is_deleted = false `
       } else {
         WHERE = `where is_deleted = false `
       }

@@ -23,7 +23,7 @@ module.exports = {
       let WHERE = "";
 
       if (customerId) {
-        WHERE = `where customer_cd not in ( '${customerId}') and is_deleted = false `
+        WHERE = `where customer_cd in ( '00000451','00000850','00001021','00001029' ) and is_deleted = false `
       } else {
         WHERE = `where is_deleted = false `
       }
@@ -72,9 +72,12 @@ module.exports = {
 
   sendEmail: async function (emailDetails, customerId, customerDetails, billingYear, billingMonth) {
 
+    try{
     console.log("email details .." + JSON.stringify(emailDetails))
 
     let lengthEmail = emailDetails.length;
+
+    
 
     if (lengthEmail == 0) {
       throw new Error('Email details are not valid! Please check email config for this customer Id ' + customerId)
@@ -82,14 +85,60 @@ module.exports = {
 
     console.log("current dir.." + __dirname);
 
+    let attachments = [], obj ={};
     let customerName = customerDetails.customer_name;
-    let emailSubject = emailDetails[0]['email_subject'];
-    let emailContent = emailDetails[0]['email_contents'].replace(/\n/g, "<br />");;
+   // let emailSubject = emailDetails[0]['email_subject'];
+    let emailSubject = "【2023年11月～2024年4月分】FDコミッション通知書のお知らせ(株式会社アイ・ピー・エス・プロ)";
+    let emailContent = emailDetails[0]['email_contents'].replace(/\n/g, "<br />");
 
     let paymentDueDateMode = emailDetails[0]['payment_due_date_mode'];
 
     let emailTo = emailDetails[0]['email_to'];
     let emailCc = emailDetails[0]['email_cc'];
+    
+
+    let filename = `10${customerId}_${billingYear}${billingMonth}_${customerName}.pdf`;
+    let path = __dirname + `\\pdf\\10${customerId}_${billingYear}${billingMonth}_${customerName}.pdf`;
+
+
+
+    if(customerId ==='00000451' || customerId ==='00000850' || customerId ==='00001021' || customerId ==='00001029' ){
+      attachments = [{
+          filename: `10${customerId}_202311_${customerName}.pdf`,
+          path: __dirname + `\\pdf\\10${customerId}_202311_${customerName}.pdf`
+        },{
+          filename: `10${customerId}_202312_${customerName}.pdf`,
+          path: __dirname + `\\pdf\\10${customerId}_202312_${customerName}.pdf`
+        },
+        {
+          filename: `10${customerId}_202401_${customerName}.pdf`,
+          path: __dirname + `\\pdf\\10${customerId}_202401_${customerName}.pdf`
+        },{
+          filename: `10${customerId}_202402_${customerName}.pdf`,
+          path: __dirname + `\\pdf\\10${customerId}_202402_${customerName}.pdf`
+        },{
+          filename: `10${customerId}_202403_${customerName}.pdf`,
+          path: __dirname + `\\pdf\\10${customerId}_202403_${customerName}.pdf`
+        },{
+          filename: `10${customerId}_202404_${customerName}.pdf`,
+          path: __dirname + `\\pdf\\10${customerId}_202404_${customerName}.pdf`
+        }]
+
+
+       // attachments.push(obj)            
+
+    }else{
+     obj= {   // file on disk as an attachment
+        filename: filename,
+        path: path // stream this file
+      }
+      attachments.push(obj)
+    }
+
+   // attachments.push(obj)
+
+
+    
 
     console.log(emailDetails[0]['email_to'])
     console.log(emailDetails[0]['email_cc'])
@@ -102,10 +151,9 @@ module.exports = {
     let html = '';
     html += emailContent;
 
+  
 
-
-    let filename = `10${customerId}_${billingYear}${billingMonth}_${customerName}.pdf`;
-    let path = __dirname + `\\pdf\\10${customerId}_${billingYear}${billingMonth}_${customerName}.pdf`;
+   
 
     //       filename = `コミッション通知書(テスト).pdf`;
     //     path = __dirname + `\\pdf\\コミッション通知書(テスト).pdf`;
@@ -121,12 +169,7 @@ module.exports = {
       bcc: emailBCC,
       subject: emailSubject,
       html,
-      attachments: [
-        {   // file on disk as an attachment
-          filename: filename,
-          path: path // stream this file
-        },
-      ]
+      attachments: attachments
     }
     console.log("1")
 
@@ -134,6 +177,11 @@ module.exports = {
     console.log("2")
 
     return res;
+
+  }catch(err){
+
+    console.log("error is "+err.message)
+  }
   },
 
 }

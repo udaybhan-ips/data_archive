@@ -23,7 +23,7 @@ var billingController = require('../byokakin/kddi/billing.controller');
 
 // },null, true, 'Asia/Tokyo');
 
-// var billingControllerJob = new CronJob ('8 17 * * *',function(){
+// var billingControllerJob = new CronJob ('29 11 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.getData();
 //     console.log('This is byokakin email notification end');

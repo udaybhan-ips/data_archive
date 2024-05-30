@@ -11,7 +11,6 @@ module.exports = {
         throw new Error('Could not fetch target date');
       }
 
-
       const billingYear = new Date(Dates.target_billing_month).getFullYear();
       let billingMonth = new Date(Dates.target_billing_month).getMonth() + 1;
 
@@ -64,7 +63,6 @@ module.exports = {
         return res.status(400).json({
           message: 'error while fetching data processed data'
         });
-
       }
 
       const [rawDataRes, rawDataErr] = await handleError(EmailNotification.getSummaryDataMysql(Dates.targetDateWithTimezone));
@@ -72,7 +70,6 @@ module.exports = {
         return res.status(400).json({
           message: 'error while fetching raw data'
         });
-
       }
 
       const [createTableRes, createTableErr] = await handleError(EmailNotification.createTable(rawDataRes, proDataRes));
@@ -80,7 +77,6 @@ module.exports = {
         return res.status(400).json({
           message: 'error while creating table'
         });
-
       }
 
       const [sendEmailRes, sendEmailErr] = await handleError(EmailNotification.sendEmail(createTableRes));

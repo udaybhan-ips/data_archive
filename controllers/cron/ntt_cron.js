@@ -29,7 +29,7 @@ var CDRsController = require('../byokakin/ntt/cdr.controller');
 //     console.log('This is byokakin email notification end');
 // },null, true, 'Asia/Tokyo');
 
-// var billingControllerJob = new CronJob ('6 11 * * *',function(){
+// var billingControllerJob = new CronJob ('28 14 * * *',function(){
 //     console.log('This is byokakin  billing start');
 //     billingController.getData();
 //     console.log('This is byokakin email notification end');
