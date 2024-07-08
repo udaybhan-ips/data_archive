@@ -108,10 +108,10 @@ module.exports = {
       customercode,'kotehi' as calltype, 
       (case when lj.a is null then rj.b else (case when rj.b is null then lj.a else lj.a+rj.b end )end ) as ips_price,  
       '${year}-${month}' as cdrmonth from (select comp_acco__c, sum(amount) as a from (select * from (select comp_acco__c, amount, 
-       (select data_name from kddi_kotehi_a_service_details where data_code=gendetaildesc) as  gendetaildesc_name, datebill  
+       (select data_name from kddi_kotehi_a_service_details where data_code=gendetaildesc limit 1) as  gendetaildesc_name, datebill  
        from kddi_kotei_cdr_contents where  to_char(datebill::date, 'MM-YYYY')='${month}-${year}' ) as foo  where foo.gendetaildesc_name 
        not ilike '%通話料%') as res group by comp_acco__c ) as lj full join (select sum(amount) as b,  comp_acco__c from (select * from 
-      (select comp_acco__c, amount, (select data_name from kddi_kotehi_a_basic_construct where data_code=basicchargedesc) as  basicchargedesc_name, 
+      (select comp_acco__c, amount, (select data_name from kddi_kotehi_a_basic_construct where data_code=basicchargedesc limit 1) as  basicchargedesc_name, 
       datebill  from kddi_kotei_cdr_basic where  to_char(datebill::date, 'MM-YYYY')='${month}-${year}' ) as foo where foo.basicchargedesc_name not ilike
        '%通話料%')  as res group by comp_acco__c) as rj on (lj.comp_acco__c= rj.comp_acco__c)`;
 

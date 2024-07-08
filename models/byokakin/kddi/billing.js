@@ -63,7 +63,7 @@ module.exports = {
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
       where is_deleted = false 
-      and customer_cd ='00000630'
+     and customer_cd in ('00000669')
       and service_type ->> 'kddi_customer'  = 'true' 
   
       order by customer_code`;

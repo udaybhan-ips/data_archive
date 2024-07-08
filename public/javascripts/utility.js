@@ -1,46 +1,63 @@
-const fs=require('fs');
-var path = require('path');
-const iconv = require('iconv-lite');
+const fs = require("fs");
+var path = require("path");
+const iconv = require("iconv-lite");
 
+const dateVsMonths = {
+  "01": "Jan",
+  "02": "Feb",
+  "03": "March",
+  "04": "April",
+  "05": "May",
+  "06": "June",
+  "07": "July",
+  "08": "Augest",
+  "09": "Sept",
+  10: "Oct",
+  11: "Nov",
+  12: "Dec",
+};
 
- const dateVsMonths={'01':'Jan','02':'Feb','03':'March','04':'April','05':'May','06':'June','07':'July','08':'Augest','09':'Sept','10':'Oct','11':'Nov','12':'Dec'};
- 
- const dateVsMonthsWithoutZero={'1':'Jan','2':'Feb','3':'March','4':'April','5':'May','6':'June','7':'July','8':'Augest','9':'Sept','10':'Oct','11':'Nov','12':'Dec'};
- 
+const dateVsMonthsWithoutZero = {
+  1: "Jan",
+  2: "Feb",
+  3: "March",
+  4: "April",
+  5: "May",
+  6: "June",
+  7: "July",
+  8: "Augest",
+  9: "Sept",
+  10: "Oct",
+  11: "Nov",
+  12: "Dec",
+};
 
- module.exports={dateVsMonths};
- module.exports={dateVsMonthsWithoutZero};
+module.exports = { dateVsMonths };
+module.exports = { dateVsMonthsWithoutZero };
 
-
-module.exports.getMonthName = function(monthNo){
-  if(monthNo){
+module.exports.getMonthName = function (monthNo) {
+  if (monthNo) {
     return dateVsMonths[monthNo];
   }
   return null;
-}
-
-
+};
 
 /*
 create CSV file
 */
 
-var nodemailer = require('nodemailer');
+var nodemailer = require("nodemailer");
 
+function writeArrayToCSV(data, fileName) {
+  console.log("data.." + JSON.stringify(data));
 
-
-    
-function writeArrayToCSV(data,fileName){
-
-  console.log("data.."+JSON.stringify(data))
-
-    fs.writeFile(fileName, data, function(err) {
-      if(err){
-        console.log(err);
-      }else{
-        console.log("success");
-      }
- })
+  fs.writeFile(fileName, data, function (err) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("success");
+    }
+  });
 }
 
 // module.exports.createCSVWithWriter=async function(fileName, header, data){
@@ -54,22 +71,17 @@ function writeArrayToCSV(data,fileName){
 //     });
 // }
 
-
 // module.exports.createCSVWithWriter=async function(fileName, header, data){
-
-  
 
 //   const createCsvWriter = require('csv-writer').createObjectCsvWriter({header, path: fileName });
 
 //   try{
-//     await writeData(data, createCsvWriter);    
+//     await writeData(data, createCsvWriter);
 //   }catch(err){
 //     console.log("Err=="+err.message);
 //   }
-  
-  
-// }
 
+// }
 
 // async function writeData(records, csvWriter){
 //   try{
@@ -79,78 +91,66 @@ function writeArrayToCSV(data,fileName){
 //   }
 // }
 
+module.exports.createCSVWithWriter = async function (fileName, header, data) {
+  const createCsvWriter = require("csv-writer").createObjectCsvWriter({
+    append: true,
+    header,
+    path: fileName,
+  });
 
-
-module.exports.createCSVWithWriter=async function(fileName, header, data){
-
-  const createCsvWriter = require('csv-writer').createObjectCsvWriter({ append: true ,header,path: fileName});
-
-  try{
+  try {
     await writeData(data, createCsvWriter);
-  }catch(err){
-    console.log("Err=="+err.message);
+  } catch (err) {
+    console.log("Err==" + err.message);
   }
+};
 
-
-}
-
-
-async function writeData(records, csvWriter){
-  try{
-    await csvWriter.writeRecords(records)
-  }catch(erorr){
-    console.log("Error== "+error.message);
+async function writeData(records, csvWriter) {
+  try {
+    await csvWriter.writeRecords(records);
+  } catch (erorr) {
+    console.log("Error== " + error.message);
   }
 }
-
-
-
-
-
 
 module.exports.daysInMonth = function (month, year) {
   return new Date(year, month, 0).getDate();
-}
+};
 
-module.exports.arrayToCsv= function (data,headers,fileName){
+module.exports.arrayToCsv = function (data, headers, fileName) {
+  let csvRows = [];
+  csvRows.push(headers.join(",") + "\r\n");
 
-    let csvRows=[];
-    csvRows.push(headers.join(",")+'\r\n');
+  console.log("ROW LENGTH=" + csvRows.length);
 
-    console.log("ROW LENGTH="+csvRows.length);
-    
-    csvRows += data.map(function(d){
+  csvRows += data
+    .map(function (d) {
       return JSON.stringify(Object.values(d));
     })
-    .join('\n') 
-    .replace(/(^\[)|(\]$)/mg, '');
+    .join("\n")
+    .replace(/(^\[)|(\]$)/gm, "");
 
-    //console.log(csvRows);  
-    writeArrayToCSV(csvRows,fileName);
-}
+  //console.log(csvRows);
+  writeArrayToCSV(csvRows, fileName);
+};
 
-module.exports.utcToDate= async function(utcDate){
-  
-  let newDate='';
-  let stDate=utcDate.toISOString();
+module.exports.utcToDate = async function (utcDate) {
+  let newDate = "";
+  let stDate = utcDate.toISOString();
   try {
-    newDate=stDate.replace(/T/,' ').replace(/\..+/, '');
-  }catch(err){
+    newDate = stDate.replace(/T/, " ").replace(/\..+/, "");
+  } catch (err) {
     console.log(err.message);
-    newDate=stDate;
+    newDate = stDate;
   }
-  return newDate;  
-}
+  return newDate;
+};
 
-
-module.exports.utcToDateNew= async function(utcDate){
-  
+module.exports.utcToDateNew = async function (utcDate) {
   try {
+    //var d = new Date("2024-01-25T12:04:00.000Z");
 
-
-    //var d = new Date("2024-01-25T12:04:00.000Z"); 
-
-    let date =  new Date(utcDate) 
+    let date = new Date(utcDate);
 
     return date.toLocaleString();
 
@@ -161,190 +161,172 @@ module.exports.utcToDateNew= async function(utcDate){
 
     // newDate.setHours(hours - offset);
 
-    return newDate;   
-  }catch(err){
+    return newDate;
+  } catch (err) {
     console.log(err.message);
   }
-  
-}
-
+};
 
 // const headers=['通話開始時間','通話開始時間','通話元番号','通話先番号','通話時間（秒）','GSX','ten'];
 // const fileName='abc.csv';
 // arrayToCSV(arr,headers,fileName);
 /****************** send email ***************/
 
-module.exports.sendEmailIPSPro= async function(mailOptions){
+module.exports.sendEmailIPSPro = async function (mailOptions) {
   var transporter = nodemailer.createTransport({
     secure: false,
-    host:'103.120.16.136',
-    port:587,
+    host: "103.120.16.136",
+    port: 587,
     auth: {
-      user: 'ipsp_billing@sysmail.ipspro.co.jp',
-      pass: '3aThu7rlMu1oSwl*Rim6'
-    }
+      user: "ipsp_billing@sysmail.ipspro.co.jp",
+      pass: "3aThu7rlMu1oSwl*Rim6",
+    },
   });
-  
-  try {
-    let res = await transporter.sendMail(mailOptions);    
-    console.log("res.."+JSON.stringify(res))
-    return res;
-  }catch(error){
-    console.log("error.."+error)
-    return error;
-  }    
-}
 
-module.exports.sendEmailTesting= async function(mailOptions){
-  var transporter = nodemailer.createTransport({
-    secure: false,
-    host:'103.120.16.136',
-    port:587,
-    auth: {
-      user: 'ips_tech@sysmail.ipsism.co.jp',
-      pass: 't2oqa$5sPlNix2zuT$'
-    }
-  });
-  
   try {
-    let res = await transporter.sendMail(mailOptions);    
-    console.log("res.."+JSON.stringify(res))
+    let res = await transporter.sendMail(mailOptions);
+    console.log("res.." + JSON.stringify(res));
     return res;
-  }catch(error){
-    console.log("error.."+error)
+  } catch (error) {
+    console.log("error.." + error);
     return error;
-  }    
-}
+  }
+};
 
-module.exports.sendEmail= function(mailOptions){
+module.exports.sendEmailTesting = async function (mailOptions) {
   var transporter = nodemailer.createTransport({
     secure: false,
-    host:'103.120.16.136',
-    port:587,
+    host: "103.120.16.136",
+    port: 587,
     auth: {
-      user: 'ips_tech@sysmail.ipsism.co.jp',
-      pass: 't2oqa$5sPlNix2zuT$'
-    }
+      user: "ips_tech@sysmail.ipsism.co.jp",
+      pass: "t2oqa$5sPlNix2zuT$",
+    },
   });
-  
-  transporter.sendMail(mailOptions, function(error, info){
+
+  try {
+    let res = await transporter.sendMail(mailOptions);
+    console.log("res.." + JSON.stringify(res));
+    return res;
+  } catch (error) {
+    console.log("error.." + error);
+    return error;
+  }
+};
+
+module.exports.sendEmail = function (mailOptions) {
+  var transporter = nodemailer.createTransport({
+    secure: false,
+    host: "103.120.16.136",
+    port: 587,
+    auth: {
+      user: "ips_tech@sysmail.ipsism.co.jp",
+      pass: "t2oqa$5sPlNix2zuT$",
+    },
+  });
+
+  transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
       console.log(error);
       return false;
     } else {
-      console.log('Email sent: ' + info.response);
+      console.log("Email sent: " + info.response);
       return true;
     }
-  });  
-}
+  });
+};
 
-module.exports.copyCDR=function(source, target ){
-  copyFolderRecursiveSync( source, target )
-}
+module.exports.copyCDR = function (source, target) {
+  copyFolderRecursiveSync(source, target);
+};
 
+module.exports.rates = { fico: [{ mobile: "14", landLine: "6" }] };
 
-module.exports.rates={'fico':[{'mobile':'14','landLine':'6'}]};
-
-module.exports.numberWithCommas = function(x) {
+module.exports.numberWithCommas = function (x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
+};
 
-
-function copyFolderRecursiveSync( source, target ) {
+function copyFolderRecursiveSync(source, target) {
   var files = [];
 
   //check if folder needs to be created or integrated
-  var targetFolder = path.join( target, path.basename( source ) );
-  if ( !fs.existsSync( targetFolder ) ) {
-      fs.mkdirSync( targetFolder );
+  var targetFolder = path.join(target, path.basename(source));
+  if (!fs.existsSync(targetFolder)) {
+    fs.mkdirSync(targetFolder);
   }
 
   //copy
-  if ( fs.lstatSync( source ).isDirectory() ) {
-      files = fs.readdirSync( source );
-      files.forEach( function ( file ) {
-          var curSource = path.join( source, file );
-          if ( fs.lstatSync( curSource ).isDirectory() ) {
-              copyFolderRecursiveSync( curSource, targetFolder );
-          } else {
-              copyFileSync( curSource, targetFolder );
-          }
-      } );
+  if (fs.lstatSync(source).isDirectory()) {
+    files = fs.readdirSync(source);
+    files.forEach(function (file) {
+      var curSource = path.join(source, file);
+      if (fs.lstatSync(curSource).isDirectory()) {
+        copyFolderRecursiveSync(curSource, targetFolder);
+      } else {
+        copyFileSync(curSource, targetFolder);
+      }
+    });
   }
 }
 
-
-function copyFileSync( source, target ) {
+function copyFileSync(source, target) {
   var targetFile = target;
 
   //if target is a directory a new file with the same name will be created
-  if ( fs.existsSync( target ) ) {
-      if ( fs.lstatSync( target ).isDirectory() ) {
-          targetFile = path.join( target, path.basename( source ) );
-      }
+  if (fs.existsSync(target)) {
+    if (fs.lstatSync(target).isDirectory()) {
+      targetFile = path.join(target, path.basename(source));
+    }
   }
   fs.writeFileSync(targetFile, fs.readFileSync(source));
 }
 
+module.exports.createFolder = function createFolder(folderName) {
+  const fs = require("fs");
+  try {
+    if (!fs.existsSync(folderName)) {
+      fs.mkdirSync(folderName, { recursive: true });
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
 
-
-module.exports.createFolder=function createFolder(folderName){    
-    const fs=require('fs');
-    try{
-        if (!fs.existsSync(folderName)){
-            fs.mkdirSync(folderName,{recursive: true});
-        }
-    } catch (err) {
-        console.error(err)
-    }       
-
-}
-
-module.exports.getPaymentPlanDate = async function (mode, year, month){
-
+module.exports.getPaymentPlanDate = async function (mode, year, month) {
   let checkIfHolidayTableExistRes = await checkIfHolidayTableExist(year);
 
-  if(!checkIfHolidayTableExistRes){
+  if (!checkIfHolidayTableExistRes) {
     await createHolidayTableAndAddHolidayRecords(year, month);
   }
 
-   const getHolidayDataRes =  await getHolidayData(year, month);
+  const getHolidayDataRes = await getHolidayData(year, month);
+};
 
-
-}
-
-async function checkIfHolidayTableExist(year){
-
-  const chcekHolidayTable = `SELECT EXISTS ( SELECT FROM information_schema.tables WHERE  table_schema ='public' AND table_name = 'jp_holiday_${year}' )` ;
-  let checkTableExistRes = await db.query(chcekHolidayTable,[], true);
+async function checkIfHolidayTableExist(year) {
+  const chcekHolidayTable = `SELECT EXISTS ( SELECT FROM information_schema.tables WHERE  table_schema ='public' AND table_name = 'jp_holiday_${year}' )`;
+  let checkTableExistRes = await db.query(chcekHolidayTable, [], true);
 
   if (checkTableExistRes && checkTableExistRes.rows) {
-    return checkTableExistRes.rows[0]['exists']
-  }else{
+    return checkTableExistRes.rows[0]["exists"];
+  } else {
     return false;
   }
 }
 
-async function createHolidayTableAndAddHolidayRecords(year, month){
-  const query =` CREATE TABLE IF NOT EXISTS "jp_holiday_${year}" ("id" serial, "holiday_date" TIMESTAMP WITHout TIME ZONE not null , name VARCHAR ) ` ;
-  const tableCreationRes =await db.query(query, [], true);
-  
-  const res = await getHolidayData(year)
+async function createHolidayTableAndAddHolidayRecords(year, month) {
+  const query = ` CREATE TABLE IF NOT EXISTS "jp_holiday_${year}" ("id" serial, "holiday_date" TIMESTAMP WITHout TIME ZONE not null , name VARCHAR ) `;
+  const tableCreationRes = await db.query(query, [], true);
+  const res = await getHolidayData(year);
 
   return res;
-  
-
 }
-
 
 var https = require("https");
 
-async function getHolidayData(year){
-
-  var connectApiHost = "holidays-jp.shogo82148.com"
+async function getHolidayData(year) {
+  var connectApiHost = "holidays-jp.shogo82148.com";
   var connectApiPath = `/${year}`;
-  
-  
+
   var options = {
     host: connectApiHost,
     path: connectApiPath,
@@ -352,144 +334,151 @@ async function getHolidayData(year){
     //port: 443,
     method: "GET",
   };
-  
-  https.request(options, function(res) {
-    console.log("STATUS: " + res.statusCode);
-    console.log("HEADERS: " + JSON.stringify(res.headers));
-    res.setEncoding("utf8");
-    res.on("data", function (chunk) {
-      console.log("BODY: " + chunk);
-    });
-  }).end();
-  
+
+  https
+    .request(options, function (res) {
+      console.log("STATUS: " + res.statusCode);
+      console.log("HEADERS: " + JSON.stringify(res.headers));
+      res.setEncoding("utf8");
+      res.on("data", function (chunk) {
+        console.log("BODY: " + chunk);
+      });
+    })
+    .end();
 }
 
+function pad(n) {
+  return n < 10 ? "0" + n : n;
+}
 
-function pad(n){return n<10 ? '0'+n : n}
-
-module.exports.getCurrentYearMonthDay = function (date){
+module.exports.getCurrentYearMonthDay = function (date) {
   var d;
-  
-  if(date){
+
+  if (date) {
     d = new Date(date);
-  }else{
+  } else {
     d = new Date();
   }
-  
+
   let month = pad(d.getMonth() + 1);
-  let day =  pad(d.getDate());
+  let day = pad(d.getDate());
   let year = d.getFullYear();
 
-  console.log("year..."+year)
-  console.log("day..."+day)
-  console.log("month..."+month)
+  console.log("year..." + year);
+  console.log("day..." + day);
+  console.log("month..." + month);
 
   return `${year}-${month}-${day}`;
+};
 
+function pad(n) {
+  return n < 10 ? "0" + n : n;
 }
-function pad(n){return n<10 ? '0'+n : n}
 
-module.exports.getCurrentDayMonthYear = function (date){
+module.exports.getCurrentDayMonthYear = function (date) {
   var d;
-  
-  if(date){
+
+  if (date) {
     d = new Date(date);
-  }else{
+  } else {
     d = new Date();
   }
-  
   let month = d.getMonth() + 1;
-  let day =  d.getDate();
+  let day = d.getDate();
   let year = d.getFullYear();
 
   return `${year}_${month}_${day}`;
+};
 
-}
-
-
-module.exports.getPreviousYearMonth = function (date){
+module.exports.getPreviousYearMonth = function (date) {
   var d;
-  
-  if(date){
+
+  if (date) {
     d = new Date(date);
-  }else{
+  } else {
     d = new Date();
   }
-  
-  d.setDate(1);
-  d.setMonth(d.getMonth()-1);
 
+  d.setDate(1);
+  d.setMonth(d.getMonth() - 1);
 
   let month = d.getMonth() + 1;
-  let day =  d.getDate();
+  let day = d.getDate();
   let year = d.getFullYear();
 
-  if(month < 10 ){
-    month = '0'+month;
+  if (month < 10) {
+    month = "0" + month;
   }
 
-  return {year:[year], month:[month]};
+  return { year: [year], month: [month] };
+};
 
-}
-
-module.exports.getPreviousYearMonthDay = function (date){
+module.exports.getPreviousYearMonthDay = function (date) {
   var d;
-  
-  if(date){
+
+  if (date) {
     d = new Date(date);
-  }else{
+  } else {
     d = new Date();
   }
-  
-  d.setDate(1);
-  d.setMonth(d.getMonth()-1);
 
+  d.setDate(1);
+  d.setMonth(d.getMonth() - 1);
 
   let prevMonth = d.getMonth() + 1;
-  let prevDay =  d.getDate();
+  let prevDay = d.getDate();
   let prevYear = d.getFullYear();
 
-  if(prevMonth < 10 ){
-    prevMonth = '0'+prevMonth;
+  if (prevMonth < 10) {
+    prevMonth = "0" + prevMonth;
   }
 
-  return {prevYear, prevMonth, prevDay};
+  return { prevYear, prevMonth, prevDay };
+};
 
-}
-
-
-module.exports.formatDate = function  (date) {
+module.exports.formatDate = function (date) {
   var d = new Date(date),
-      month = '' + (d.getMonth() + 1),
-      day = '' + d.getDate(),
-      year = d.getFullYear();
+    month = "" + (d.getMonth() + 1),
+    day = "" + d.getDate(),
+    year = d.getFullYear();
 
-  if (month.length < 2) 
-      month = '0' + month;
-  if (day.length < 2) 
-      day = '0' + day;
+  if (month.length < 2) month = "0" + month;
+  if (day.length < 2) day = "0" + day;
 
-  return [year, month, day].join('/');
-}
+  return [year, month, day].join("/");
+};
 
-
-module.exports.splitDate=function(date){
-  let year='',month='',monthName='';
-  const dateVsMonths={'01':'Jan','02':'Feb','03':'March','04':'April','05':'May','06':'June','07':'July','08':'Augest','09':'Sept','10':'Oct','11':'Nov','12':'Dec'};
-  try{
-    let dateTmpArr=date.split(" ");
-    let dateArr=dateTmpArr[0].split("-");
-    year=dateArr[0];
-    month=dateArr[1];
-    monthName=dateVsMonths[month];    
-  }catch(e){
+module.exports.splitDate = function (date) {
+  let year = "",
+    month = "",
+    monthName = "";
+  const dateVsMonths = {
+    "01": "Jan",
+    "02": "Feb",
+    "03": "March",
+    "04": "April",
+    "05": "May",
+    "06": "June",
+    "07": "July",
+    "08": "Augest",
+    "09": "Sept",
+    10: "Oct",
+    11: "Nov",
+    12: "Dec",
+  };
+  try {
+    let dateTmpArr = date.split(" ");
+    let dateArr = dateTmpArr[0].split("-");
+    year = dateArr[0];
+    month = dateArr[1];
+    monthName = dateVsMonths[month];
+  } catch (e) {
     console.log(e.message);
   }
-  return [monthName, year,month];
-}
+  return [monthName, year, month];
+};
 
-module.exports.genrateHTML=function(domesticAmount, intAmount, year, month){
-
+module.exports.genrateHTML = function (domesticAmount, intAmount, year, month) {
   return `<div class="">
   <div class="aHl"></div>
   <div id=":7jn" tabindex="-1"></div>
@@ -537,8 +526,4 @@ module.exports.genrateHTML=function(domesticAmount, intAmount, year, month){
   </div>
   <div class="hi"></div>
   </div>`;
-  
-}
-
-
-
+};

@@ -1,5 +1,5 @@
 var ArchiveNTT = require('../../../models/byokakin/ntt/archive');
-const billingMonth = "04";
+const billingMonth = "05";
 const billingYear ="2024";
 const carrier = 'NTT';
 
@@ -9,6 +9,7 @@ module.exports = {
     try {
      
       console.log("here")
+      const resCreateTable = await ArchiveNTT.createNTTTables(billingYear, billingMonth);
       const resNTTKotehiData = await ArchiveNTT.insertNTTKotehiData("filePath", "fileName", billingYear, billingMonth, carrier);
       console.log("Done ...")
       // return res.status(200).json({

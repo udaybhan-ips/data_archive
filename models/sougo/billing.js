@@ -3,6 +3,8 @@ var db = require('./../../config/database');
 var PDFDocument = require("pdfkit");
 var fs = require("fs");
 
+var common = require('./../common/common')
+
 
 module.exports = {
   getRates: async function () {
@@ -68,7 +70,7 @@ module.exports = {
     try {
       console.log("in get all comp code");
       const query = `select distinct(company_code) as company_code from billcdr_${year}${month}  
-      
+      where company_code not in ('9999999999')
       order by company_code `;
       const billNoRes = await db.queryIBS(query, []);
       return billNoRes.rows;
@@ -84,7 +86,7 @@ module.exports = {
       console.log("in get all comp code");
       
       let query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
-      where company_code in ('1011000061')  order by company_code `;
+      where company_code  in  ('1011000065', '1011000074')  order by company_code `;
 
       // query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
       // where company_code ='1011000058'
@@ -397,7 +399,7 @@ async function getResInfoNew (data, company_code, ratesInfo, carrierInfo, billin
 
     let newOicName = data['term_carrier_id'] == '5039' ? '0ABJ' : '050IP' ;
 
-    let IPText = (data['calling_type'] == 'GSTN' && data['term_carrier_id']=='5040' ) ? '（メタルIP）' : '' ;
+    let IPText = (data['calling_type'] == 'GSTN' ) ? '（メタルIP）' : '' ;
 
     case1['call_count'] = data['total_calls'];
     case1['line_no'] = lineCounter * 6 + 1;
@@ -651,7 +653,94 @@ async function getInvoiceData(company_code, year, month, newData) {
   }
 }
 
+async function getPaymentPlanDueDate(date, mode){
 
+  let addMonth = 0 , billingDueYear , billingDueMonth, paymentDueYearMonth;
+  
+  const myDate = date;
+
+  if(mode === 'yearly'){
+    
+    
+    paymentDueYearMonth = new Date(myDate.setMonth(3));
+    billingDueYear = paymentDueYearMonth.getFullYear() + 1;
+    billingDueMonth = paymentDueYearMonth.getMonth() + 1;
+
+  }else if(mode ==='half_yearly'){
+  
+    paymentDueYearMonth = new Date(myDate.setMonth(9));
+    billingDueYear = paymentDueYearMonth.getFullYear();
+    billingDueMonth = paymentDueYearMonth.getMonth() + 1;
+
+  }else {
+    paymentDueYearMonth = new Date(myDate.setMonth(myDate.getMonth()));
+    billingDueYear = paymentDueYearMonth.getFullYear();
+    billingDueMonth = paymentDueYearMonth.getMonth() + 1;
+  }
+
+  //if(mode === 'year')
+
+
+
+
+
+      const lastDayOfMonth = new Date(billingDueYear, billingDueMonth, 0);
+
+      const billingDueDay = lastDayOfMonth.getDate();
+
+
+      // check first weekend 
+
+      const getHolidays = await common.getHolidayByYear(billingDueYear);
+
+      let {actualDayValue, actualbillingDueMonth} = await getValidDate(billingDueYear, billingDueMonth, billingDueDay, getHolidays);
+
+      actualDayValue = actualDayValue.toString().padStart(2, '0') ;
+      actualbillingDueMonth = actualbillingDueMonth.toString().padStart(2, '0') ;
+
+      const validPaymentPlanDate = `${billingDueYear}-${actualbillingDueMonth}-${actualDayValue}`;
+
+      console.log("validPayemt date is " + validPaymentPlanDate);
+
+      return validPaymentPlanDate;
+
+}
+
+async function getValidDate(billingDueYear, billingDueMonth, billingDueDay, getHolidays) {
+
+  let tmpbillingDueMonth = billingDueMonth ;
+  let tmpactualBillingMonth = billingDueMonth - 1;
+
+  let actualBillingMonth = billingDueMonth - 1;
+
+  var actualDayValue = billingDueDay;
+
+  if (billingDueDay < 1) {
+    return billingDueDay;
+  }
+
+  async function callRec(billingDueYear, billingDueMonth, actualBillingMonth, actualDayValue, getHolidays) {
+    let counter = 0 ;
+    const checkIfWeekend = await common.checkIfWeekend(billingDueYear, actualBillingMonth, actualDayValue);
+    const checkIfHoilday = await common.checkIfHoilday(billingDueYear, billingDueMonth, actualDayValue, getHolidays);
+    if (checkIfWeekend || checkIfHoilday) {
+      actualDayValue = actualDayValue + 1;
+      counter = 1
+      if(counter == 1 && tmpbillingDueMonth == billingDueMonth && tmpactualBillingMonth == actualBillingMonth ){
+        billingDueMonth = billingDueMonth+1
+        actualBillingMonth = actualBillingMonth + 1
+      }
+
+      return await callRec(billingDueYear, billingDueMonth, actualBillingMonth, actualDayValue, getHolidays)
+    } else {
+      const actualbillingDueMonth = billingDueMonth
+      return {actualDayValue, actualbillingDueMonth  };
+    }
+  }
+
+  return await callRec(billingDueYear, billingDueMonth, actualBillingMonth, actualDayValue, getHolidays);
+
+}
 
 
 
@@ -672,39 +761,46 @@ async function createInvoice(company_code, billingYear, billingMonth, invoice, p
   });
 
   let paymentDueDate = "";
-  let tmpPaymentDate = "";
+  let tmpPaymentDate = "", tmpCurrentMonth =  new Date(currentMonth.valueOf()) ;
   if (address && address[0]) {
     tmpPaymentDate = address[0]['payment_due_date'];
   }
 
-  const currentYear = new Date(currentMonth).getFullYear();
-  let currentMonthValue = new Date(currentMonth).getMonth() + 1;
-  if (parseInt(currentMonthValue, 10) < 10) {
-    currentMonthValue = '0' + currentMonthValue;
-  }
+  console.log("before current month"+ currentMonth)
+   paymentDueDate = await getPaymentPlanDueDate(tmpCurrentMonth, tmpPaymentDate);
 
-  let lastMonthDay  = new Date(currentYear, currentMonthValue, 0).getDate();
+  console.log("new payment date" + paymentDueDate) ;
+  console.log("after current month"+ currentMonth)
+ 
+
+  // const currentYear = new Date(currentMonth).getFullYear();
+  // let currentMonthValue = new Date(currentMonth).getMonth() + 1;
+  // if (parseInt(currentMonthValue, 10) < 10) {
+  //   currentMonthValue = '0' + currentMonthValue;
+  // }
+
+  // let lastMonthDay  = new Date(currentYear, currentMonthValue, 0).getDate();
   
-    if (tmpPaymentDate == 'yearly') {
-      if (parseInt(billingMonth) >= 4){
-        console.log("IF")
-        paymentDueDate = `${billingYear +1}/04/30`;
-      }        
-      else{
-        console.log("ELSE")
-        paymentDueDate = `${currentYear }/04/30`;
-      }
+  //   if (tmpPaymentDate == 'yearly') {
+  //     if (parseInt(billingMonth) >= 4){
+  //       console.log("IF")
+  //       paymentDueDate = `${billingYear +1}/04/30`;
+  //     }        
+  //     else{
+  //       console.log("ELSE")
+  //       paymentDueDate = `${currentYear }/04/30`;
+  //     }
         
-    } else if (tmpPaymentDate == 'half_yearly') {
-      if (parseInt(billingMonth) > 10 && parseInt(billingMonth) >=3 )
-        paymentDueDate = `${billingYear +1}/10/31`;
-      else
-        paymentDueDate = `${currentYear}/10/31`;
-    } else {
-      //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
-      // monthly due date!
-      paymentDueDate = `${currentYear }/05/31`;
-    }
+  //   } else if (tmpPaymentDate == 'half_yearly') {
+  //     if (parseInt(billingMonth) > 10 && parseInt(billingMonth) >=3 )
+  //       paymentDueDate = `${billingYear +1}/10/31`;
+  //     else
+  //       paymentDueDate = `${currentYear}/10/31`;
+  //   } else {
+  //     //paymentDueDate = `${currentYear}/${currentMonthValue}/${lastMonthDay}`;
+  //     // monthly due date!
+  //     paymentDueDate = `${currentYear }/07/01`;
+  //   }
 
   await generateHeader(address, doc, totalCallAmount);
 
@@ -957,6 +1053,9 @@ function textInRowFirst(doc, text, x, heigth, align, width) {
 
 
 function generateCustomerInformation(company_code, billingYear, billingMonth, doc, invoice, y, currentMonth, totalAmount, paymentDueDate) {
+
+
+  console.log("gci current month"+ currentMonth)
 
   const currentYear = new Date(currentMonth).getFullYear();
   let currentMonthValue = new Date(currentMonth).getMonth() + 1;

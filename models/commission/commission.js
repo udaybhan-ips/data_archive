@@ -555,21 +555,6 @@ module.exports = {
         throw new Error('Invalid Request')
       }
       let addMonth = 2;
-      // if(payment_plan_date == 'Monthly'){
-      //   addMonth = 2;
-      // }else if(payment_plan_date == 'Two Months'){
-      //   addMonth = 3;
-      // }else if(payment_plan_date == 'Half Yearly'){
-      //     // half yearly means =>( May ~ Oct And Nov ~ April) these are the target commission month              
-      //   addMonth = 2;
-      // }else if(payment_plan_date == 'Yearly'){
-      //     // yearly means =>( Nov ~ Oct)
-      //   addMonth = 2;
-      // }
-      // const myData1 = new Date(`'${year}-${month}-1'`);
-      // const currentYearMonth  = new Date(myData1.setMonth(myData1.getMonth()+1));
-      // const currentYear = currentYearMonth.getFullYear();
-      // const currentMonth = currentYearMonth.getMonth()+1;
 
 
       const myDate = new Date(`'${year}-${month}-1'`);
