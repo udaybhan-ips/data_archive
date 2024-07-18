@@ -5,7 +5,7 @@ module.exports = {
   cdrProcessing: async function (req, res) {
     try {
 
-      const billingMonth = '05', billingYear = "2024";
+      const billingMonth = '06', billingYear = "2024";
 
       // console.log("ratesDetails="+JSON.stringify(ratesDetails));
 

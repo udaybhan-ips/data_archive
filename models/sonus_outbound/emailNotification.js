@@ -190,7 +190,7 @@ module.exports = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
             to:'telecom@ipspro.co.jp',
             //to: 'uday@ipspro.co.jp',
-            cc:'y_ito@ipspro.co.jp,uday@ipspro.co.jp',
+            cc:'y_ito@ipspro.co.jp,uday@ipspro.co.jp,rc_sato@ipspro.co.jp',
             subject: 'SONUS OUTBOUND CDR CHECK',
             html
         }

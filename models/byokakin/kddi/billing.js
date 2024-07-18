@@ -63,7 +63,7 @@ module.exports = {
     try {
       const query = `select id, customer_cd as customer_code , customer_name from m_customer 
       where is_deleted = false 
-     and customer_cd in ('00000669')
+  
       and service_type ->> 'kddi_customer'  = 'true' 
   
       order by customer_code`;
@@ -103,7 +103,7 @@ module.exports = {
 
       const query = `select  raw_cdr.* from byokakin_kddi_raw_cdr_${billingYear}${billingMonth} raw_cdr join ntt_kddi_freedial_c free_dial on 
       (regexp_replace(raw_cdr.did, '[^0-9]', '', 'g') = free_dial.free_numb__c 
-      and free_dial.cust_code__c::int = '${customer_code}' and 
+      and free_dial.cust_code__c::int = '${customer_code}'  and
       (free_dial.stop_date__c is null or free_dial.stop_date__c !='1800-01-01 00:00:00' OR
       free_dial.stop_date__c='null' OR free_dial.stop_date__c::date > now()::date)   ) `;
 
@@ -804,9 +804,16 @@ async function getCallDuration(duration) {
 
   let resDuration = "";
   try {
+    const index = duration.indexOf('件')
+    if(index!== -1){
+      return duration.replace('件','')
+    }
+
     const arr = duration.split(":");
+
     resDuration = (+arr[0]) * 60 * 60 + (+arr[1]) * 60 + (+arr[2]);
     resDuration = Math.ceil(resDuration)
+
   } catch (error) {
     console.log("Error in get call duration.." + error.message)
   }

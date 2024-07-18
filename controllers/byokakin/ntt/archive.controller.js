@@ -1,5 +1,5 @@
 var ArchiveNTT = require('../../../models/byokakin/ntt/archive');
-const billingMonth = "05";
+const billingMonth = "06";
 const billingYear ="2024";
 const carrier = 'NTT';
 

@@ -124,8 +124,8 @@ module.exports = {
 
         let mailOption = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
-            to: 'uday@ipspro.co.jp',
-            cc:'y_ito@ipspro.co.jp',
+            to: 'telecom@ipspro.co.jp',
+            cc:'y_ito@ipspro.co.jp,rc_sato@ipspro.co.jp,uday@ipspro.co.jp',
             subject: 'LEAFNET CDR CHECK',
             html
         }

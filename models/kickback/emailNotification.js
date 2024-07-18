@@ -585,7 +585,7 @@ module.exports = {
                 to: emailTO,
                 cc: emailCC,
                 //  cc: 'y_ito@ipspro.co.jp',
-                bcc: 'uday@ipspro.co.jp,telecom@ipspro.co.jp,y_ito@ipspro.co.jp',
+                bcc: 'uday@ipspro.co.jp,rc_sato@ipspro.co.jp,telecom@ipspro.co.jp,y_ito@ipspro.co.jp',
 
                 subject,
                 html
@@ -598,7 +598,7 @@ module.exports = {
             from: 'ips_tech@sysmail.ipsism.co.jp',
             to: 'telecom@ipspro.co.jp',
             //to: 'uday@ipspro.co.jp',
-            cc: 'y_ito@ipspro.co.jp,uday@ipspro.co.jp',
+            cc: 'y_ito@ipspro.co.jp,uday@ipspro.co.jp,rc_sato@ipspro.co.jp',
             //cc: 'uday@ipspro.co.jp',
             subject,
             html
