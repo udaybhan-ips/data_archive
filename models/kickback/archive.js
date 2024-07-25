@@ -30,6 +30,7 @@ let ColumnSetNewSonus = [
   "term_carrier_id",
   "orig_carrier_id",
   "cpc",
+  "kickcompany"
 ];
 
 let ColumnSetSonus = [
@@ -368,7 +369,7 @@ module.exports = {
 
       for (let i = 0; i < chunkArray.length; i++) {
         if (__type == "new_migration_data") {
-          const data = await getNextInsertBatchNew(chunkArray[i], "", "");
+          const data = await getNextInsertBatchNew(chunkArray[i], carrierInfo, "");
           res = await db.queryBatchInsert(data, "ibs", ColumnSetValue);
         } else if (__type == "raw_cdr") {
           const data = await getNextInsertBatch(
@@ -791,7 +792,7 @@ async function getNextInsertBatch(
   return valueArray;
 }
 
-async function getNextInsertBatchNew(data) {
+async function getNextInsertBatchNew(data, companyInfo) {
   const dataLen = data.length;
   console.log("data preapering for new sonus data ");
   let valueArray = [];
@@ -852,6 +853,8 @@ async function getNextInsertBatchNew(data) {
       obj["orig_carrier_id"] = origCarrierId;
       obj["date_added"] = "now()";
       obj["cpc"] = data[i]["CPC"];
+      obj["kickcompany"] = await getKickCompany( data[i]["CALLED_NUMBER"],
+      companyInfo)
 
       // obj['sonus_anani'] = data[i]['INANI'];
       // obj['sonus_incallednumber'] = INCALLEDNUMBER;

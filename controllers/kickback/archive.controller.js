@@ -50,11 +50,12 @@ module.exports = {
       const getTargetBillableNewCDRRes = await ArchiveKickback.getTargetNewCDR(
         Dates.targetDate
       );
+      const getCarrierInfoRes = await ArchiveKickback.getKickCompanyInfo();
       const getDataBillabeRes = await ArchiveKickback.insertByBatches(
         getTargetBillableNewCDRRes,
         null,
         null,
-        null,
+        getCarrierInfoRes,
         null,
         "new_migration_data",
         tableName

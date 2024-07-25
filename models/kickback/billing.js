@@ -151,6 +151,26 @@ module.exports = {
       return error;
     }
   },
+  getELIKickCompList: async function () {
+
+    try {
+      const query = `select customer_id, service_type, cell_phone_limit from kickback_billable 
+
+       where  customer_id in ('00000036') and
+       deleted=false  order by  customer_id     `;
+
+      //where  deleted=false and customer_id in ('00001101','00001282') order by  customer_id     `;
+      const getKickCompListRes = await db.queryIBS(query, []);
+
+      if (getKickCompListRes.rows) {
+        return (getKickCompListRes.rows);
+      }
+      return { err: 'not found' };
+    } catch (error) {
+      console.log("err in get kick comp list =" + error.message);
+      return error;
+    }
+  },
   getKickCompCallsInfo: async function (customer_id, tableName) {
 
     console.log("get calls info of " + customer_id);
@@ -203,7 +223,77 @@ module.exports = {
     }
   },
 
+  getTargetCDRWithTableName: async function (tableName,kickCompany, service_type, year, month, _03_numbers_arr, isExceed, exceedLimitTime) {
 
+    let _03_numbers = '';
+    let query = "";
+
+    try {
+      for (let i = 0; i < _03_numbers_arr.length; i++) {
+        _03_numbers = _03_numbers + `'${_03_numbers_arr[i]['_03_numbers']}',`;
+      }
+      //remove last , from string
+      if (_03_numbers.substr(_03_numbers.length - 1) == ',') {
+        _03_numbers = _03_numbers.substring(0, _03_numbers.length - 1);
+      }
+      if (service_type == 'rate_base') {
+        query = `select count(*) as total_calls, sum(duration) as total_duration , term_ani 
+      from ${tableName} where term_ani in (${_03_numbers}) and duration>1 and call_status in (16, 31) group by term_ani order by term_ani  `;
+      } else {
+        if (isExceed || kickCompany == '00000697') {
+          let queryTermUse1 = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
+          from ${tableName} where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers 
+          from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=1 group by   company_code, carrier_code, term_carrier_id 
+          order by  company_code, carrier_code, term_carrier_id`;
+          let queryTermUse2 = "";
+
+          if (isExceed) {
+            queryTermUse2 = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
+            from ${tableName} where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
+             from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=2 and start_time<='${exceedLimitTime}' group by   company_code, carrier_code, term_carrier_id 
+            order by  company_code, carrier_code, term_carrier_id`;
+
+          } else {
+            queryTermUse2 = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
+            from ${tableName} where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
+             from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=2 group by   company_code, carrier_code, term_carrier_id 
+            order by  company_code, carrier_code, term_carrier_id`;
+
+          }
+          console.log("queryTermUse1==" + queryTermUse1);
+          console.log("queryTermUse2==" + queryTermUse2);
+
+          const termUse1Res = await db.queryIBS(queryTermUse1);
+          const termUse2Res = await db.queryIBS(queryTermUse2);
+          const combineData = await combineTwoArray(termUse1Res.rows, termUse2Res.rows);
+
+          console.log("combineData" + JSON.stringify(combineData));
+
+          if (kickCompany == '00000697') {
+            return { 'term_use1': termUse1Res.rows, 'term_use2': termUse2Res.rows };
+          }
+
+          return combineData;
+
+        } else {
+          query = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
+          from ${tableName} where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
+           from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) group by   company_code, carrier_code, term_carrier_id 
+          order by  company_code, carrier_code, term_carrier_id `;
+        }
+
+        //in_outbound, trunk_port_target, call_type from     billcdr_kickback_billuse where kick_company='${kickCompany}' `;
+      }
+
+      console.log("query==" + query);
+      const data = await db.queryIBS(query);
+
+      return data.rows;
+    } catch (error) {
+      console.log("error in get cdr data=" + error.message);
+      return error;
+    }
+  },
 
   getTargetCDR: async function (kickCompany, service_type, year, month, _03_numbers_arr, isExceed, exceedLimitTime) {
 
@@ -316,6 +406,46 @@ module.exports = {
       return error;
     }
   },
+
+  createDetailDataNew: async function (bill_no, customer_id, year, month, _03_numbers, data) {
+    console.log("details" + JSON.stringify(_03_numbers));
+
+    console.log("length=" + _03_numbers.length)
+    console.log("data len=" + data.length);
+
+    try {
+
+      for (let i = 0; i < _03_numbers.length; i++) {
+        let duration = 0;
+        let call_count = 0;
+        for (let j = 0; j < data.length; j++) {
+          if (_03_numbers[i]['_03_numbers'] == data[j]['term_ani']) {
+            duration = duration + parseFloat(data[j]['total_duration']);
+            call_count++;
+          }
+        }
+
+        //console.log("duration=="+duration);
+
+        if (duration > 0) {
+          duration = parseInt(duration / 60, 10);
+        }
+        let item_no = i + 1;
+
+        let query = `insert into kickback_detail_new (bill_no, item_no , item_name, call_minute, amount, remarks, date_update,
+          name_update, date_insert, name_insert, call_count) VALUES('${bill_no}', '${item_no}', '${_03_numbers[i]['_03_numbers']}', '${duration}', 0, '' ,'now()','', 'now()',
+           'system','${call_count}')`;
+        // console.log("query==" + query);
+        let insertBillingdetailsRes = await db.queryIBS(query, []);
+
+      }
+
+    } catch (error) {
+      console.log("Error---" + error.message);
+      return error;
+    }
+  },
+
   createDetailData: async function (bill_no, customer_id, year, month, _03_numbers, data) {
     console.log("details" + JSON.stringify(_03_numbers));
 
@@ -351,6 +481,63 @@ module.exports = {
 
     } catch (error) {
       console.log("Error---" + error.message);
+      return error;
+    }
+  },
+
+  createDetailDataFCNew: async function (bill_no, customer_id, year, month, ratesDetails, data, carrierInfo, service_type) {
+
+    let numerOfDays = new Date(year, month, 0).getDate();
+
+    console.log("details FC");
+    try {
+
+      let call_count = 0;
+      let duration = 0;
+      let amount = 0;
+      let billAmount = 0;
+      let tax = 0;
+
+      for (let i = 0; i < data.length; i++) {
+        let info = await getResInfo(data[i], ratesDetails, carrierInfo, month, service_type, i);
+        for (let ii = 0; ii < info.length; ii++) {
+
+          call_count = call_count + parseInt(info[ii]['call_count'], 10);
+          duration = duration + parseInt(info[ii]['call_sec'], 10);
+
+          amount = amount + (parseInt(info[ii]['amount'], 10));
+
+          let query = `insert into kickback_detail_irregular_new (bill_no,line_no, item_type , item_name, call_count, call_sec,rate,
+                amount, remarks, date_update, name_update, date_insert, name_insert) VALUES('${bill_no}', '${info[ii]['line_no']}', 
+                '${info[ii]['item_type']}', '${info[ii]['item_name']}',${info[ii]['call_count']}, ${info[ii]['call_sec']}, ${info[ii]['rate']} 
+                ,${info[ii]['amount']},'${info[ii]['remarks']}','now()','system', 'now()','system')`;
+
+          console.log("query==" + query);
+          let insertBillingdetailsRes = await db.queryIBS(query, []);
+        }
+      }
+
+      if (amount > 0) {
+        tax = amount * .1;
+        billAmount = amount + tax;
+      }
+
+      let query = `insert into kickback_history_new (bill_no , customer_code , date_bill , date_payment , bill_term_start , bill_term_end , bill_period ,
+        bill_minute , bill_rate , bill_amount , amount , tax , disc_amount , date_insert , name_insert , date_update , name_update , paid_flag ,
+         obic_flag, call_count) VALUES('${bill_no}', '${customer_id}', '${year}-${month}-01', '${year}-${month}-25','${year}-${month}-01', '${year}-${month}-${numerOfDays}',
+         '1' ,'${duration}',0,'${billAmount}','${amount}','${tax}','0','now()','System','now()','System',
+        '0','0','${call_count}')`;
+      console.log("query==" + query);
+
+      let insertHisDataFC = await db.queryIBS(query, []);
+
+
+
+
+
+
+    } catch (error) {
+      console.log("Error in result ---" + error.message);
       return error;
     }
   },
@@ -408,6 +595,53 @@ module.exports = {
 
     } catch (error) {
       console.log("Error in result ---" + error.message);
+      return error;
+    }
+  },
+
+  createSummaryData_New: async function (bill_no, customer_id, year, month, ratesInfo, data) {
+    console.log("summary" + JSON.stringify(ratesInfo));
+
+    console.log(ratesInfo[0]['minute_rate']);
+    let numerOfDays = new Date(year, month, 0).getDate();
+
+    try {
+
+      let duration = 0;
+      let call_count = 0;
+
+      for (let j = 0; j < data.length; j++) {
+        let tmp = parseInt(data[j]['total_duration'], 10);
+        if (tmp > 0) {
+          duration = duration + parseInt(tmp / 60, 10)
+        }
+        //duration = duration + parseInt(data[j]['total_duration']);
+        call_count++;
+      }
+
+      // if (duration > 0) {
+      //   duration = parseInt(duration/60);
+      // }
+
+      let amount = duration * ratesInfo[0]['minute_rate'];
+      let tax = amount * .1;
+      let billAmount = amount + tax;
+      let discAmount = 0;
+
+
+
+      let query = `insert into kickback_history_new (bill_no , customer_code , date_bill , date_payment , bill_term_start , bill_term_end , bill_period ,
+           bill_minute , bill_rate , bill_amount , amount , tax , disc_amount , date_insert , name_insert , date_update , name_update , paid_flag ,
+            obic_flag, call_count) VALUES('${bill_no}', '${ratesInfo[0]['customer_id']}', '${year}-${month}-01', '${year}-${month}-25','${year}-${month}-01', '${year}-${month}-${numerOfDays}',
+            '1' ,'${duration}','${ratesInfo[0]['minute_rate']}','${billAmount}','${amount}','${tax}','${discAmount}','now()','System','now()','System',
+           '0','0','${call_count}')`;
+      console.log("query==" + query);
+      let insertBillingdetailsRes = await db.queryIBS(query, []);
+
+
+
+    } catch (error) {
+      console.log("Error---" + error.message);
       return error;
     }
   },
