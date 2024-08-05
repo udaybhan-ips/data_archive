@@ -97,7 +97,7 @@ module.exports = {
     console.log("Here!");
     try {
       const query = `select *, CALLDURATION*0.01 AS DURATION from cdr where  start_time>='${targetDate}' and  
-      start_time < DATE_ADD("${targetDate}", INTERVAL 30 DAY) and ingr_pstn_trunk_name ='INNET00'     `;
+      start_time < DATE_ADD("${targetDate}", INTERVAL 1 DAY) and ingr_pstn_trunk_name ='INNET00'     `;
       //const query = `select * from cdr where start_time>='${targetDate}' and  start_time < DATE_ADD("${targetDate}", INTERVAL 1 DAY) ` ;
 
       //STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)
@@ -182,7 +182,9 @@ module.exports = {
          calling_number varchar, called_number varchar, ingr_pstn_trunk_name varchar, calling_name varchar, orig_ioi varchar, 
          term_ioi varchar, calling_type varchar, called_type varchar, date_added timestamp without time zone, 
          duration_use varchar, sonus_duration varchar, company_code varchar, term_carrier_id varchar, orig_carrier_id varchar, 
-         cpc varchar )`;
+         cpc varchar, kickcompany varchar )`;
+
+         console.log("table creation"+query)
 
       const tableCreationRes = db.queryIBS(query, []);
       if (tableCreationRes) {

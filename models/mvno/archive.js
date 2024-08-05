@@ -126,7 +126,7 @@ module.exports = {
         authcode ,  billableseconds ,  billdate ,  billedseconds ,  billedsecondsdisplay ,  billingclass ,   callcharge ,  calldirection ,  
         callstatuscode ,  calltypecode ,  connectseconds ,  custaccountcode ,   custcode ,  custid ,  custserviceid ,  discountamount , 
         dnis ,  origani , termani , outportgroupnumber , termcountrydesc , stoptime ,   starttime , inseizetime 
-        FROM CALL WITH(NOLOCK) WHERE starttime BETWEEN '${targetDateWithTimezone}' and  DATEADD(day, 30, '${targetDateWithTimezone}') AND 
+        FROM CALL WITH(NOLOCK) WHERE starttime BETWEEN '${targetDateWithTimezone}' and  DATEADD(day, 1, '${targetDateWithTimezone}') AND 
         (calldirection = 'O') AND (connectseconds > 0) ORDER BY starttime `;
       //console.log("query="+query);
       const data = await db.msSQLServer(query);

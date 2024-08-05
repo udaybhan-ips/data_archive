@@ -93,6 +93,20 @@ module.exports = {
     }
   },
 
+  getBillNoInfoNew: async function () {
+    try {
+      const query = `select max(bill_no) as max_bill_no from kickback_history_new `;
+      const billNoRes = await db.queryIBS(query, []);
+      if (billNoRes.rows) {
+        return { 'max_bill_no': (billNoRes.rows[0].max_bill_no) };
+      }
+      return { err: 'not found' };
+    } catch (error) {
+      console.log("err in bill no info =" + error.message);
+      return error;
+    }
+  },
+
   get03Numbers: async function (customer_id) {
     try {
       const query = `select substring(_03_numbers, 2, 10) as _03_numbers, customer_cd from _03numbers 
@@ -156,7 +170,8 @@ module.exports = {
     try {
       const query = `select customer_id, service_type, cell_phone_limit from kickback_billable 
 
-       where  customer_id in ('00000036') and
+       where  customer_id in ('00000036','00000338','00000677','00000676','00000683','00000694','00000695','00000697',
+       '00000720','00000873','00001101') and
        deleted=false  order by  customer_id     `;
 
       //where  deleted=false and customer_id in ('00001101','00001282') order by  customer_id     `;
@@ -168,6 +183,25 @@ module.exports = {
       return { err: 'not found' };
     } catch (error) {
       console.log("err in get kick comp list =" + error.message);
+      return error;
+    }
+  },
+
+  getKickCompCallsInfoNew: async function (customer_id, tableName) {
+
+    console.log("get calls info of " + customer_id);
+
+    try {
+      const query = `select count(*) as total, sum(callduration::numeric)/60 as total_duration ,kickcompany from ${tableName} 
+      where kickcompany='${customer_id}' group by kickcompany`;
+      const getKickCompCallsInfoRes = await db.queryIBS(query, []);
+
+      if (getKickCompCallsInfoRes.rows) {
+        return (getKickCompCallsInfoRes.rows);
+      }
+      return { err: 'not found' };
+    } catch (error) {
+      console.log("err in get kick comp calls info =" + error.message);
       return error;
     }
   },
@@ -222,6 +256,24 @@ module.exports = {
       return error;
     }
   },
+  getTargetDateByTermUseNew: async function (customerInfo, tableName) {
+    const limitSec = parseInt(customerInfo.cell_phone_limit, 10) * 60;
+    try {
+      const query = ` select max(start_time) as limit_date_time, sum(callduration::numeric) as total_duration, count(*) from (select start_time, callduration,  sum(callduration::numeric) 
+      OVER (order by start_time asc) as cum_sum from ${tableName} where kickcompany='${customerInfo.customer_id}' and term_use=2 ) as t
+       where cum_sum <= ${limitSec}`;
+      console.log(query);
+      const targetDateByTermUseRes = await db.queryIBS(query, []);
+      //console.log(targetDateRes);
+      if (targetDateByTermUseRes.rows) {
+        return { 'isExceed': true, 'limit_date_time': (targetDateByTermUseRes.rows[0].limit_date_time), 'customer_id': (customerInfo.customer_id) };
+      }
+      return { err: 'not found' };
+    } catch (error) {
+      console.log("err in get target cdr =" + error.message);
+      return error;
+    }
+  },
 
   getTargetCDRWithTableName: async function (tableName,kickCompany, service_type, year, month, _03_numbers_arr, isExceed, exceedLimitTime) {
 
@@ -229,18 +281,12 @@ module.exports = {
     let query = "";
 
     try {
-      for (let i = 0; i < _03_numbers_arr.length; i++) {
-        _03_numbers = _03_numbers + `'${_03_numbers_arr[i]['_03_numbers']}',`;
-      }
-      //remove last , from string
-      if (_03_numbers.substr(_03_numbers.length - 1) == ',') {
-        _03_numbers = _03_numbers.substring(0, _03_numbers.length - 1);
-      }
+      
       if (service_type == 'rate_base') {
         query = `select count(*) as total_calls, sum(duration) as total_duration , term_ani 
       from ${tableName} where term_ani in (${_03_numbers}) and duration>1 and call_status in (16, 31) group by term_ani order by term_ani  `;
       } else {
-        if (isExceed || kickCompany == '00000697') {
+        if (isExceed ) {
           let queryTermUse1 = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
           from ${tableName} where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers 
           from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=1 group by   company_code, carrier_code, term_carrier_id 
@@ -276,10 +322,19 @@ module.exports = {
           return combineData;
 
         } else {
-          query = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
-          from ${tableName} where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
-           from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) group by   company_code, carrier_code, term_carrier_id 
-          order by  company_code, carrier_code, term_carrier_id `;
+
+             
+	  // select count(*) as total_calls, sum(callduration::numeric) as total_duration , company_code, orig_carrier_id as carrier_code, term_carrier_id 
+    // from cdr_202406_new where callduration::numeric>1 and called_number in (select substring(_03_numbers, 2, 10) as _03_numbers
+    //  from _03numbers where customer_cd='00000677' and valid_flag = 0) group by   company_code, orig_carrier_id, term_carrier_id 
+     // order by  company_code, orig_carrier_id, term_carrier_id 
+
+          query = `select count(*) as total_calls, sum(callduration::numeric) as total_duration , company_code, orig_ioi as carrier_code, orig_ioi, 
+          case when term_carrier_id='5039' then '0ABJ' else '050IP' end as term_carrier_id 
+          from ${tableName} where callduration::numeric>1 and cpc!='test' and called_number in (select substring(_03_numbers, 2, 10) as _03_numbers
+          from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) group by   company_code, orig_ioi, orig_ioi, 
+          case when term_carrier_id='5039' then '0ABJ' else '050IP' end
+          order by  company_code, orig_ioi, orig_ioi, case when term_carrier_id='5039' then '0ABJ' else '050IP' end `;
         }
 
         //in_outbound, trunk_port_target, call_type from     billcdr_kickback_billuse where kick_company='${kickCompany}' `;
@@ -310,24 +365,24 @@ module.exports = {
       }
       if (service_type == 'rate_base') {
         query = `select count(*) as total_calls, sum(duration) as total_duration , term_ani 
-      from billcdr_${year}${month} where term_ani in (${_03_numbers}) and duration>1 and call_status in (16, 31) group by term_ani order by term_ani  `;
+      from billcdr_${year}${month} where company_code !='9999999999' and term_ani in (${_03_numbers}) and duration>1 and call_status in (16, 31) group by term_ani order by term_ani  `;
       } else {
         if (isExceed || kickCompany == '00000697') {
           let queryTermUse1 = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
-          from billcdr_${year}${month} where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers 
+          from billcdr_${year}${month} where company_code !='9999999999' and duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers 
           from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=1 group by   company_code, carrier_code, term_carrier_id 
           order by  company_code, carrier_code, term_carrier_id`;
           let queryTermUse2 = "";
 
           if (isExceed) {
             queryTermUse2 = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
-            from billcdr_${year}${month} where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
+            from billcdr_${year}${month} where company_code !='9999999999' and duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
              from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=2 and start_time<='${exceedLimitTime}' group by   company_code, carrier_code, term_carrier_id 
             order by  company_code, carrier_code, term_carrier_id`;
 
           } else {
             queryTermUse2 = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
-            from billcdr_${year}${month} where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
+            from billcdr_${year}${month} where company_code !='9999999999' and duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
              from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) and term_use=2 group by   company_code, carrier_code, term_carrier_id 
             order by  company_code, carrier_code, term_carrier_id`;
 
@@ -349,7 +404,7 @@ module.exports = {
 
         } else {
           query = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
-          from billcdr_${year}${month} where duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
+          from billcdr_${year}${month} where company_code !='9999999999' and duration>1 and call_status in (16, 31) and term_ani in (select substring(_03_numbers, 2, 10) as _03_numbers
            from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) group by   company_code, carrier_code, term_carrier_id 
           order by  company_code, carrier_code, term_carrier_id `;
         }
@@ -719,6 +774,42 @@ module.exports = {
     return resArr;
 
   },
+
+  genrateInvoiceNew: async function (customerId, serviceType, billingYear, billingMonth, currentMonth, term_use, bill_no) {
+    try {
+
+      const invoiceData = await getInvoiceDataNew(customerId, serviceType, billingYear, billingMonth, term_use, bill_no);
+      const customerAddress = await getCustomerInfo(customerId);
+
+      let path;
+      if (customerId == 'NA' || customerId == 'NA') {
+        path = __dirname + `\\Invoice\\10${customerId}_${customerAddress[0]['customer_name']}${billingYear}${billingMonth}${bill_no}_ipdata.pdf`;
+      } else {
+        path = __dirname + `\\Invoice\\10${customerId}_${customerAddress[0]['customer_name']}${billingYear}${billingMonth}_ipdata.pdf`;
+      }
+
+      let totalCallAmount = 0;
+      let totalCallDuration = 0;
+      let invoiceNo;
+      invoiceData.map(obj => {
+        if (serviceType == 'rate_base') {
+          totalCallAmount = parseInt(obj.total_amount);
+          totalCallDuration = totalCallDuration + parseInt(obj.call_minute);
+          invoiceNo = obj.bill_no;
+        } else {
+          totalCallAmount = totalCallAmount + parseInt(obj.amount);
+          totalCallDuration = totalCallDuration + parseInt(obj.call_sec);
+          invoiceNo = obj.bill_no;
+        }
+
+      });
+      await createInvoice(customerId, serviceType, billingYear, billingMonth, invoiceData, path, totalCallAmount, currentMonth, customerAddress, totalCallDuration, invoiceNo);
+      console.log("Done...")
+    } catch (err) {
+      console.log("error...." + err.message);
+    }
+
+  },
   genrateInvoice: async function (customerId, serviceType, billingYear, billingMonth, currentMonth, term_use, bill_no) {
     try {
 
@@ -1006,6 +1097,50 @@ async function getInvoiceData(customerId, serviceType, year, month, term_use, bi
   }
 }
 
+async function getInvoiceDataNew(customerId, serviceType, year, month, term_use, bill_no) {
+  try {
+    let query = "";
+    if (serviceType == 'rate_base') {
+
+      if (customerId == '00000893') {
+        query = `select * from (select bill_no, item_name, call_minute from kickback_detail where call_minute>0)as lj join 
+    (select bill_no, customer_code, date_bill , amount as total_amount from kickback_history 
+      where customer_code='${customerId}' and bill_no='${bill_no}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}' ) as rj
+       on (lj.bill_no=rj.bill_no) order by lj.item_name` ;
+      } else {
+        query = `select * from (select bill_no, item_name, call_minute from kickback_detail where call_minute>0)as lj join 
+        (select bill_no, customer_code, date_bill , amount as total_amount from kickback_history 
+          where customer_code='${customerId}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}' ) as rj
+           on (lj.bill_no=rj.bill_no) order by lj.item_name` ;
+      }
+
+
+    } else {
+      if (customerId == 'NA') {
+        query = ` select * from (select bill_no, item_name, call_count, rate, remarks, amount, line_no from kickback_detail_irregular 
+          where   amount::int!=0 and  bill_no='${bill_no}')as lj join 
+        (select bill_no, customer_code, date_bill  from kickback_history 
+        where customer_code='${customerId}' and bill_no='${bill_no}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}') as rj
+         on (lj.bill_no=rj.bill_no) order by lj.line_no`  ;
+      } else {
+        query = ` select * from (select bill_no, item_name, call_count, rate, remarks, amount, line_no from kickback_detail_irregular_new 
+        where   amount::int!=0)as lj join 
+      (select bill_no, customer_code, date_bill  from kickback_history_new 
+      where customer_code='${customerId}'   and to_char(date_bill, 'MM-YYYY') =  '${month}-${year}') as rj
+       on (lj.bill_no=rj.bill_no) order by lj.line_no`  ;
+      }
+    }
+
+    const ratesRes = await db.queryIBS(query, []);
+
+    if (ratesRes.rows) {
+      return (ratesRes.rows);
+    }
+
+  } catch (error) {
+    return error;
+  }
+}
 
 
 

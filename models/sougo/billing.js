@@ -695,6 +695,16 @@ async function getPaymentPlanDueDate(date, mode){
 
       let {actualDayValue, actualbillingDueMonth} = await getValidDate(billingDueYear, billingDueMonth, billingDueDay, getHolidays);
 
+
+      console.log("billingDueYear"+billingDueYear)
+
+      console.log("billingDueMonth----"+billingDueMonth)
+
+      console.log("billingDueDay"+billingDueDay)
+
+      console.log("actualDayValue----"+actualDayValue)
+
+
       actualDayValue = actualDayValue.toString().padStart(2, '0') ;
       actualbillingDueMonth = actualbillingDueMonth.toString().padStart(2, '0') ;
 
@@ -719,13 +729,19 @@ async function getValidDate(billingDueYear, billingDueMonth, billingDueDay, getH
     return billingDueDay;
   }
 
+  let count = 0
+
   async function callRec(billingDueYear, billingDueMonth, actualBillingMonth, actualDayValue, getHolidays) {
     let counter = 0 ;
+
+    console.log("actualDayValue is"+actualDayValue)
+
     const checkIfWeekend = await common.checkIfWeekend(billingDueYear, actualBillingMonth, actualDayValue);
     const checkIfHoilday = await common.checkIfHoilday(billingDueYear, billingDueMonth, actualDayValue, getHolidays);
     if (checkIfWeekend || checkIfHoilday) {
-      actualDayValue = actualDayValue + 1;
+      actualDayValue = count + 1;
       counter = 1
+      count ++ ;
       if(counter == 1 && tmpbillingDueMonth == billingDueMonth && tmpactualBillingMonth == actualBillingMonth ){
         billingDueMonth = billingDueMonth+1
         actualBillingMonth = actualBillingMonth + 1
