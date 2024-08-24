@@ -97,7 +97,7 @@ module.exports = {
     console.log("Here!");
     try {
       const query = `select *, CALLDURATION*0.01 AS DURATION from cdr where  start_time>='${targetDate}' and  
-      start_time < DATE_ADD("${targetDate}", INTERVAL 1 DAY) and ingr_pstn_trunk_name ='INNET00'     `;
+      start_time < DATE_ADD("${targetDate}", INTERVAL 31 DAY) and ingr_pstn_trunk_name ='INNET00'     `;
       //const query = `select * from cdr where start_time>='${targetDate}' and  start_time < DATE_ADD("${targetDate}", INTERVAL 1 DAY) ` ;
 
       //STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)
@@ -961,9 +961,20 @@ async function getCompanyCodeNew(origIOI) {
     } else if (origIOI.includes("IEEE")) {
       origCarrierId = "2276";
     }
-  } else if (origIOI.includes("ims.mnc011.mcc440.3gppnetwork.org")) {
+  } else if (origIOI.includes("mnc010.mcc440.3gppnetwork.org")) {
     companyCode = "1011000069";
-    origCarrierId = "0201";
+    
+
+    if (origIOI.includes("IP-Phone")) {
+      origCarrierId = "5025";
+    } else if (origIOI.includes("IEEE")) {
+      origCarrierId = "5025";
+    }else if(origIOI.includes("SAT-Type")){
+      origCarrierId = "0203";
+    }else{
+      origCarrierId = "0201";
+    }
+
   } else if (origIOI.includes("voip.oedotele.com")) {
     companyCode = "1011000070";
 
@@ -991,6 +1002,22 @@ async function getCompanyCodeNew(origIOI) {
       origCarrierId = "5005";
     } else if (origIOI.includes("IEEE")) {
       origCarrierId = "5015";
+    }
+  }else if (origIOI.includes("iptel.ctc.jp")) {
+    companyCode = "1011000075";
+
+    if (origIOI.includes("IP-Phone")) {
+      origCarrierId = "5002";
+    } else if (origIOI.includes("IEEE")) {
+      origCarrierId = "5022";
+    }
+  }else if (origIOI.includes("qtnet.ne.jp")) {
+    companyCode = "1011000076";
+
+    if (origIOI.includes("IP-Phone")) {
+      origCarrierId = "5014";
+    } else if (origIOI.includes("IEEE")) {
+      origCarrierId = "5018";
     }
   }
 

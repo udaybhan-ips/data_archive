@@ -86,7 +86,7 @@ module.exports = {
       console.log("in get all comp code");
       
       let query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
-      where company_code  in  ('1011000065', '1011000074')  order by company_code `;
+      where company_code  in  ('1011000075','1011000076')  order by company_code `;
 
       // query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
       // where company_code ='1011000058'

@@ -150,7 +150,7 @@ module.exports = {
     try {
       const query = `select customer_id, service_type, cell_phone_limit from kickback_billable 
 
-       where 
+       where customer_id in ('00001466') and
        deleted=false  order by  customer_id     `;
 
       //where  deleted=false and customer_id in ('00001101','00001282') order by  customer_id     `;
@@ -365,7 +365,7 @@ module.exports = {
       }
       if (service_type == 'rate_base') {
         query = `select count(*) as total_calls, sum(duration) as total_duration , term_ani 
-      from billcdr_${year}${month} where company_code !='9999999999' and term_ani in (${_03_numbers}) and duration>1 and call_status in (16, 31) group by term_ani order by term_ani  `;
+      from billcdr_${year}${month} where  term_ani in (${_03_numbers}) and duration>1 and call_status in (16, 31) group by term_ani order by term_ani  `;
       } else {
         if (isExceed || kickCompany == '00000697') {
           let queryTermUse1 = `select count(*) as total_calls, sum(duration) as total_duration , company_code, carrier_code, term_carrier_id 
