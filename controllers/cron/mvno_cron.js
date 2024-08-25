@@ -5,7 +5,7 @@ var BillingController = require('../mvno/billing.controller');
 var CDRController = require('../mvno/cdr.controller');
 
 
-// var archiverJobSonusOut = new CronJob ('9 10 * * *',function(){
+// var archiverJobSonusOut = new CronJob ('19 15 * * *',function(){
 //     console.log('You will see this message every second');
 //     archiveController.getData();
 //     console.log('You will see this message every second');
