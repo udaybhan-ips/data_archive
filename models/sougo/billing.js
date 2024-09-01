@@ -24,6 +24,24 @@ module.exports = {
       return error;
     }
   },
+  getIPRates: async function () {
+    try {
+      const query = `select id, host_name, company_code, typeof_call, rate_setup, rate_trunk_port,
+       rate_second from ipdata_rate where deleted = false`;
+      const ratesIPRes = await db.queryIBS(query, []);
+
+      // console.log("ratesRes="+JSON.stringify(ratesRes.rows));
+
+      if (ratesIPRes.rows) {
+        // console.log("if")
+        return (ratesIPRes.rows);
+      }
+      return { err: 'not found' };
+    } catch (error) {
+      console.log("err in get rates =" + error.message);
+      return error;
+    }
+  },
   getCarrierInfo: async function () {
     try {
       const query = `select carrier_code, term_carrier_code, carrier_name, company_code from carrier where deleted = false`;
@@ -86,7 +104,7 @@ module.exports = {
       console.log("in get all comp code");
       
       let query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
-      where company_code  in  ('1011000075','1011000076')  order by company_code `;
+      where company_code  in  ('1011000056')  order by company_code `;
 
       // query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
       // where company_code ='1011000058'
@@ -133,6 +151,27 @@ module.exports = {
     }
   },
 
+
+  getNewIPDataTargetCDR: async function (company_code, year, month) {
+
+    try {
+      query = `select count(*) as total_calls,  trunc(sum(duration_use::numeric), 0) as total_duration , 
+       orig_ioi ,  term_ioi from 
+      cdr_${year}${month}_new 
+      where  company_code='${company_code}' and cpc!='test'
+     
+      group by orig_ioi ,term_ioi
+      order by term_ioi, term_ioi `;
+
+      console.log("query==" + query);
+      const data = await db.queryIBS(query);
+
+      return data.rows;
+    } catch (error) {
+      console.log("error in get cdr data=" + error.message);
+      return error;
+    }
+  },
   getNewDataTargetCDR: async function (company_code, year, month) {
 
     try {
@@ -193,6 +232,55 @@ module.exports = {
       }
 
       let query = `insert into bill_history (bill_no , company_code , date_bill , date_payment , bill_term_start , bill_term_end , bill_period ,
+         amount , tax ,print_flag , date_insert , name_insert , date_update , name_update , bill_include ,call_count) VALUES('${bill_no}', '${company_code}', '${year}-${month}-01', '${year}-${month}-25','${year}-${month}-01', '${year}-${month}-${numerOfDays}',
+         '1' ,'${amount}','${tax}','0','now()','System','now()','System', '0','${call_count}')`;
+      //console.log("query==" + query);
+
+      await db.queryIBS(query, []);
+    } catch (error) {
+      console.log("Error in result ---" + error.message);
+      return error;
+    }
+  },
+
+  createNewIPDetailData: async function (bill_no, company_code, year, month, ratesIPDetails, data) {
+    console.log("details ");
+    let numerOfDays = new Date(year, month , 0). getDate();
+    try {
+
+      let call_count = 0;
+      let duration = 0;
+      let amount = 0;
+      let billAmount = 0;
+      let tax = 0;
+
+
+      for (let i = 0; i < data.length; i++) {
+        let info = await getResInfoNewIPData(data[i], company_code, ratesIPDetails, month, i);
+
+        for (let ii = 0; ii < info.length; ii++) {
+
+          call_count = call_count + parseInt(info[ii]['call_count'], 10);
+          duration = duration + parseInt(info[ii]['call_sec'], 10);
+          if (parseInt(info[ii]['amount'], 10) >= 1) {
+            amount = amount + parseInt(info[ii]['amount'], 10);
+          }
+          let query = `insert into bill_detail_new (bill_no,line_no, item_type , item_name, call_count, call_sec,rate,
+                amount, remarks, date_update, name_update, date_insert, name_insert) VALUES('${bill_no}', '${info[ii]['line_no']}', 
+                '${info[ii]['item_type']}', '${info[ii]['item_name']}',${info[ii]['call_count']}, ${info[ii]['call_sec']}, ${info[ii]['rate']} 
+                ,${info[ii]['amount']},'${info[ii]['remarks']}','now()','system', 'now()','system')`;
+
+          //console.log("query==" + query);
+          await db.queryIBS(query, []);
+        }
+      }
+
+      if (amount > 0) {
+        tax = amount * .1; // 10% tax
+        billAmount = amount + tax;
+      }
+
+      let query = `insert into bill_history_new (bill_no , company_code , date_bill , date_payment , bill_term_start , bill_term_end , bill_period ,
          amount , tax ,print_flag , date_insert , name_insert , date_update , name_update , bill_include ,call_count) VALUES('${bill_no}', '${company_code}', '${year}-${month}-01', '${year}-${month}-25','${year}-${month}-01', '${year}-${month}-${numerOfDays}',
          '1' ,'${amount}','${tax}','0','now()','System','now()','System', '0','${call_count}')`;
       //console.log("query==" + query);
@@ -383,6 +471,105 @@ async function getResInfo(data, company_code, ratesInfo, carrierInfo, billingMon
   return res;
 }
 
+async function getResInfoNewIPData (data, company_code, ratesIPInfo, billingMonth, lineCounter) {
+
+  console.log("company_code==" + company_code);
+  console.log("carrier_code==" + data['orig_ioi']);
+  console.log("term_carrier_id==" + data['term_ioi']);
+
+
+  let res = [], case1 = {}, case2 = {}, case3 = {}, case4 = {}, case5 = {}, case6 = {};
+  try {
+
+    const newOicName = data['term_ioi'].includes('IEEE') ? '0ABJ' : '050IP' ;
+
+    let IPTest2 = "" ;
+    if(data['term_ioi']){
+      IPTest2Arr = data['term_ioi'].split("-")
+      IPTest2= IPTest2Arr[0];
+    }
+
+
+    const rate = await getSougoRatesIPData(ratesIPInfo, data['orig_ioi'], company_code, newOicName);
+
+    const IPText = data['orig_ioi'].includes('GSTN')  ? '（メタルIP）' : '' ;
+    const IPTest1Arr =  data['orig_ioi'].split(".");
+
+
+    case1['call_count'] = data['total_calls'];
+    case1['line_no'] = lineCounter * 6 + 1;
+    case1['item_type'] = 1;
+    case1['item_name'] = IPTest1Arr[0] + '-' + IPText + "発信分 通話回数（国内）";
+    case1['call_sec'] = data['total_calls'];
+    case1['amount'] = data['total_calls'] * rate['rate_setup'];
+    case1['rate'] = rate['rate_setup'];
+    case1['remarks'] = newOicName + "着信 " + billingMonth + "月分";
+
+    case2['call_count'] = 0;
+    case2['line_no'] = lineCounter * 6 + 2;
+    case2['item_type'] = 2;
+    case2['item_name'] =IPTest1Arr[0] + '-'  + IPText + "発信分 通話秒数（国内）";
+    case2['call_sec'] = data['total_duration'];
+    case2['amount'] = data['total_duration'] * rate['rate_sec'];
+    case2['rate'] = rate['rate_sec'];
+    case2['remarks'] = newOicName + "着信 " + billingMonth + "月分";
+
+
+    case3['call_count'] = data['total_duration'];
+    case3['line_no'] = lineCounter * 6 + 3;
+    case3['item_type'] = 3;
+    case3['item_name'] =IPTest1Arr[0] + '-'   + "発信分 ﾄﾗﾝｸﾎﾟｰﾄ接続料（国内）";
+    case3['call_sec'] = data['total_duration'];
+    case3['amount'] = rate['rate_trunk_port'] * data['total_duration'];
+    case3['rate'] = rate['rate_trunk_port'];
+    case3['remarks'] = IPTest2 + "着信 " + billingMonth + "月分";
+
+    case4['call_count'] = 0;
+    case4['line_no'] = lineCounter * 6 + 4;
+    case4['item_type'] = 1;
+    case4['item_name'] = IPTest1Arr[0] + '-'  + "発信分 通話回数（国際）"
+    case4['call_sec'] = 0;
+    case4['amount'] = 0 * rate['rate_setup'];
+    case4['rate'] = rate['rate_setup'];
+    case4['remarks'] = newOicName + "着信" + billingMonth + "月分";
+
+    case5['call_count'] = 0;
+    case5['line_no'] = lineCounter * 6 + 5;
+    case5['item_type'] = 2;
+    case5['item_name'] =IPTest1Arr[0] + '-'  + "発信分 通話秒数（国際）";
+    case5['call_sec'] = 0;
+    case5['amount'] = 0 * rate['rate_sec'];
+    case5['rate'] = rate['rate_sec'];
+    case5['remarks'] = newOicName + "着信" + billingMonth + "月分";
+
+
+    case6['call_count'] = 0;
+    case6['line_no'] = lineCounter * 6 + 6;
+    case6['item_type'] = 3;
+    case6['item_name'] =IPTest1Arr[0] + '-' + "発信分 ﾄﾗﾝｸﾎﾟｰﾄ接続料（国際）";
+    case6['call_sec'] = 0;
+    case6['amount'] = 0;
+    case6['rate'] = rate['rate_trunk_port'];
+    case6['remarks'] = newOicName + "着信" + billingMonth + "月分";
+
+
+    res.push(case1);
+    res.push(case2);
+    res.push(case3);
+    res.push(case4);
+    res.push(case5);
+    res.push(case6);
+
+
+
+
+  } catch (err) {
+    console.log("error in get res..." + err.message);
+  }
+
+  return res;
+}
+
 async function getResInfoNew (data, company_code, ratesInfo, carrierInfo, billingMonth, lineCounter) {
 
   console.log("company_code==" + company_code);
@@ -491,6 +678,41 @@ async function getCarrierName(data, carrier_code) {
   return "";
 }
 
+async function getSougoRatesIPData(data, carrier_ioi, company_code, term_ioi) {
+  let res = {};
+
+  try{
+    let tmpData = data.filter((obj) => {
+      if (obj['company_code'] == company_code && obj['host_name'].toLowerCase().trim() == carrier_ioi.toLowerCase() )
+        return true;
+    });
+  
+    if(tmpData.length==0){
+      console.log("Rate is not register")
+      throw new Error("Rate is not register")
+    }else if(tmpData.length==1) {
+      res['rate_setup'] = tmpData[0]['rate_setup'];
+      res['rate_sec'] = tmpData[0]['rate_second'];
+      res['rate_trunk_port'] = tmpData[0]['rate_trunk_port'];
+      return res;
+    }else{
+      for(let i=0; i< tmpData.length; i++){
+        if(data['typeof_call'] == term_ioi ){
+         
+          res['rate_setup'] = tmpData[i]['rate_setup'];
+          res['rate_sec'] = tmpData[i]['rate_second'];
+          res['rate_trunk_port'] = tmpData[i]['rate_trunk_port'];
+          return res;
+        }
+      }
+    }
+  
+  return res;
+  }catch(e){
+    console.log("Error in getting ip data rates..."+ e.message);
+  }
+  
+}
 
 
 async function getSougoRates(data, carrier_code, company_code, term_carrier_code) {

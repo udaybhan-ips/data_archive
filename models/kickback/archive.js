@@ -97,7 +97,8 @@ module.exports = {
     console.log("Here!");
     try {
       const query = `select *, CALLDURATION*0.01 AS DURATION from cdr where  start_time>='${targetDate}' and  
-      start_time < DATE_ADD("${targetDate}", INTERVAL 31 DAY) and ingr_pstn_trunk_name ='INNET00'     `;
+      start_time < DATE_ADD("${targetDate}", INTERVAL 31 DAY) and ingr_pstn_trunk_name ='INNET00' and 
+      disconnect_time!='0000-00-00 00:00:00.00'    `;
       //const query = `select * from cdr where start_time>='${targetDate}' and  start_time < DATE_ADD("${targetDate}", INTERVAL 1 DAY) ` ;
 
       //STARTTIME >= '${targetDateWithTimezone}' and startTime < DATE_ADD("${targetDateWithTimezone}", INTERVAL 1 DAY)
@@ -344,7 +345,8 @@ module.exports = {
     carrierInfo,
     companyInfo,
     __type,
-    tableName
+    tableName,
+    getKicIPDataInfoRes
   ) {
     const chunkArray = chunk(records, BATCH_SIZE);
 
@@ -371,7 +373,7 @@ module.exports = {
 
       for (let i = 0; i < chunkArray.length; i++) {
         if (__type == "new_migration_data") {
-          const data = await getNextInsertBatchNew(chunkArray[i], carrierInfo, "");
+          const data = await getNextInsertBatchNew(chunkArray[i], carrierInfo, getKicIPDataInfoRes);
           res = await db.queryBatchInsert(data, "ibs", ColumnSetValue);
         } else if (__type == "raw_cdr") {
           const data = await getNextInsertBatch(
@@ -482,6 +484,25 @@ module.exports = {
       if (getCompanyCodeInfoRes.rows) {
         return getCompanyCodeInfoRes.rows;
       }
+    } catch (error) {
+      console.log("error in get company info query" + error.message);
+      return error;
+    }
+  },
+  
+  getKicIPDataInfo: async function () {
+    try {
+      const query = `select id, host_name, company_code, typeof_call, rate_setup, rate_trunk_port,
+       rate_second from ipdata_rate where deleted = false`;
+      const ratesIPRes = await db.queryIBS(query, []);
+
+      // console.log("ratesRes="+JSON.stringify(ratesRes.rows));
+
+      if (ratesIPRes.rows) {
+        // console.log("if")
+        return (ratesIPRes.rows);
+      }
+      return { err: 'not found' };
     } catch (error) {
       console.log("error in get company info query" + error.message);
       return error;
@@ -794,7 +815,7 @@ async function getNextInsertBatch(
   return valueArray;
 }
 
-async function getNextInsertBatchNew(data, companyInfo) {
+async function getNextInsertBatchNew(data, companyInfo, getKicIPDataInfoRes) {
   const dataLen = data.length;
   console.log("data preapering for new sonus data ");
   let valueArray = [];
@@ -826,9 +847,15 @@ async function getNextInsertBatchNew(data, companyInfo) {
         console.log("data[i]['START_TIME']" + data[i]["START_TIME"]);
       }
 
-      const { companyCode, origCarrierId } = await getCompanyCodeNew(
+      const { companyCode } = await getCompanyCodeNew(
+        data[i]["ORIG_IOI"], getKicIPDataInfoRes
+      );
+
+
+      const { origCarrierId } = await getCarrierCodeIP(
         data[i]["ORIG_IOI"]
       );
+
       const termCarrierId = await getTermCarrierId(data[i]["CALLED_NUMBER"]);
 
       let obj = {};
@@ -877,38 +904,60 @@ async function getNextInsertBatchNew(data, companyInfo) {
   return valueArray;
 }
 
-async function getCompanyCodeNew(origIOI) {
-  let companyCode = "9999999999",
-    origCarrierId = "";
+async function getCompanyCodeNew(origIOI, getKicIPDataInfoRes) {
+
+  let companyCode = "9999999999";
+
+
+  try{
+    for(let i = 0; i<getKicIPDataInfoRes.length; i++){
+      if(getKicIPDataInfoRes[i]['host_name'].toLowerCase().trim()==origIOI.toLowerCase()){
+        companyCode = getKicIPDataInfoRes[i]['company_code'];
+        return { companyCode };
+      }
+    }
+
+  }catch(err){
+   
+    console.log("Error in getting company code"+ err.message)
+    return { companyCode };
+  }
+
+
+ 
+
+  return { companyCode };
+}
+
+async function getCarrierCodeIP(origIOI) {
+  let  origCarrierId = "";
 
   if (origIOI.includes("ntt-east")) {
-    companyCode = "1011000056";
+   
     if (origIOI.includes("GSTN")) {
       origCarrierId = "2233";
     } else if (origIOI.includes("IEEE")) {
       origCarrierId = "5001";
     }
   } else if (origIOI.includes("ntt-west")) {
-    companyCode = "1011000057";
+  
     if (origIOI.includes("GSTN")) {
       origCarrierId = "2234";
     } else if (origIOI.includes("IEEE")) {
       origCarrierId = "5007";
     }
   } else if (origIOI.includes("softbank")) {
-    companyCode = "1011000058";
+   
     origCarrierId = "2013";
   } else if (origIOI.includes("ntt.com")) {
-    companyCode = "1011000059";
+
     origCarrierId = "5020";
   } else if (origIOI.includes("sanntsu.com")) {
-    companyCode = "1011000060";
+  
     origCarrierId = "6010";
   } else if (origIOI.includes("stnet.ne.jp")) {
-    companyCode = "1011000061";
     origCarrierId = "5016";
   } else if (origIOI.includes("ziptelecom.tel")) {
-    companyCode = "1011000062";
 
     if (origIOI.includes("IP-Phone")) {
       origCarrierId = "5023";
@@ -916,7 +965,6 @@ async function getCompanyCodeNew(origIOI) {
       origCarrierId = "5041";
     }
   } else if (origIOI.includes("colt.ne.jp")) {
-    companyCode = "1011000063";
 
     if (origIOI.includes("IP-Phone")) {
       origCarrierId = "5043";
@@ -926,27 +974,22 @@ async function getCompanyCodeNew(origIOI) {
       origCarrierId = "2214";
     }
   } else if (origIOI.includes("comsq.jp")) {
-    companyCode = "1011000064";
     origCarrierId = "6015";
   } else if (
     origIOI.includes("mnc051.mcc440.3gppnetwork.org") ||
     origIOI.includes("fixed.kddi.ne.jp")
   ) {
-    companyCode = "1011000065";
 
     if (origIOI.includes("IP-Phone")) {
       origCarrierId = "5003";
     } else if (origIOI.includes("IEEE")) {
       origCarrierId = "5006";
     } else {
-      companyCode = "1011000074";
       origCarrierId = "0500";
     }
   } else if (origIOI.includes("histd.jp")) {
-    companyCode = "1011000066";
     origCarrierId = "6019";
   } else if (origIOI.includes("nni.0038.net")) {
-    companyCode = "1011000067";
 
     if (origIOI.includes("IP-Phone")) {
       origCarrierId = "5012";
@@ -954,7 +997,6 @@ async function getCompanyCodeNew(origIOI) {
       origCarrierId = "5017";
     }
   } else if (origIOI.includes("arteria-net.com")) {
-    companyCode = "1011000068";
 
     if (origIOI.includes("IP-Phone")) {
       origCarrierId = "2276";
@@ -962,7 +1004,6 @@ async function getCompanyCodeNew(origIOI) {
       origCarrierId = "2276";
     }
   } else if (origIOI.includes("mnc010.mcc440.3gppnetwork.org")) {
-    companyCode = "1011000069";
     
 
     if (origIOI.includes("IP-Phone")) {
@@ -976,7 +1017,6 @@ async function getCompanyCodeNew(origIOI) {
     }
 
   } else if (origIOI.includes("voip.oedotele.com")) {
-    companyCode = "1011000070";
 
     if (origIOI.includes("IP-Phone")) {
       origCarrierId = "6016";
@@ -984,11 +1024,9 @@ async function getCompanyCodeNew(origIOI) {
       origCarrierId = "6016";
     }
   } else if (origIOI.includes("ims.mnc020.mcc440.3gppnetwork.org")) {
-    companyCode = "1011000071";
 
     origCarrierId = "0901";
   }else if (origIOI.includes("tohknet-voip.jp")) {
-    companyCode = "1011000072";
 
     if (origIOI.includes("IP-Phone")) {
       origCarrierId = "5011";
@@ -996,7 +1034,6 @@ async function getCompanyCodeNew(origIOI) {
       origCarrierId = "5011";
     }
   }else if (origIOI.includes("eonet.ne.jp")) {
-    companyCode = "1011000073";
 
     if (origIOI.includes("IP-Phone")) {
       origCarrierId = "5005";
@@ -1004,7 +1041,6 @@ async function getCompanyCodeNew(origIOI) {
       origCarrierId = "5015";
     }
   }else if (origIOI.includes("iptel.ctc.jp")) {
-    companyCode = "1011000075";
 
     if (origIOI.includes("IP-Phone")) {
       origCarrierId = "5002";
@@ -1012,7 +1048,6 @@ async function getCompanyCodeNew(origIOI) {
       origCarrierId = "5022";
     }
   }else if (origIOI.includes("qtnet.ne.jp")) {
-    companyCode = "1011000076";
 
     if (origIOI.includes("IP-Phone")) {
       origCarrierId = "5014";
@@ -1021,7 +1056,7 @@ async function getCompanyCodeNew(origIOI) {
     }
   }
 
-  return { companyCode, origCarrierId };
+  return { origCarrierId };
 }
 
 async function getTermCarrierId(calledNumber) {

@@ -4,7 +4,7 @@ var billingController = require('../kickback/billing.controller');
 var CDRsController = require('../kickback/cdr.controller');
 var EmailController = require('../kickback/emailNotification.controller');
 
-// var archiverJob = new CronJob ('1 10 * * *',function(){
+// var archiverJob = new CronJob ('3 22 * * *',function(){
 //     console.log('This is kickback archiver start');
 //     archiveController.getNewData();
 //     console.log('This is kickback archiver End');  
@@ -51,6 +51,8 @@ var EmailController = require('../kickback/emailNotification.controller');
 //     console.log('This is kickback billing end');
 
 // },null, true, 'Asia/Tokyo');
+
+
 
 
 // module.exports={};

@@ -51,6 +51,8 @@ module.exports = {
         Dates.targetDate
       );
       const getCarrierInfoRes = await ArchiveKickback.getKickCompanyInfo();
+      const getKicIPDataInfoRes = await ArchiveKickback.getKicIPDataInfo();
+
       const getDataBillabeRes = await ArchiveKickback.insertByBatches(
         getTargetBillableNewCDRRes,
         null,
@@ -58,7 +60,8 @@ module.exports = {
         getCarrierInfoRes,
         null,
         "new_migration_data",
-        tableName
+        tableName,
+        getKicIPDataInfoRes
       );
 
       const [updateBatchControlRes, updateBatchControlErr] = await handleError(

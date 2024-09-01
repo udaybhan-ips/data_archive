@@ -19,7 +19,9 @@ module.exports = {
     try {
       //  if(validateRateData()){
 
-      const company_code = data.comp_code.split(",")?.[0];
+      const company_codeArr = data.comp_code.split(",");
+      const company_code = company_codeArr[0];
+
 
             const query=`INSERT INTO ipdata_rate (host_name, company_code,typeof_call, rate_setup, rate_second, rate_trunk_port, added_by, date_added
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning company_code`;
@@ -63,7 +65,8 @@ module.exports = {
               updateData = updateData +'updated_by='+`'${data.updated_by}'`+',';
             }
 
-            const queryUpdate= `update ipdata_rate set ${updateData}  update_date = now()  where  company_code='${data.company_code}'`;
+            const queryUpdate= `update ipdata_rate set ${updateData}  update_date = now()  
+            where  id='${data.id}'`;
             const resUpdate = await db.queryIBS(queryUpdate,[]);
 
             return resUpdate.rows[0];
