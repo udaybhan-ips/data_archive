@@ -66,10 +66,33 @@ module.exports = {
 
             const insertHistory = ` insert into  _03numbers_history ` ;
 
+            
+        let stopDate = null;
+        let startDate = null;
+
+        if(param.stop_date != undefined && param.stop_date!='' && param.stop_date!=null) {
+            stopDate =  param.stop_date;
+        }
+
+        if(param.start_date != undefined && param.start_date!='' && param.start_date!=null) {
+            startDate =  param.start_date;
+        }
 
 
-            const query = `update _03numbers set customer_cd='${param.customer_cd}', modi_name='${updatedBy}', 
-            date_update=now(), stop_date='${param.stop_date}', start_date='${param.start_date}' where id in (${ids.toString()}) `;
+        let updateData = "" ;
+
+        if(stopDate!=null){
+            updateData += `stop_date='${stopDate}',`
+        }
+
+        if(startDate!=null){
+            updateData += `start_date='${startDate}',`
+        }
+
+
+
+            const query = `update _03numbers set ${updateData}  customer_cd='${param.customer_cd}', modi_name='${updatedBy}', 
+            date_update=now() where id in (${ids.toString()}) `;
             const summaryRes = await db.queryIBS(query, []);
 
             if (summaryRes.rows) {
