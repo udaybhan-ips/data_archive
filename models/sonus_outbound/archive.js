@@ -606,10 +606,10 @@ async function getNextInsertBatch(data, customerInfo) {
       obj['duration_use'] = parseInt(data[i]['DURATION'], 10);
       obj['in_outbound'] = 0;
       obj['dom_int_call'] = 0;
-      obj['orig_carrier_id'] = getOrigCarrierID(data[i]['EGRPROTOVARIANT']);
-      obj['term_carrier_id'] = getTermCarrierID(data[i]['EGRPROTOVARIANT']);
+      obj['orig_carrier_id'] = '';
+      obj['term_carrier_id'] = '';
       obj['transit_carrier_id'] = '';
-      obj['selected_carrier_id'] = getSelectedCarrierID(data[i]['EGRPROTOVARIANT']);
+      obj['selected_carrier_id'] = '';
       obj['billing_comp_code'] = compInfo.comp_code;
       obj['billing_comp_name'] = "";
       obj['trunk_port'] = 0;

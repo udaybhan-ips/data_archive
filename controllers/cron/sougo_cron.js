@@ -40,7 +40,7 @@ var EmailController = require('../sougo/emailNotification.controller');
 
 // },null, true, 'Asia/Tokyo');
 
-// var billingControllerJob = new CronJob ('33 22 * * *',function(){
+// var billingControllerJob = new CronJob ('48 10 * * *',function(){
 //     console.log('This is sougo  billing start');
 //     billingController.getNewBillingIPDataWithRate();
 //     console.log('This is sougo email notification end');

@@ -97,7 +97,7 @@ module.exports = {
     console.log("Here!");
     try {
       const query = `select *, CALLDURATION*0.01 AS DURATION from cdr where  start_time>='${targetDate}' and  
-      start_time < DATE_ADD("${targetDate}", INTERVAL 31 DAY) and ingr_pstn_trunk_name ='INNET00' and 
+      start_time < DATE_ADD("${targetDate}", INTERVAL 30 DAY) and ingr_pstn_trunk_name ='INNET00' and 
       disconnect_time!='0000-00-00 00:00:00.00'    `;
       //const query = `select * from cdr where start_time>='${targetDate}' and  start_time < DATE_ADD("${targetDate}", INTERVAL 1 DAY) ` ;
 

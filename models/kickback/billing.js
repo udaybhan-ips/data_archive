@@ -150,7 +150,8 @@ module.exports = {
     try {
       const query = `select customer_id, service_type, cell_phone_limit from kickback_billable 
 
-       where customer_id in ('00001466') and
+       where customer_id in ('00000036','00000338','00000677','00000676','00000683','00000694','00000695','00000697',
+       '00000720','00000873','00001101') and
        deleted=false  order by  customer_id     `;
 
       //where  deleted=false and customer_id in ('00001101','00001282') order by  customer_id     `;
@@ -329,7 +330,8 @@ module.exports = {
     //  from _03numbers where customer_cd='00000677' and valid_flag = 0) group by   company_code, orig_carrier_id, term_carrier_id 
      // order by  company_code, orig_carrier_id, term_carrier_id 
 
-          query = `select count(*) as total_calls, sum(callduration::numeric) as total_duration , company_code, orig_ioi as carrier_code, orig_ioi, 
+          query = `select count(*) as total_calls, sum(callduration::numeric) as total_duration , company_code, 
+          orig_ioi as carrier_code, orig_ioi, 
           case when term_carrier_id='5039' then '0ABJ' else '050IP' end as term_carrier_id 
           from ${tableName} where callduration::numeric>1 and cpc!='test' and called_number in (select substring(_03_numbers, 2, 10) as _03_numbers
           from _03numbers where customer_cd='${kickCompany}' and valid_flag = 0) group by   company_code, orig_ioi, orig_ioi, 

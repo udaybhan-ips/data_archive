@@ -104,7 +104,7 @@ module.exports = {
       console.log("in get all comp code");
       
       let query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
-      where company_code not  in  ('9999999999')  order by company_code `;
+      where company_code in  ('1011000065')  order by company_code `;
 
       // query = `select distinct(company_code) as company_code from cdr_${year}${month}_new   
       // where company_code ='1011000058'
@@ -492,6 +492,8 @@ async function getResInfoNewIPData (data, company_code, ratesIPInfo, billingMont
 
     const rate = await getSougoRatesIPData(ratesIPInfo, data['orig_ioi'], company_code, newOicName);
 
+    console.log("rate.."+ JSON.stringify(rate))
+
     const IPText = data['orig_ioi'].includes('GSTN')  ? '（メタルIP）' : '' ;
     const IPTest1Arr =  data['orig_ioi'].split(".");
 
@@ -686,6 +688,8 @@ async function getSougoRatesIPData(data, carrier_ioi, company_code, term_ioi) {
       if (obj['company_code'] == company_code && obj['host_name'].toLowerCase().trim() == carrier_ioi.toLowerCase() )
         return true;
     });
+
+    console.log("tmpData"+JSON.stringify(tmpData))
   
     if(tmpData.length==0){
       console.log("Rate is not register")
@@ -697,7 +701,7 @@ async function getSougoRatesIPData(data, carrier_ioi, company_code, term_ioi) {
       return res;
     }else{
       for(let i=0; i< tmpData.length; i++){
-        if(data['typeof_call'] == term_ioi ){
+        if(tmpData[i]['typeof_call'] == term_ioi ){
          
           res['rate_setup'] = tmpData[i]['rate_setup'];
           res['rate_sec'] = tmpData[i]['rate_second'];
